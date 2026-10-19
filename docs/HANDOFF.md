@@ -4,7 +4,7 @@ Project: Pin by Pin Lab, a free hands-on ESP32 course site parallel to ESP32 Fro
 like Wokwi: practice first (real code, real wiring, Run), quizzes second. Distinctive design, not an AI template.
 
 Working directory: `C:/Users/emin/esp32-learning-lab`. GitHub: `emjnbulut/esp32-learning-lab` (private).
-Not published anywhere yet; where to host is the owner's decision. Preserve `.openai/hosting.json` (Sites id from the
+Published with GitHub Pages from the main branch (.github/workflows/pages.yml). Preserve `.openai/hosting.json` (Sites id from the
 first builder); do not create another Site.
 
 ## Architecture (buildless ES modules in `dist/`)
@@ -23,8 +23,6 @@ first builder); do not create another Site.
 - `app.mjs` — views, routing (`#/lesson/<id>`, `#/workshop`, `#/notebook`), storage.
 - `i18n.mjs` — Turkish: `TR` (English UI string → Turkish, also sketch comments and warning templates),
   `TR_LESSONS`, `TR_UNITS`, `TR_MISSIONS` (same shape as missions, arrays by index).
-
-- `owner.mjs` + `tools/owner-key.mjs` — owner passphrase hash and sign-in flag; `app.mjs` `owner`/`review` decide `canOpen`.
 
 ## Rules
 

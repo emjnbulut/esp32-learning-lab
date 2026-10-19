@@ -759,7 +759,6 @@ Object.assign(TR,{
 });
 Object.assign(TR,{'Undo':'Geri al','Redo':'Yinele','Undo (Ctrl+Z)':'Geri al (Ctrl+Z)','Redo (Ctrl+Y)':'Yinele (Ctrl+Y)','Cancel wire':'Kabloyu iptal et','Wire started: click another pin to finish it, or press Cancel wire.':'Kablo başladı: bitirmek için başka bir pine tıkla ya da “Kabloyu iptal et”e bas.'});
 Object.assign(TR,{'Tool':'Araç','Move':'Taşı','Wire':'Kablo','Move parts, select wires (V)':'Parçaları taşı, kabloları seç (V)','Draw wires (W)':'Kablo çek (W)','Automatic colour':'Otomatik renk','Wire tool: click a pin or hole, then another one. Press Esc or ✋ Move to stop.':'Kablo aracı: bir pine ya da deliğe, sonra bir başkasına tıkla. Bırakmak için Esc’e ya da ✋ Taşı’ya bas.'});
-Object.assign(TR,{'Review mode: every lesson is unlocked.':'İnceleme modu: bütün dersler açık.','Turn off':'Kapat','Lock lessons again':'Dersleri yeniden kilitle','Unlock every lesson (review mode)':'Bütün dersleri aç (inceleme modu)','Lessons are locked again.':'Dersler yeniden kilitlendi.','REVIEW MODE · PROGRESS NOT CHANGED':'İNCELEME MODU · İLERLEME DEĞİŞMEDİ'});
 // questions replaced so that nothing is asked before it is taught
 Object.assign(TR_LESSONS.check1.questions[0],{q:'Bu program ilk 3 saniyede ne yazdırır?',choices:['1, 2, 3','0, 1, 2','1, 1, 1'],explain:'n ilk yazdırmadan önce 1 olur, sonra loop her saniye yeniden çalışır: 1, 2, 3.'});
 Object.assign(TR_LESSONS.check1.questions[3],{q:'Kart açılırken yalnızca bir kez çalışması gereken kodu nereye yazarsın?',choices:['setup() içine','loop() içine','loop()’tan sonra'],explain:'setup() açılışta bir kez çalışır; loop() ondan sonra tekrar tekrar çalışır.'});
@@ -921,4 +920,3 @@ Object.assign(TR_MISSIONS,{
   ]
  }
 });
-Object.assign(TR,{'OWNER ACCESS':'SAHİP GİRİŞİ','You are signed in.':'Giriş yaptın.','Course owner sign-in':'Kurs sahibi girişi','Every lesson is open for you while review mode is on. Your own progress is not changed by lessons you open this way.':'İnceleme modu açıkken bütün dersler senin için açık. Bu şekilde açtığın derslerle kendi ilerlemen değişmez.','For the person who made this course. Visitors do not need to sign in: lessons open one after another as usual.':'Bu kursu hazırlayan kişi için. Ziyaretçilerin giriş yapmasına gerek yok: dersler her zamanki gibi sırayla açılır.','Passphrase':'Parola','Sign in':'Giriş yap','Sign out':'Çıkış yap','That is not the passphrase.':'Parola yanlış.','Signed out.':'Çıkış yapıldı.','Signed in. Review mode is on.':'Giriş yapıldı. İnceleme modu açık.'});

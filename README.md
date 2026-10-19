@@ -40,14 +40,10 @@ float, String), arrays, functions, control flow, `#define`, `Serial` (print/prin
 interrupts are reported as unsupported. The circuit solver is DC with piecewise-linear diodes (LED forward voltages,
 ~10 Ω GPIO output resistance, 45 kΩ pull-ups); PWM brightness is averaged by duty cycle.
 
-## Owner access
-
-Visitors follow the normal unlocking rules. The course owner signs in at `#/owner` with a passphrase and can then open every lesson (review mode; lessons opened this way do not change progress). `dist/owner.mjs` holds only a salted PBKDF2 hash. Change the passphrase with `node tools/owner-key.mjs "new passphrase"` (or without an argument to generate one). The site is static, so this is a lock for ordinary visitors, not real security; the lessons are not secret.
-
 ## Data and access
 
 Progress lives in localStorage under `pin-by-pin-progress-v1`, mission work under `pin-by-pin-work-v1`, workshop
 projects under `pin-by-pin-projects-v1`, language under `pin-by-pin-lang`. There is no user database, analytics or
-authentication. The site is not published yet; the GitHub repository is private.
+authentication. Published with GitHub Pages (see below).
 
 See `docs/HANDOFF.md`, `docs/ROADMAP.md`, `docs/CURRICULUM.md` and `docs/REBUILD.md`.
