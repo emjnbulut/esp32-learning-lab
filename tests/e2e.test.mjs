@@ -56,3 +56,34 @@ test('notebook export, reset and import restore progress',async()=>{const page=a
 
 test('phone width has no horizontal page scroll',async()=>{for(const hash of ['','#/atolye','#/defter']){const page=await open(hash,{width:390,height:844});await page.waitForSelector('.main');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390,hash);await page.close();}
  const page=await open('#/ders/light',{completed:unit12,width:390,height:844});await page.waitForSelector('#bench');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);await buildLED(page);await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/Akım yolu tamamlandı/);await page.close();});
+const unit13=[...unit12,'light','blink','challenge'];
+
+test('unit 4 button lab: place, wire, press and release',async()=>{const page=await open('#/ders/button',{completed:[...unit13,'pullup','floating']});await page.waitForSelector('#bench');
+ assert.equal(await page.locator('[data-part="led"]').count(),1);assert.equal(await page.locator('#press').isDisabled(),true);
+ await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/Önce butonu/);
+ await page.click('[data-add="button"]');await page.click(hole(9,1));await page.click('[data-pin="gpio22"]');await page.click(hole(9,7));await page.click(hole(11,7));await page.click('[data-pin="gnd"]');
+ await page.click('#rotate-button');await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/yan dönmüş/);await page.click('#rotate-button');
+ await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/basılı değilken HIGH/);
+ await page.waitForFunction(()=>document.querySelector('#serial').textContent.trim().split('\n').every(l=>l==='1'));
+ const box=await page.locator('#press').boundingBox();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
+ await page.waitForFunction(()=>document.querySelector('#led-bulb').getAttribute('fill')==='#ff8348');assert.match(await page.locator('#serial').innerText(),/0/);assert.equal(await page.locator('#finish-lab').isDisabled(),true);
+ await page.mouse.up();await page.waitForFunction(()=>!document.querySelector('#finish-lab').disabled);
+ await page.selectOption('#pin-mode','input');await page.waitForFunction(()=>document.querySelector('#finish-lab').disabled);assert.match(await page.locator('#sketch').innerText(),/pinMode\(BUTTON_PIN, INPUT\)/);assert.match(await page.locator('#lab-feedback').innerText(),/boşta/);
+ await page.selectOption('#pin-mode','pullup');await page.focus('#press');await page.keyboard.down('Space');await page.waitForFunction(()=>document.querySelector('#led-bulb').getAttribute('fill')==='#ff8348');await page.keyboard.up('Space');
+ await page.waitForFunction(()=>!document.querySelector('#finish-lab').disabled);await page.click('#finish-lab');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/Kart seni duydu/);assert.deepEqual(page.errors,[]);await page.close();});
+
+test('unit 4 debounce: bouncing presses count many times until debounce is long enough',async()=>{const page=await open('#/ders/bounce',{completed:[...unit13,'pullup','floating','button']});await page.waitForSelector('#scope');
+ await page.click('#bounce-press');assert.match(await page.locator('#bounce-state').innerText(),/Tek basış \d kez sayıldı/);assert.ok(await page.locator('.count-dot').count()>1);
+ await page.$eval('#debounce',el=>{el.value='50';el.dispatchEvent(new Event('input',{bubbles:true}));});assert.match(await page.locator('#sketch').innerText(),/>= 50/);assert.equal(await page.locator('.count-dot').count(),1);
+ for(let i=0;i<3;i++)await page.click('#bounce-press');assert.match(await page.locator('#bounce-state').innerText(),/3 \/ 3/);
+ await page.click('#finish-lab');await page.waitForSelector('.success');assert.deepEqual(page.errors,[]);await page.close();});
+
+test('unit 4 challenge: delay() misses short presses, millis() catches them',async()=>{const page=await open('#/ders/nowait',{completed:[...unit13,'pullup','floating','button','bounce','millis']});await page.waitForSelector('#nw-press');
+ const tap=async(ms)=>{const b=await page.locator('#nw-press').boundingBox();await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();await page.waitForTimeout(ms);await page.mouse.up();};
+ await page.waitForFunction(()=>{const t=document.querySelectorAll('#timeline .read');return t.length>0;});
+ for(let i=0;i<4;i++){await tap(60);await page.waitForTimeout(170);}
+ assert.match(await page.locator('#nw-stats').innerText(),/Kaçırılan [1-4]/);
+ await page.click('[data-version="millis"]');assert.match(await page.locator('pre').innerText(),/millis\(\)/);
+ for(let i=0;i<3;i++){await tap(60);await page.waitForTimeout(80);}
+ assert.match(await page.locator('#nw-stats').innerText(),/Yakalanan 3 · Kaçırılan 0 · Üst üste 3 \/ 3/);
+ await page.click('#finish-lab');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/Aynı anda iki iş/);assert.deepEqual(page.errors,[]);await page.close();});

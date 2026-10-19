@@ -3,3 +3,33 @@
 
 @media(min-width:851px){.hero-art svg{max-height:295px}.hero{min-height:350px}.hero-art{width:100%}}
 .pin circle.hit{fill:transparent!important;stroke:none!important}
+.select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:5px;background:var(--paper);font:11px var(--mono);color:var(--ink)}
+.press{margin-top:14px;width:100%;min-height:52px;border-radius:6px;border:1px solid var(--ink);background:var(--white);font:800 12px var(--sans);color:var(--ink);box-shadow:0 4px 0 var(--ink);transition:transform .05s,box-shadow .05s;user-select:none;-webkit-user-select:none;touch-action:none}
+.press.down{transform:translateY(4px);box-shadow:0 0 0 var(--ink);background:var(--lime)}
+.press:disabled{opacity:.45;box-shadow:none}
+.lab-lower pre.serial{height:150px;overflow:hidden;padding:12px 16px}
+.scope{background:#1f302a;border-radius:7px;padding:10px}
+.scope svg{width:100%;height:auto;display:block}
+.scope .trace{fill:none;stroke:var(--lime);stroke-width:2}
+.scope .window{fill:#e5f292;opacity:.14}
+.scope .count-dot{fill:var(--orange);stroke:#1f302a;stroke-width:2}
+.scope-label{font:9px var(--mono);fill:#9fb0a5}
+.scope-hint{font:11px var(--mono);fill:#c9d4c4}
+.segmented{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--white);margin-bottom:16px}
+.segmented button{padding:11px 16px;font:11px var(--mono);min-height:40px}
+.segmented button.active{background:var(--ink);color:var(--white)}
+.nowait-stage{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:20px;align-items:center;background:#eaece2;border:1px solid #d3d8c9;border-radius:7px;padding:18px}
+.nowait-stage .press{margin-top:0}
+.nowait-leds{width:100%;max-width:320px;height:auto}
+.nowait-leds .scope-label{fill:var(--muted)}
+.timeline{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:6px}
+.timeline svg{width:100%;height:60px;display:block}
+.timeline .read{stroke:#9aa58f;stroke-width:2}
+.timeline .read-band{fill:#dfe4d4}
+.timeline .hit{fill:#6f9f55}
+.timeline .miss{fill:var(--orange)}
+.timeline .held{fill:#9aa58f}
+.nw-stats{font:10px var(--mono);margin-top:8px;color:var(--muted)}
+.nw-stats b{color:var(--ink)}
+.nw-explain{font-size:12px;line-height:1.8}
+@media(max-width:600px){.nowait-stage{grid-template-columns:1fr}.segmented{display:flex}.segmented button{flex:1;padding:11px 8px}}

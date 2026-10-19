@@ -9,6 +9,8 @@ Done (2026-10-19): browser regression suite, keyboard navigation and focus handl
 Observe whether first-time learners can place parts, wire pins, recognize polarity and complete the timing challenge without guessing. Improve touch interactions, keyboard navigation, lesson explanations and error feedback. Add measured learning outcomes and a proper automated browser regression suite.
 
 ## 0.3 — Buttons and time
+Done (2026-10-19): unit 4 with 6 activities. Not yet: the two-LED wiring of the source (GPIO 25 on the top half) as a bench task, and button parts in the free workshop.
+
 Model switch state, INPUT_PULLUP, a stable-state debounce algorithm and millis-based independent activities. Align with source episode 4 after its debounce review. Expand free workshop parts.
 
 ## Runtime proof (separate from UI milestones)
