@@ -19,71 +19,80 @@ test('home loads without errors and later lessons are locked',async()=>{const pa
 
 test('deep link to a locked lesson falls back to the learning path',async()=>{const page=await open('#/ders/challenge');await page.waitForSelector('.hero');assert.equal(new URL(page.url()).hash,'#/');await page.close();});
 
-test('quiz: wrong answer explains, right answer completes once, progress survives refresh',async()=>{const page=await open();await page.click('.continue-card .primary');await page.waitForSelector('.quiz');assert.equal(new URL(page.url()).hash,'#/ders/board');
+test('quiz: wrong answer explains, right answer completes once, progress survives refresh',async()=>{const page=await open();await page.click('.continue-card .primary');await page.waitForSelector('.quiz');assert.equal(new URL(page.url()).hash,'#/lesson/board');
  await page.click('[data-choice="2"]');await page.click('#check-answer');await assert.doesNotReject(page.waitForSelector('#feedback.bad'));
  await page.click('[data-choice="0"]');await page.click('#check-answer');await page.waitForSelector('#feedback.good');await page.click('#check-answer');await page.waitForSelector('.success');assert.match(await page.locator('.earned').innerText(),/\+20 XP/);
  await page.reload();await page.waitForSelector('.quiz');await page.click('.close');await page.waitForSelector('.stat-star');assert.equal(await xp(page),'20');assert.equal(await page.locator('[data-lesson="serial"].lesson-node').isDisabled(),false);
- await page.goto(BASE+'#/defter');await page.click('.record [data-lesson="board"]');await page.click('[data-choice="0"]');await page.click('#check-answer');await page.click('#check-answer');assert.match(await page.locator('.earned').innerText(),/ZATEN/);await page.click('.success [data-nav="home"]');assert.equal(await xp(page),'20');await page.close();});
+ await page.goto(BASE+'#/notebook');await page.click('.record [data-lesson="board"]');await page.click('[data-choice="0"]');await page.click('#check-answer');await page.click('#check-answer');assert.match(await page.locator('.earned').innerText(),/ALREADY/);await page.click('.success [data-nav="home"]');assert.equal(await xp(page),'20');await page.close();});
 
 test('browser back returns from a lesson to the learning path',async()=>{const page=await open();await page.click('[data-lesson="board"].lesson-node');await page.waitForSelector('.quiz');await page.goBack();await page.waitForSelector('.hero');assert.equal(await page.locator('.quiz').count(),0);await page.close();});
 
-test('lab: LED circuit lights, wrong topologies are explained',async()=>{const page=await open('#/ders/light',{completed:unit12});await page.waitForSelector('#bench');
- await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/LED ve 220/);
+test('lab: LED circuit lights, wrong topologies are explained',async()=>{const page=await open('#/lesson/light',{completed:unit12});await page.waitForSelector('#bench');
+ await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/an LED and a 220/);
  await buildLED(page);assert.equal(await page.locator('.wire-delete').count(),2);assert.match(await page.locator('.wire-delete').first().innerText(),/GPIO 23 — c4/);
- await page.click('#reverse-led');await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/ters/);await page.click('#reverse-led');
- await page.click('.wire-delete >> nth=1');await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/tamamlanmadı/);
- await page.click(hole(7,3));await page.click('[data-pin="gnd"]');await page.click('[data-pin="gpio"]');await page.click('[data-pin="gnd"]');await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/GND doğrudan/);await page.click('.wire-delete >> nth=2');
- await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/Akım yolu tamamlandı/);await page.waitForFunction(()=>document.querySelector('#led-bulb').getAttribute('fill')==='#ff8348');
- await page.waitForFunction(()=>!document.querySelector('#finish-lab').disabled,null,{timeout:4000});await page.click('#finish-lab');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/İlk ışığın yandı/);assert.deepEqual(page.errors,[]);await page.close();});
+ await page.click('#reverse-led');await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/wrong way round/);await page.click('#reverse-led');
+ await page.click('.wire-delete >> nth=1');await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/isn’t complete/);
+ await page.click(hole(7,3));await page.click('[data-pin="gnd"]');await page.click('[data-pin="gpio"]');await page.click('[data-pin="gnd"]');await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/connected directly/);await page.click('.wire-delete >> nth=2');
+ await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/Current path complete/);await page.waitForFunction(()=>document.querySelector('#led-bulb').getAttribute('fill')==='#ff8348');
+ await page.waitForFunction(()=>!document.querySelector('#finish-lab').disabled,null,{timeout:4000});await page.click('#finish-lab');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/Your first light is on/);assert.deepEqual(page.errors,[]);await page.close();});
 
-test('challenge only passes at 250 ms',async()=>{const page=await open('#/ders/challenge',{completed:[...unit12,'light','blink']});await page.waitForSelector('#bench');await buildLED(page);await setDelay(page,300);await page.click('#run-lab');
+test('challenge only passes at 250 ms',async()=>{const page=await open('#/lesson/challenge',{completed:[...unit12,'light','blink']});await page.waitForSelector('#bench');await buildLED(page);await setDelay(page,300);await page.click('#run-lab');
  await page.waitForFunction(()=>document.querySelector('#lab-feedback').classList.contains('bad'),null,{timeout:4000});assert.equal(await page.locator('#finish-lab').isDisabled(),true);
  await setDelay(page,250);assert.match(await page.locator('#sketch').innerText(),/delay\(250\)/);assert.match(await page.locator('#frequency').innerText(),/2\.00/);
- await page.waitForFunction(()=>!document.querySelector('#finish-lab').disabled,null,{timeout:4000});await page.click('#finish-lab');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/Ritmi sen belirledin/);await page.close();});
+ await page.waitForFunction(()=>!document.querySelector('#finish-lab').disabled,null,{timeout:4000});await page.click('#finish-lab');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/You set the rhythm/);await page.close();});
 
-test('keyboard: arrow keys move between holes and focus survives re-render',async()=>{const page=await open('#/atolye');await page.waitForSelector('#bench');
+test('keyboard: arrow keys move between holes and focus survives re-render',async()=>{const page=await open('#/workshop');await page.waitForSelector('#bench');
  assert.equal(await page.locator('[data-hole][tabindex="0"]').count(),1);
  await page.focus('[data-pin="gpio"]');await page.keyboard.press('Enter');await page.focus(hole(0,0));for(const k of ['ArrowRight','ArrowRight','ArrowRight','ArrowDown','ArrowDown'])await page.keyboard.press(k);
  assert.equal(await page.evaluate(()=>document.activeElement.dataset.hole),'3,2');await page.keyboard.press('Enter');
  assert.equal(await page.locator('.wire-delete').count(),1);assert.equal(await page.evaluate(()=>document.activeElement.dataset.hole),'3,2');
  await page.focus('[data-add="led"]');await page.keyboard.press('Enter');assert.equal(await page.evaluate(()=>document.activeElement.dataset.hole),'3,2');await page.keyboard.press('Enter');assert.equal(await page.locator('[data-part="led"]').count(),1);await page.close();});
 
-test('notebook export, reset and import restore progress',async()=>{const page=await open('#/defter',{completed:['board','serial']});await page.waitForSelector('#export-progress');
+test('notebook export, reset and import restore progress',async()=>{const page=await open('#/notebook',{completed:['board','serial']});await page.waitForSelector('#export-progress');
  const [download]=await Promise.all([page.waitForEvent('download'),page.click('#export-progress')]);const file=await download.path();const saved=JSON.parse(fs.readFileSync(file,'utf8'));assert.deepEqual(saved.completed,['board','serial']);
  await page.click('#reset-progress');await page.waitForFunction(()=>document.querySelector('.stat-star b').textContent==='0');
  await page.setInputFiles('#progress-file',file);await page.waitForFunction(()=>document.querySelector('.stat-star b').textContent==='40');
- await page.setInputFiles('#progress-file',{name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{"nope":1}')});await page.waitForSelector('.toast');assert.match(await page.locator('.toast').innerText(),/geçerli/);await page.close();});
+ await page.setInputFiles('#progress-file',{name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{"nope":1}')});await page.waitForSelector('.toast');assert.match(await page.locator('.toast').innerText(),/not a valid/);await page.close();});
 
-test('phone width has no horizontal page scroll',async()=>{for(const hash of ['','#/atolye','#/defter']){const page=await open(hash,{width:390,height:844});await page.waitForSelector('.main');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390,hash);await page.close();}
- const page=await open('#/ders/light',{completed:unit12,width:390,height:844});await page.waitForSelector('#bench');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);await buildLED(page);await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/Akım yolu tamamlandı/);await page.close();});
+test('phone width has no horizontal page scroll',async()=>{for(const hash of ['','#/workshop','#/notebook']){const page=await open(hash,{width:390,height:844});await page.waitForSelector('.main');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390,hash);await page.close();}
+ const page=await open('#/lesson/light',{completed:unit12,width:390,height:844});await page.waitForSelector('#bench');assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);await buildLED(page);await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/Current path complete/);await page.close();});
 const unit13=[...unit12,'light','blink','challenge'];
 
-test('unit 4 button lab: place, wire, press and release',async()=>{const page=await open('#/ders/button',{completed:[...unit13,'pullup','floating']});await page.waitForSelector('#bench');
+test('unit 4 button lab: place, wire, press and release',async()=>{const page=await open('#/lesson/button',{completed:[...unit13,'pullup','floating']});await page.waitForSelector('#bench');
  assert.equal(await page.locator('[data-part="led"]').count(),1);assert.equal(await page.locator('#press').isDisabled(),true);
- await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/Önce butonu/);
+ await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/First place the button/);
  await page.click('[data-add="button"]');await page.click(hole(9,1));await page.click('[data-pin="gpio22"]');await page.click(hole(9,7));await page.click(hole(11,7));await page.click('[data-pin="gnd"]');
- await page.click('#rotate-button');await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/yan dönmüş/);await page.click('#rotate-button');
- await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/basılı değilken HIGH/);
+ await page.click('#rotate-button');await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/turned sideways/);await page.click('#rotate-button');
+ await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/HIGH \(1\) when released/);
  await page.waitForFunction(()=>document.querySelector('#serial').textContent.trim().split('\n').every(l=>l==='1'));
  const box=await page.locator('#press').boundingBox();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
  await page.waitForFunction(()=>document.querySelector('#led-bulb').getAttribute('fill')==='#ff8348');assert.match(await page.locator('#serial').innerText(),/0/);assert.equal(await page.locator('#finish-lab').isDisabled(),true);
  await page.mouse.up();await page.waitForFunction(()=>!document.querySelector('#finish-lab').disabled);
- await page.selectOption('#pin-mode','input');await page.waitForFunction(()=>document.querySelector('#finish-lab').disabled);assert.match(await page.locator('#sketch').innerText(),/pinMode\(BUTTON_PIN, INPUT\)/);assert.match(await page.locator('#lab-feedback').innerText(),/boşta/);
+ await page.selectOption('#pin-mode','input');await page.waitForFunction(()=>document.querySelector('#finish-lab').disabled);assert.match(await page.locator('#sketch').innerText(),/pinMode\(BUTTON_PIN, INPUT\)/);assert.match(await page.locator('#lab-feedback').innerText(),/Floating pin/);
  await page.selectOption('#pin-mode','pullup');await page.focus('#press');await page.keyboard.down('Space');await page.waitForFunction(()=>document.querySelector('#led-bulb').getAttribute('fill')==='#ff8348');await page.keyboard.up('Space');
- await page.waitForFunction(()=>!document.querySelector('#finish-lab').disabled);await page.click('#finish-lab');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/Kart seni duydu/);assert.deepEqual(page.errors,[]);await page.close();});
+ await page.waitForFunction(()=>!document.querySelector('#finish-lab').disabled);await page.click('#finish-lab');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/The board heard you/);assert.deepEqual(page.errors,[]);await page.close();});
 
-test('unit 4 debounce: bouncing presses count many times until debounce is long enough',async()=>{const page=await open('#/ders/bounce',{completed:[...unit13,'pullup','floating','button']});await page.waitForSelector('#scope');
- await page.click('#bounce-press');assert.match(await page.locator('#bounce-state').innerText(),/Tek basış \d kez sayıldı/);assert.ok(await page.locator('.count-dot').count()>1);
+test('unit 4 debounce: bouncing presses count many times until debounce is long enough',async()=>{const page=await open('#/lesson/bounce',{completed:[...unit13,'pullup','floating','button']});await page.waitForSelector('#scope');
+ await page.click('#bounce-press');assert.match(await page.locator('#bounce-state').innerText(),/One press counted \d times/);assert.ok(await page.locator('.count-dot').count()>1);
  await page.$eval('#debounce',el=>{el.value='50';el.dispatchEvent(new Event('input',{bubbles:true}));});assert.match(await page.locator('#sketch').innerText(),/>= 50/);assert.equal(await page.locator('.count-dot').count(),1);
  for(let i=0;i<3;i++)await page.click('#bounce-press');assert.match(await page.locator('#bounce-state').innerText(),/3 \/ 3/);
  await page.click('#finish-lab');await page.waitForSelector('.success');assert.deepEqual(page.errors,[]);await page.close();});
 
-test('unit 4 challenge: delay() misses short presses, millis() catches them',async()=>{const page=await open('#/ders/nowait',{completed:[...unit13,'pullup','floating','button','bounce','millis']});await page.waitForSelector('#nw-press');
+test('unit 4 challenge: delay() misses short presses, millis() catches them',async()=>{const page=await open('#/lesson/nowait',{completed:[...unit13,'pullup','floating','button','bounce','millis']});await page.waitForSelector('#nw-press');
  const tap=async(ms)=>{const b=await page.locator('#nw-press').boundingBox();await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();await page.waitForTimeout(ms);await page.mouse.up();};
  await page.waitForFunction(()=>{const t=document.querySelectorAll('#timeline .read');return t.length>0;});
  for(let i=0;i<4;i++){await tap(60);await page.waitForTimeout(170);}
- assert.match(await page.locator('#nw-stats').innerText(),/Kaçırılan [1-4]/);
+ assert.match(await page.locator('#nw-stats').innerText(),/Missed [1-4]/);
  await page.click('[data-version="millis"]');assert.match(await page.locator('pre').innerText(),/millis\(\)/);
  for(let i=0;i<3;i++){await tap(60);await page.waitForTimeout(80);}
- assert.match(await page.locator('#nw-stats').innerText(),/Yakalanan 3 · Kaçırılan 0 · Üst üste 3 \/ 3/);
- await page.click('#finish-lab');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/Aynı anda iki iş/);assert.deepEqual(page.errors,[]);await page.close();});
+ assert.match(await page.locator('#nw-stats').innerText(),/Caught 3 · Missed 0 · In a row 3 \/ 3/);
+ await page.click('#finish-lab');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/Two things at once/);assert.deepEqual(page.errors,[]);await page.close();});
+
+test('language switch: English by default, Turkish on request and remembered',async()=>{const page=await open();await page.waitForSelector('.hero');assert.equal(await page.evaluate(()=>document.documentElement.lang),'en');assert.match(await page.locator('.hero h1').innerText(),/It starts/);
+ await page.click('[data-lang="tr"]');assert.match(await page.locator('.hero h1').innerText(),/Bir pinle/);assert.equal(await page.evaluate(()=>document.documentElement.lang),'tr');assert.match(await page.title(),/Bir pinle başlar/);
+ await page.reload();await page.waitForSelector('.hero');assert.match(await page.locator('.hero h1').innerText(),/Bir pinle/);assert.match(await page.locator('.unit h3').first().innerText(),/Kartla tanış/);
+ await page.goto(BASE+'#/ders/board');await page.waitForSelector('.quiz');assert.match(await page.locator('.quiz h2').innerText(),/LED’i programla/);await page.click('[data-choice="1"]');await page.click('#check-answer');assert.match(await page.locator('#feedback').innerText(),/Henüz değil/);
+ await page.click('.lesson-header [data-lang="en"]');assert.match(await page.locator('.quiz h2').innerText(),/switch an LED/);assert.equal(await page.locator('[data-choice="1"].selected').count(),1);assert.deepEqual(page.errors,[]);await page.close();});
+
+test('Turkish lab messages and sketch comments are translated',async()=>{const page=await open('#/lesson/button',{completed:[...unit13,'pullup','floating']});await page.waitForSelector('#bench');await page.click('[data-lang="tr"]');
+ assert.match(await page.locator('#sketch').innerText(),/buton bu pini GND’ye çeker/);await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/Önce butonu/);await page.close();});

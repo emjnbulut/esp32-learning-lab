@@ -1,0 +1,10 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs';
+import {lessons,units,makeSketch,makeTimerSketch,makeDebounceSketch} from '../dist/model.mjs';import {TR,TR_LESSONS,TR_UNITS} from '../dist/i18n.mjs';
+const app=fs.readFileSync(new URL('../dist/app.mjs',import.meta.url),'utf8'),model=fs.readFileSync(new URL('../dist/model.mjs',import.meta.url),'utf8');
+const holes=s=>[...s.matchAll(/\{(\w+)\}/g)].map(m=>m[1]).sort().join();
+// keys passed to t() indirectly (arrays, lookup tables) next to the literal t('...') calls
+const indirect=['Learning path','Workshop','My notebook','Your first light is on.','You set the rhythm.','The board heard you.','Every press counts once.','Two things at once.','Now you know this.','Resistor','Button'];
+test('every English UI string has a Turkish translation with the same placeholders',()=>{const keys=new Set([...[...app.matchAll(/\bt\('((?:[^'\\]|\\.)*)'/g)].map(m=>m[1]),...indirect,...[...model.matchAll(/message:'([^']*)'/g)].map(m=>m[1])]);for(const k of keys){assert.ok(TR[k],'missing TR: '+k);assert.equal(holes(TR[k]),holes(k),'placeholders: '+k);}});
+test('sketch comments are translatable',()=>{for(const code of [makeSketch('button',500),makeTimerSketch('delay'),makeTimerSketch('millis'),makeDebounceSketch(50),...lessons.map(l=>l.code||'')])for(const [,c] of code.matchAll(/\/\/ (.*)$/gm))assert.ok(TR[c],'missing comment: '+c);});
+test('every lesson and unit has Turkish content matching its shape',()=>{for(const l of lessons){const tr=TR_LESSONS[l.id];assert.ok(tr,l.id);for(const f of ['title','tag','intro','hint','question','explanation','code'])assert.equal(f in tr,f in l,l.id+'.'+f);if(l.choices)assert.equal(tr.choices.length,l.choices.length);}for(const u of units)assert.ok(TR_UNITS[u.id]?.title&&TR_UNITS[u.id]?.subtitle,'unit '+u.id);});
+test('the source language of model content is English',()=>assert.doesNotMatch(model,/[ğışĞİŞ]/));

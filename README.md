@@ -2,7 +2,7 @@
 
 Free, step-by-step ESP32 learning, following [ESP32 From Zero](https://github.com/emjnbulut/esp32-from-zero).
 
-A Turkish learning workshop with an original visual identity: paper tones, technical drawings, a learning path and a working virtual circuit bench. No account or payment is needed for the current learning activities.
+A bilingual learning workshop (English by default, Turkish with the EN/TR switch) with an original visual identity: paper tones, technical drawings, a learning path and a working virtual circuit bench. No account or payment is needed for the current learning activities.
 
 ## Run
 
@@ -16,6 +16,12 @@ npm run e2e     # Playwright regression suite (Chromium)
 ```
 
 Open http://127.0.0.1:4177. `dist/` is the complete static website and works under a hosting subdirectory.
+
+## Version 0.4
+
+- English is the main language; an EN/TR switch in the top bar and lesson header changes the whole site, and the choice is remembered (`pin-by-pin-lang` in localStorage).
+- English routes `#/workshop`, `#/notebook`, `#/lesson/<id>`; the old Turkish routes still work.
+- `dist/i18n.mjs` holds the Turkish content: `TR` maps every English UI string, model message and sketch comment to Turkish; `TR_LESSONS` / `TR_UNITS` hold lesson and unit text. `tests/i18n.test.mjs` fails when a string has no translation.
 
 ## Version 0.3
 

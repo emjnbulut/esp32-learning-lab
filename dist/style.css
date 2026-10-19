@@ -33,3 +33,7 @@
 .nw-stats b{color:var(--ink)}
 .nw-explain{font-size:12px;line-height:1.8}
 @media(max-width:600px){.nowait-stage{grid-template-columns:1fr}.segmented{display:flex}.segmented button{flex:1;padding:11px 8px}}
+.lang-switch{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--white)}
+.lang-switch button{font:10px var(--mono);padding:6px 10px;min-height:30px;color:var(--muted)}
+.lang-switch button.active{background:var(--ink);color:var(--white)}
+.lesson-header .lang-switch{flex-shrink:0}

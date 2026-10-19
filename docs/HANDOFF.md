@@ -6,6 +6,8 @@ Working directory: `C:/Users/emin/esp32-learning-lab`.
 GitHub: `emjnbulut/esp32-learning-lab` (private). Not published anywhere yet; where to host is the owner's decision.
 Sites identity: tracked `.openai/hosting.json`; preserve it. Do not create another Site.
 
+Language: English is the source text everywhere (model content, messages, UI). Turkish lives in `dist/i18n.mjs`; in `app.mjs` wrap every user-visible string in `t('English')` (placeholders `{name}`), use `L(lesson)` / `U(unit)` for content and `sk(code)` for sketch comments, then add the Turkish entry — `npm run check` lists anything missing.
+
 Architecture: buildless ES modules in `dist/`. `model.mjs` owns curriculum, progression and graph connectivity. `app.mjs` owns views, hash routing, SVG circuit editor, lesson state, localStorage and controlled timing. `style.css` owns responsive visual language.
 
 Unit 4: `gpio22` pin and `button` part (rows e/f fixed, `rotated` swaps which leg pairs are always connected). Activity types besides quiz/lab: `bounce` and `nowait` (views `bouncePage`/`nowaitPage`, state `bs`/`nw`, bound in `bindSims`).
