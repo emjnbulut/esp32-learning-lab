@@ -6,14 +6,25 @@ A Turkish learning workshop with an original visual identity: paper tones, techn
 
 ## Run
 
-Requires Node.js 20+; no npm dependencies or build step.
+Requires Node.js 20+. The site itself has no dependencies or build step; Playwright is a dev dependency used only by the browser tests.
 
 ```sh
-npm run dev
-npm run check
+npm run dev     # local preview
+npm run check   # syntax + model tests
+npm install     # once, for browser tests
+npm run e2e     # Playwright regression suite (Chromium)
 ```
 
 Open http://127.0.0.1:4177. `dist/` is the complete static website and works under a hosting subdirectory.
+
+## Version 0.2
+
+- Address-bar routes (`#/`, `#/atolye`, `#/defter`, `#/ders/<id>`): refresh keeps the current lesson, the browser back button works, locked deep links fall back to the learning path.
+- Keyboard: focus survives every re-render; breadboard holes use arrow-key navigation (one tab stop) and choosing a part jumps to the hole cursor.
+- Wires end in the exact hole that was chosen, are drawn under holes and ESP32 pins (a wire no longer blocks the next connection), and are listed with readable names such as `GPIO 23 — c4`. Duplicate wires inside one connected column are ignored.
+- Larger invisible touch targets on breadboard holes; part legs no longer swallow hole clicks.
+- Turkish copy fixes; lesson counts derived from the curriculum instead of a fixed 9.
+- Browser regression suite (`tests/e2e.test.mjs`) covering the HANDOFF checklist; runs in CI.
 
 ## Version 0.1
 

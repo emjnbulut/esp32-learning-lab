@@ -4,6 +4,8 @@
 Learning path, 9 tasks, local progress, guided LED circuit model, downloadable Arduino code. All later units explicitly marked preparing.
 
 ## 0.2 — Learn from real beginners
+Done (2026-10-19): browser regression suite, keyboard navigation and focus handling, routes/back button, touch targets, wire layering, copy fixes. Still open: observing real first-time learners and acting on it; measured learning outcomes.
+
 Observe whether first-time learners can place parts, wire pins, recognize polarity and complete the timing challenge without guessing. Improve touch interactions, keyboard navigation, lesson explanations and error feedback. Add measured learning outcomes and a proper automated browser regression suite.
 
 ## 0.3 — Buttons and time

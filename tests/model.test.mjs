@@ -1,4 +1,4 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {lessons,units,sanitizeProgress,nextLesson,canOpen,complete,totalXP,circuitState,holeId,makeSketch} from '../dist/model.mjs';
+import test from 'node:test';import assert from 'node:assert/strict';import {lessons,units,sanitizeProgress,nextLesson,canOpen,complete,totalXP,circuitState,holeId,makeSketch,net} from '../dist/model.mjs';
 const circuit=()=>({parts:[{kind:'resistor',col:3,row:0},{kind:'led',col:6,row:0}],wires:[['gpio','t3'],['t7','gnd']]});
 test('breadboard has separate banks and connected five-hole columns',()=>{assert.equal(holeId(7,0),holeId(7,4));assert.notEqual(holeId(7,4),holeId(7,5));assert.notEqual(holeId(7,0),holeId(8,0));});
 test('correct series circuit lights LED',()=>assert.equal(circuitState(circuit()).ok,true));
@@ -15,3 +15,4 @@ test('progress validates ids and deduplicates XP',()=>{const p=sanitizeProgress(
 test('future lessons stay locked until all predecessors completed',()=>{let p=sanitizeProgress({});assert.equal(canOpen('light',p),false);assert.equal(complete(p,'light','2026-10-19').completed.length,0);for(const l of lessons){assert.equal(canOpen(l.id,p),true);p=complete(p,l.id,'2026-10-19');}assert.equal(totalXP(p),260);assert.equal(p.dates.length,1);assert.equal(nextLesson(p),undefined);assert.equal(totalXP(complete(p,'challenge','2026-10-20')),260);});
 test('curriculum maps to 11 units and has unique activities',()=>{assert.equal(units.length,11);assert.equal(new Set(lessons.map(l=>l.id)).size,9);for(const l of lessons)assert.ok(units.some(u=>u.id===l.unit&&u.available));});
 test('Arduino export uses the selected timing and pin',()=>{const s=makeSketch('blink',250);assert.match(s,/LED_PIN = 23/);assert.equal((s.match(/delay\(250\)/g)||[]).length,2);assert.doesNotMatch(makeSketch('steady',500),/delay/);});
+test('wire ends on a specific hole join the whole five-hole column',()=>{const c=circuit();c.wires=[['gpio','t3:0'],['t7:4','gnd']];assert.equal(circuitState(c).ok,true);assert.equal(net('b7:9'),net('b7'));c.wires=[['gpio','t3:0'],['b7:5','gnd']];assert.equal(circuitState(c).ok,false);});
