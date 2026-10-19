@@ -55,8 +55,8 @@ See `docs/HANDOFF.md`, `docs/ROADMAP.md`, `docs/CURRICULUM.md` and `docs/REBUILD
 ## License
 
 Personal learning remains free. Arduino/ESP32 teaching snippets are **MIT**, including use in
-your own commercial projects. New original platform software uses the **Pin by Pin Lab
-NonCommercial Software License 1.0**; paid, ad-supported or other commercial reuse requires
+your own commercial projects. New original platform software uses the **PolyForm
+Noncommercial License 1.0.0**; paid, ad-supported or other commercial reuse requires
 separate written permission. New original course text/artwork is **CC BY-NC-SA 4.0**.
 
 Earlier MIT platform rights, third-party licenses and learners' own work remain valid.
