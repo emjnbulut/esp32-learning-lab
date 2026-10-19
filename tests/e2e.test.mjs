@@ -13,10 +13,10 @@ async function open(hash='',{completed=[],width=1440,height=900,lang}={}){
 const U1=['hello','serial','counter','check1'],U2=['circuit','rows','fix','resistor','check2'],U3=['blink','fast','polarity','pair','check3'],U4=['press','pullup','toggle','nowait','millis','two','check4'];
 const lab=page=>page.waitForFunction(()=>document.querySelector('#lab-root')?.__lab?.view);
 const goalsOk=page=>page.$$eval('.goal.ok',e=>e.length);
-async function dragPins(page,a,b){const [x1,y1]=await page.evaluate(k=>document.querySelector('#lab-root').__lab.pinScreen(k),a);const [x2,y2]=await page.evaluate(k=>document.querySelector('#lab-root').__lab.pinScreen(k),b);
+async function dragPins(page,a,b){await page.click('[data-tool="wire"]');const [x1,y1]=await page.evaluate(k=>document.querySelector('#lab-root').__lab.pinScreen(k),a);const [x2,y2]=await page.evaluate(k=>document.querySelector('#lab-root').__lab.pinScreen(k),b);
  await page.mouse.move(x1,y1);await page.mouse.down();await page.mouse.move((x1+x2)/2,(y1+y2)/2,{steps:4});await page.mouse.move(x2,y2,{steps:4});await page.mouse.up();}
 async function movePart(page,id,toKey){// drag a part by its body so that its anchor pin lands on a breadboard hole
- const box=await page.locator(`#lab-svg [data-part="${id}"]`).boundingBox();const [ax,ay]=await page.evaluate(k=>{const l=document.querySelector('#lab-root').__lab;const p=l.diagram.parts.find(q=>q.id===k);return l.worldToScreen(p.x,p.y);},id);
+ await page.click('[data-tool="select"]');const box=await page.locator(`#lab-svg [data-part="${id}"]`).boundingBox();const [ax,ay]=await page.evaluate(k=>{const l=document.querySelector('#lab-root').__lab;const p=l.diagram.parts.find(q=>q.id===k);return l.worldToScreen(p.x,p.y);},id);
  const [tx,ty]=await page.evaluate(k=>document.querySelector('#lab-root').__lab.pinScreen(k),toKey);const sx=box.x+box.width/2,sy=box.y+box.height/2;
  await page.mouse.move(sx,sy);await page.mouse.down();await page.mouse.move(sx+(tx-ax)/2,sy+(ty-ay)/2,{steps:5});await page.mouse.move(sx+tx-ax,sy+ty-ay,{steps:5});await page.mouse.up();}
 
@@ -31,7 +31,7 @@ test('a compile error points at the line and does not run',async()=>{const page=
  assert.match(await page.locator('#lab-error').innerText(),/Line 2[\s\S]*Expected ";"/);assert.equal(await page.locator('.ed-gutter b').innerText(),'2');assert.match(await page.locator('#lab-run').innerText(),/Run/);await page.close();});
 
 test('mission circuit: rotate and place parts, drag wires from pin to pin, the LED lights',async()=>{const page=await open('#/lesson/circuit',{completed:U1});await lab(page);
- await movePart(page,'r1','bb:bp8');await page.click('#lab-svg [data-part="r1"]');for(let i=0;i<3;i++)await page.keyboard.press('r');
+ await movePart(page,'r1','bb:bp8');await page.click('#lab-svg [data-part="r1"]');await page.locator('#lab-svg').focus();for(let i=0;i<3;i++)await page.keyboard.press('r');
  await movePart(page,'led1','bb:f8');
  await dragPins(page,'esp:3V3','bb:bp2');await dragPins(page,'esp:GND.R','bb:bn3');await dragPins(page,'bb:j9','bb:bn9');
  const st=await page.evaluate(()=>{const l=document.querySelector('#lab-root').__lab;return {wires:l.diagram.wires.length,r1:l.diagram.parts.find(p=>p.id==='r1'),led:l.diagram.parts.find(p=>p.id==='led1')};});
@@ -85,3 +85,17 @@ test('undo, redo and cancel for wires and parts',async()=>{const page=await open
  const [x,y]=await page.evaluate(()=>document.querySelector('#lab-root').__lab.pinScreen('esp:D21'));await page.mouse.click(x,y);await page.waitForSelector('#lab-cancel:not([hidden])');await page.click('#lab-cancel');assert.equal(await page.locator('#lab-cancel').isHidden(),true);assert.equal(await wires(),n0);
  await page.click('#lab-add');await page.click('[data-addpart="led"]');assert.equal(await page.locator('#lab-svg [data-part="led2"]').count(),1);await page.click('#lab-undo');assert.equal(await page.locator('#lab-svg [data-part="led2"]').count(),0);
  await page.reload();await lab(page);assert.equal(await wires(),n0,'undo result is saved');assert.deepEqual(page.errors,[]);await page.close();});
+
+test('move tool: drag a wire end to another hole; the wire tool shows the connected strip',async()=>{const page=await open('#/workshop');await lab(page);
+ await page.click('[data-tool="wire"]');const [hx,hy]=await page.evaluate(()=>document.querySelector('#lab-root').__lab.pinScreen('bb:c20'));await page.mouse.move(hx,hy);await page.waitForSelector('.strip-hover');assert.match(await page.locator('#lab-tip').innerText(),/c20/);
+ await page.click('[data-tool="select"]');const i=await page.evaluate(()=>document.querySelector('#lab-root').__lab.diagram.wires.findIndex(w=>w.a==='esp:D23'||w.b==='esp:D23'));
+ const end=await page.evaluate(i=>{const w=document.querySelector('#lab-root').__lab.diagram.wires[i];return w.a==='esp:D23'?'b':'a';},i);const from=await page.evaluate(([i,e])=>document.querySelector('#lab-root').__lab.diagram.wires[i][e],[i,end]);
+ const [x,y]=await page.evaluate(k=>document.querySelector('#lab-root').__lab.pinScreen(k),from);const [mx,my]=await page.evaluate(k=>document.querySelector('#lab-root').__lab.pinScreen(k),'esp:D23');
+ await page.mouse.click((x+mx)/2,y);await page.mouse.click(x,y);
+ if(!await page.evaluate(()=>document.querySelector('#lab-root').__lab.sel?.wire!==undefined)){const [px,py]=await page.evaluate(([i])=>{const l=document.querySelector('#lab-root').__lab;l.select({wire:i});return [0,0];},[i]);}
+ const [tx,ty]=await page.evaluate(()=>document.querySelector('#lab-root').__lab.pinScreen('bb:j6'));await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(tx,ty,{steps:6});await page.mouse.up();
+ assert.equal(await page.evaluate(([i,e])=>document.querySelector('#lab-root').__lab.diagram.wires[i][e],[i,end]),'bb:j6');await page.click('#lab-undo');assert.equal(await page.evaluate(([i,e])=>document.querySelector('#lab-root').__lab.diagram.wires[i][e],[i,end]),from);assert.deepEqual(page.errors,[]);await page.close();});
+
+test('review mode unlocks every lesson without changing progress',async()=>{const page=await open('#/review');await page.waitForSelector('.review-banner');assert.equal(await page.locator('[data-lesson="speed"].lesson-node').isDisabled(),false);
+ await page.goto(BASE+'#/lesson/serial');await page.waitForSelector('.quiz');await page.click('[data-choice="0"]');await page.click('#check-answer');await page.click('#check-answer');await page.waitForSelector('.success');assert.match(await page.locator('.earned').innerText(),/REVIEW MODE/);
+ await page.click('.success [data-nav="home"]');await page.click('#review-off');await page.waitForSelector('.lesson-node');assert.equal(await page.locator('[data-lesson="speed"].lesson-node').isDisabled(),true);assert.equal(await page.locator('.stat-star b').innerText(),'0');await page.close();});

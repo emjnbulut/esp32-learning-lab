@@ -125,3 +125,4 @@
 .ws-lab .lab{height:min(calc(100vh - 180px),820px)}
 @media(max-width:1100px){.mission-shell{height:auto}.mission-layout{grid-template-columns:1fr}.mission-panel{border-right:0;border-bottom:1px solid var(--line)}.mission-lab .lab{height:calc(100vh - 90px);min-height:520px}}
 @media(max-width:600px){.ws-head h1{font-size:30px}.mission-panel{padding:20px 16px}.mission-lab{padding:6px}.steps-path{padding:6px 8px 12px}}
+.review-banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12px;padding:10px 12px;margin-top:12px;background:#fff5d6;border:1px solid #ecd38a;border-radius:6px;color:#6b5414}

@@ -70,3 +70,13 @@
 .lab-link:disabled{opacity:.4;cursor:default}
 .lab-cancel{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:3;background:#c0392b;color:#fff;border-radius:6px;padding:8px 14px;font:700 12px var(--sans);box-shadow:0 4px 12px #0003}
 .lab-cancel[hidden]{display:none}
+.lab-toolsel{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--white)}
+.lab-toolsel button{padding:6px 11px;font:700 11px var(--sans);min-height:30px;color:var(--ink)}
+.lab-toolsel button[aria-pressed=true]{background:var(--ink);color:var(--white)}
+.wire-colors{display:inline-flex;gap:4px;align-items:center}.wire-colors[hidden]{display:none}
+.wire-colors button{width:18px;height:18px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #0003;font:700 9px var(--mono);background:#e9ecdf;padding:0}
+.wire-colors button[aria-pressed=true]{box-shadow:0 0 0 2px var(--ink)}
+.lab[data-tool=wire] #lab-svg{cursor:crosshair}.lab[data-tool=wire] .part{cursor:crosshair}
+.strip-hover{fill:#f28c1c22;stroke:#f28c1c88;stroke-width:1;pointer-events:none}
+.wire-end{fill:#fff;stroke:#f28c1c;stroke-width:1.6;cursor:grab}
+@media(max-width:600px){.lab-toolsel button{padding:6px 8px}}
