@@ -757,3 +757,4 @@ Object.assign(TR,{
  "purple": "mor",
  "turn raw into a brightness 0–255 with map(), then analogWrite it": "raw değerini map() ile 0–255 arası bir parlaklığa çevir, sonra analogWrite ile yaz"
 });
+Object.assign(TR,{'Undo':'Geri al','Redo':'Yinele','Undo (Ctrl+Z)':'Geri al (Ctrl+Z)','Redo (Ctrl+Y)':'Yinele (Ctrl+Y)','Cancel wire':'Kabloyu iptal et','Wire started: click another pin to finish it, or press Cancel wire.':'Kablo başladı: bitirmek için başka bir pine tıkla ya da “Kabloyu iptal et”e bas.'});

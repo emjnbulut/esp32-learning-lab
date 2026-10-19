@@ -67,3 +67,6 @@
  .lab-body{grid-template-columns:1fr;grid-template-rows:1fr;grid-template-areas:"main"}.lab-body>section{display:none;grid-area:main;border:0}
  .lab[data-tab=code] .lab-code,.lab[data-tab=circuit] .lab-diagram,.lab[data-tab=serial] .lab-serial{display:flex}}
 .lab-props[hidden],.lab-tip[hidden],.lab-error[hidden]{display:none}
+.lab-link:disabled{opacity:.4;cursor:default}
+.lab-cancel{position:absolute;left:50%;top:10px;transform:translateX(-50%);z-index:3;background:#c0392b;color:#fff;border-radius:6px;padding:8px 14px;font:700 12px var(--sans);box-shadow:0 4px 12px #0003}
+.lab-cancel[hidden]{display:none}

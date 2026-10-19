@@ -77,3 +77,11 @@ test('phone width: lab tabs switch between code, circuit and serial without page
 test('Turkish: the whole page switches and the choice is remembered',async()=>{const page=await open('#/lesson/blink',{completed:[...U1,...U2]});await lab(page);await page.click('.lesson-header [data-lang="tr"]');await lab(page);
  assert.match(await page.locator('.mission-panel h1').innerText(),/LED/);assert.match(await page.locator('#lab-run').innerText(),/Çalıştır/);assert.match(await page.locator('.goals .code-label').innerText(),/HEDEF/);
  await page.reload();await lab(page);assert.match(await page.locator('#lab-run').innerText(),/Çalıştır/);await page.close();});
+
+test('undo, redo and cancel for wires and parts',async()=>{const page=await open('#/workshop');await lab(page);const wires=()=>page.evaluate(()=>document.querySelector('#lab-root').__lab.diagram.wires.length);
+ const n0=await wires();assert.equal(await page.locator('#lab-undo').isDisabled(),true);
+ await dragPins(page,'esp:D22','bb:j20');assert.equal(await wires(),n0+1);await page.click('#lab-undo');assert.equal(await wires(),n0);await page.click('#lab-redo');assert.equal(await wires(),n0+1);
+ await page.locator('#lab-svg').focus();await page.keyboard.press('Control+z');assert.equal(await wires(),n0);
+ const [x,y]=await page.evaluate(()=>document.querySelector('#lab-root').__lab.pinScreen('esp:D21'));await page.mouse.click(x,y);await page.waitForSelector('#lab-cancel:not([hidden])');await page.click('#lab-cancel');assert.equal(await page.locator('#lab-cancel').isHidden(),true);assert.equal(await wires(),n0);
+ await page.click('#lab-add');await page.click('[data-addpart="led"]');assert.equal(await page.locator('#lab-svg [data-part="led2"]').count(),1);await page.click('#lab-undo');assert.equal(await page.locator('#lab-svg [data-part="led2"]').count(),0);
+ await page.reload();await lab(page);assert.equal(await wires(),n0,'undo result is saved');assert.deepEqual(page.errors,[]);await page.close();});

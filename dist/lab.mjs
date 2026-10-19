@@ -18,7 +18,7 @@ export function highlight(code){return code.split('\n').map(line=>{let out='',re
 const WIRE_COLORS=['#2f9a3c','#2f6fd0','#f28c1c','#c9a400','#8a3fc8','#16a3a3'];
 const ADDABLE=['esp32','breadboard','led','resistor','button','pot','rgb','buzzer'];
 export class Lab{
- constructor(o){this.t=o.t||(s=>s);this.code=o.code||'';this.diagram=clone(o.diagram||{parts:[],wires:[]});this.onChange=o.onChange||(()=>{});this.onTick=o.onTick||(()=>{});this.onRun=o.onRun||(()=>{});
+ constructor(o){this.t=o.t||(s=>s);this.code=o.code||'';this.diagram=clone(o.diagram||{parts:[],wires:[]});this.past=[];this.future=[];this.onChange=o.onChange||(()=>{});this.onTick=o.onTick||(()=>{});this.onRun=o.onRun||(()=>{});
   this.readOnlyParts=new Set(o.lockedParts||[]);this.view=null;this.sel=null;this.sim=null;this.wiring=null;this.drag=null;this.tab='code';this.sound=true;this.baud=115200;this.lastOut='';this.raf=0;this.lastTick=0;}
  get running(){return this.sim?.status==='running';}
  mount(root){this.root=root;root.__lab=this;const t=this.t;
@@ -31,10 +31,10 @@ export class Lab{
    <section class="lab-code"><div class="lab-head"><span>sketch.ino</span><button class="lab-link" id="lab-ino">${t('Download .ino')}</button></div>
     <div class="editor"><pre class="ed-gutter" id="ed-gutter" aria-hidden="true"></pre><div class="ed-wrap"><pre class="ed-hl" id="ed-hl" aria-hidden="true"></pre><textarea id="ed-text" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="${t('Arduino code')}"></textarea></div></div>
     <div class="lab-error" id="lab-error" role="alert" hidden></div></section>
-   <section class="lab-diagram"><div class="lab-head"><span>${t('Circuit')}</span><span class="lab-spacer"></span><button class="lab-link" id="lab-add" aria-expanded="false">${t('+ Add part')}</button></div>
+   <section class="lab-diagram"><div class="lab-head"><span>${t('Circuit')}</span><span class="lab-spacer"></span><button class="lab-link" id="lab-undo" title="${t('Undo (Ctrl+Z)')}" disabled>↶ ${t('Undo')}</button><button class="lab-link" id="lab-redo" title="${t('Redo (Ctrl+Y)')}" disabled>↷ ${t('Redo')}</button><button class="lab-link" id="lab-add" aria-expanded="false">${t('+ Add part')}</button></div>
     <div class="lab-canvas"><svg id="lab-svg" tabindex="0" aria-label="${t('Circuit diagram. Drag parts to move them. Drag from one pin to another to connect a wire.')}"><g id="lab-world"></g></svg>
      <div class="lab-zoom"><button data-zoom="-1" aria-label="${t('Zoom out')}">−</button><button data-zoom="0" aria-label="${t('Fit')}">⤢</button><button data-zoom="1" aria-label="${t('Zoom in')}">+</button></div>
-     <div class="lab-tip" id="lab-tip" hidden></div><div class="lab-props" id="lab-props" hidden></div><div class="lab-palette" id="lab-palette" hidden></div></div>
+     <div class="lab-tip" id="lab-tip" hidden></div><button class="lab-cancel" id="lab-cancel" hidden>✕ ${t('Cancel wire')}</button><div class="lab-props" id="lab-props" hidden></div><div class="lab-palette" id="lab-palette" hidden></div></div>
     <div class="lab-inputs" id="lab-inputs"></div></section>
    <section class="lab-serial"><div class="lab-head"><span>Serial Monitor</span><span class="lab-spacer"></span><select id="lab-baud" aria-label="${t('Baud rate')}">${[9600,115200].map(b=>`<option ${b===this.baud?'selected':''}>${b}</option>`).join('')}</select><button class="lab-link" id="lab-clear">${t('Clear')}</button></div>
     <div class="lab-warn" id="lab-warn"></div><pre class="lab-out" id="lab-out"></pre></section>
@@ -44,7 +44,12 @@ export class Lab{
   requestAnimationFrame(()=>{this.fit();this.render();});
   const loop=ts=>{this.frame(ts);this.raf=requestAnimationFrame(loop);};this.raf=requestAnimationFrame(loop);}
  destroy(){cancelAnimationFrame(this.raf);this.stopAudio();this.sim?.stop();this.root=null;}
- changed(){this.onChange({code:this.code,diagram:this.diagram});}
+ changed(){this.onChange({code:this.code,diagram:this.diagram});this.undoState();}
+ // circuit history: snap() before every change, undo()/redo() swap whole diagrams
+ snap(){this.past.push(clone(this.diagram));if(this.past.length>60)this.past.shift();this.future=[];}
+ undo(){if(!this.past.length)return;if(this.running)this.stop();this.future.push(clone(this.diagram));this.diagram=this.past.pop();this.wiring=null;this.sel=null;this.closeProps();this.render();this.renderInputs();this.changed();}
+ redo(){if(!this.future.length)return;if(this.running)this.stop();this.past.push(clone(this.diagram));this.diagram=this.future.pop();this.wiring=null;this.sel=null;this.closeProps();this.render();this.renderInputs();this.changed();}
+ undoState(){const u=this.$?.('#lab-undo'),r=this.$?.('#lab-redo');if(u)u.disabled=!this.past.length;if(r)r.disabled=!this.future.length;}
  // ---------- editor ----------
  syncEditor(){const lines=this.code.split('\n').length;const err=this.errLine;this.$('#ed-gutter').innerHTML=Array.from({length:lines},(_,i)=>i+1===err?`<b>${i+1}</b>`:String(i+1)).join('\n')+'\n';this.$('#ed-hl').innerHTML=highlight(this.code);this.scrollEditor();}
  scrollEditor(){const hl=this.$('#ed-hl'),g=this.$('#ed-gutter');hl.scrollTop=this.ta.scrollTop;hl.scrollLeft=this.ta.scrollLeft;g.scrollTop=this.ta.scrollTop;}
@@ -67,6 +72,8 @@ export class Lab{
   this.$('#lab-baud').onchange=e=>{this.baud=Number(e.target.value);this.lastOut=null;};
   this.$('#lab-ino').onclick=()=>{const url=URL.createObjectURL(new Blob([this.code],{type:'text/plain'}));const a=document.createElement('a');a.href=url;a.download='sketch.ino';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
   this.root.querySelectorAll('[data-labtab]').forEach(b=>b.onclick=()=>{this.tab=b.dataset.labtab;this.root.querySelector('.lab').dataset.tab=this.tab;this.root.querySelectorAll('[data-labtab]').forEach(x=>x.setAttribute('aria-selected',String(x===b)));if(this.tab==='circuit')requestAnimationFrame(()=>{this.fit();this.render();});});
+  this.$('#lab-undo').onclick=()=>this.undo();this.$('#lab-redo').onclick=()=>this.redo();this.$('#lab-cancel').onclick=()=>{this.wiring=null;this.status('');this.render();};
+  this.root.addEventListener('keydown',e=>{if(e.target===this.ta||!(e.ctrlKey||e.metaKey))return;const k=e.key.toLowerCase();if(k==='z'&&!e.shiftKey){e.preventDefault();this.undo();}else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();this.redo();}});
   this.$('#lab-add').onclick=e=>{const pal=this.$('#lab-palette');const open=pal.hidden;pal.hidden=!open;e.currentTarget.setAttribute('aria-expanded',String(open));
    if(open)pal.innerHTML=ADDABLE.filter(tp=>tp!=='esp32'||!this.diagram.parts.some(p=>p.type==='esp32')).map(tp=>`<button data-addpart="${tp}">${partIcon(tp)}<span>${this.t(PARTS[tp].label)}</span></button>`).join('');
    pal.querySelectorAll('[data-addpart]').forEach(b=>b.onclick=()=>{pal.hidden=true;this.addPart(b.dataset.addpart);});};}
@@ -127,12 +134,12 @@ export class Lab{
   s+=this.diagram.wires.map((w,i)=>{const d=this.wirePath(w);if(!d)return '';const sel=this.sel?.wire===i;return `<g class="wire${sel?' selected':''}" data-wire="${i}"><path d="${d}" class="wire-hit"/><path d="${d}" class="wire-line" stroke="${w.color||'#2f9a3c'}"/>${[this.pinPosByKey(w.a),this.pinPosByKey(w.b)].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="1.8" fill="${w.color||'#2f9a3c'}"/>`).join('')}</g>`;}).join('');
   if(this.wiring){const a=this.pinPosByKey(this.wiring.from);const pts=[a,...this.wiring.pts,this.wiring.cursor||a];s+=`<path class="wire-preview" d="M${pts.map(p=>p.join(' ')).join('L')}"/>`;}
   if(this.hover)s+=`<circle class="pin-hover" cx="${this.hover.x}" cy="${this.hover.y}" r="3.2"/>`;
-  this.world.innerHTML=s;this.applyView();if(this.sim)this.paint();}
+  this.world.innerHTML=s;this.applyView();const cb=this.$('#lab-cancel');if(cb)cb.hidden=!this.wiring;if(this.sim)this.paint();}
  select(sel){this.sel=sel;this.render();this.showProps();}
  closeProps(){this.$('#lab-props').hidden=true;this.sel=null;}
  showProps(){const box=this.$('#lab-props'),t=this.t;if(!this.sel||this.running){box.hidden=true;return;}box.hidden=false;
   if(this.sel.wire!==undefined){const w=this.diagram.wires[this.sel.wire];box.innerHTML=`<strong>${t('Wire')}</strong><small>${esc(this.pinLabel(this.pins().find(q=>q.key===w.a)))} → ${esc(this.pinLabel(this.pins().find(q=>q.key===w.b)))}</small><div class="swatches">${['#2b2b2b','#d64541',...WIRE_COLORS].map(c=>`<button data-wcolor="${c}" style="background:${c}" aria-label="${c}"></button>`).join('')}</div><button class="lab-del" id="lab-del">${t('Delete')}</button>`;
-   box.querySelectorAll('[data-wcolor]').forEach(b=>b.onclick=()=>{w.color=b.dataset.wcolor;this.render();this.changed();});}
+   box.querySelectorAll('[data-wcolor]').forEach(b=>b.onclick=()=>{this.snap();w.color=b.dataset.wcolor;this.render();this.changed();});}
   else{const p=this.diagram.parts.find(q=>q.id===this.sel.part);if(!p){box.hidden=true;return;}const locked=this.readOnlyParts.has(p.id);let extra='';
    if(p.type==='led')extra=`<label>${t('Color')}<select data-attr="color">${Object.keys(LED_COLORS).map(c=>`<option value="${c}" ${p.attrs.color===c?'selected':''}>${t(c)}</option>`).join('')}</select></label>`;
    if(p.type==='resistor')extra=`<label>${t('Resistance')}<select data-attr="ohms">${[100,220,330,470,1000,4700,10000].map(o=>`<option value="${o}" ${Number(p.attrs.ohms)===o?'selected':''}>${fmtOhms(o)}</option>`).join('')}</select></label>`;
@@ -140,16 +147,16 @@ export class Lab{
    if(p.type==='buzzer')extra=`<label>${t('Type')}<select data-attr="kind"><option value="passive" ${p.attrs.kind!=='active'?'selected':''}>${t('passive (tone)')}</option><option value="active" ${p.attrs.kind==='active'?'selected':''}>${t('active (beeps on HIGH)')}</option></select></label>`;
    if(p.type==='rgb')extra=`<label>${t('Type')}<select data-attr="common"><option value="cathode" ${p.attrs.common!=='anode'?'selected':''}>${t('common cathode (−)')}</option><option value="anode" ${p.attrs.common==='anode'?'selected':''}>${t('common anode (+)')}</option></select></label>`;
    box.innerHTML=`<strong>${t(PARTS[p.type].label)}</strong><small>${esc(p.id)}</small>${extra}${locked?'':`<div class="prop-row"><button id="lab-rot">${t('↻ Rotate')}</button><button class="lab-del" id="lab-del">${t('Delete')}</button></div>`}`;
-   box.querySelectorAll('[data-attr]').forEach(el=>el.onchange=()=>{p.attrs[el.dataset.attr]=el.type==='checkbox'?el.checked:el.dataset.attr==='ohms'?Number(el.value):el.value;this.render();this.changed();});
+   box.querySelectorAll('[data-attr]').forEach(el=>el.onchange=()=>{this.snap();p.attrs[el.dataset.attr]=el.type==='checkbox'?el.checked:el.dataset.attr==='ohms'?Number(el.value):el.value;this.render();this.changed();});
    const rot=box.querySelector('#lab-rot');if(rot)rot.onclick=()=>this.rotateSel();}
   const del=box.querySelector('#lab-del');if(del)del.onclick=()=>this.deleteSel();}
- rotateSel(){const p=this.diagram.parts.find(q=>q.id===this.sel?.part);if(!p||this.readOnlyParts.has(p.id))return;p.rot=((p.rot||0)+90)%360;this.render();this.changed();}
- deleteSel(){if(!this.sel)return;if(this.sel.wire!==undefined)this.diagram.wires.splice(this.sel.wire,1);
+ rotateSel(){const p=this.diagram.parts.find(q=>q.id===this.sel?.part);if(!p||this.readOnlyParts.has(p.id))return;this.snap();p.rot=((p.rot||0)+90)%360;this.render();this.changed();}
+ deleteSel(){if(!this.sel)return;if(this.sel.part&&this.readOnlyParts.has(this.sel.part))return;this.snap();if(this.sel.wire!==undefined)this.diagram.wires.splice(this.sel.wire,1);
   else{const id=this.sel.part;if(this.readOnlyParts.has(id))return;this.diagram.parts=this.diagram.parts.filter(p=>p.id!==id);this.diagram.wires=this.diagram.wires.filter(w=>!w.a.startsWith(id+':')&&!w.b.startsWith(id+':'));}
   this.sel=null;this.closeProps();this.render();this.changed();}
  addPart(type){if(this.running)this.stop();const r=this.svg.getBoundingClientRect();let n=1;while(this.diagram.parts.some(p=>p.id===type+n))n++;const id=type==='esp32'?'esp':type==='breadboard'&&n===1?'bb':type+n;
   const cx=(r.width/2-this.view.x)/this.view.z,cy=(r.height/2-this.view.y)/this.view.z;const p={id,type,x:Math.round(cx/PITCH)*PITCH,y:Math.round(cy/PITCH)*PITCH,rot:0,attrs:{...(PARTS[type].attrs||{})}};
-  this.diagram.parts.push(p);this.select({part:id});this.changed();this.renderInputs();}
+  this.snap();this.diagram.parts.push(p);this.select({part:id});this.changed();this.renderInputs();}
  renderInputs(){const box=this.$('#lab-inputs');if(!box)return;const t=this.t;const ins=this.diagram.parts.filter(p=>p.type==='button'||p.type==='pot');
   box.innerHTML=ins.length?`<span>${t('Controls')}</span>`+ins.map(p=>p.type==='button'?`<button class="lab-press" data-press="${esc(p.id)}" ${this.running?'':'disabled'}>${t('Press {id}',{id:esc(p.id)})}</button>`:`<label>${esc(p.id)} <input type="range" min="0" max="1000" value="${Math.round((this.sim?.inputs?.[p.id]?.pos??p.attrs.pos??0.5)*1000)}" data-potin="${esc(p.id)}" ${this.running?'':'disabled'} aria-label="${t('Turn {id}',{id:esc(p.id)})}"></label>`).join(''):'';
   box.querySelectorAll('[data-press]').forEach(b=>{const id=b.dataset.press;const down=e=>{e.preventDefault();this.sim?.press(id,true);b.classList.add('down');};const up=()=>{this.sim?.press(id,false);b.classList.remove('down');};
@@ -185,7 +192,7 @@ export class Lab{
   if(!d)return;
   if(d.kind==='pan'){if(Math.hypot(e.clientX-d.sx,e.clientY-d.sy)>3)d.click=false;this.view.x=d.vx+e.clientX-d.sx;this.view.y=d.vy+e.clientY-d.sy;this.applyView();this.$('#lab-tip').hidden=true;return;}
   if(d.kind==='knob'){this.knob(e);return;}
-  if(d.kind==='part'){const nx=d.ox+Math.round((w[0]-d.w0[0])/PITCH)*PITCH,ny=d.oy+Math.round((w[1]-d.w0[1])/PITCH)*PITCH;if(nx!==d.p.x||ny!==d.p.y){d.p.x=nx;d.p.y=ny;d.moved=true;this.render();}return;}
+  if(d.kind==='part'){const nx=d.ox+Math.round((w[0]-d.w0[0])/PITCH)*PITCH,ny=d.oy+Math.round((w[1]-d.w0[1])/PITCH)*PITCH;if(nx!==d.p.x||ny!==d.p.y){if(!d.moved)this.snap();d.p.x=nx;d.p.y=ny;d.moved=true;this.render();}return;}
   if(d.kind==='wire'){if(Math.hypot(e.clientX-d.sx,e.clientY-d.sy)>4)d.moved=true;if(d.moved){this.wiring={from:d.from,pts:[],cursor:this.hover&&this.hover.key!==d.from?[this.hover.x,this.hover.y]:w};this.render();}}}
  up(e){const d=this.drag;this.drag=null;if(!d)return;
   if(d.kind==='press'){this.sim?.press(d.id,false);return;}
@@ -193,11 +200,11 @@ export class Lab{
   if(d.kind==='part'){if(d.moved)this.changed();this.select({part:d.p.id});return;}
   if(d.kind==='wire'){const w=this.toWorld(e);const pin=this.nearestPin(w);
    if(d.moved){this.wiring=null;if(pin&&pin.key!==d.from)this.addWire(d.from,pin.key);else this.render();return;}
-   this.wiring={from:d.from,pts:[],cursor:null};this.status(this.t('Wire started: click another pin to finish it (Esc cancels).'));this.render();}}
+   this.wiring={from:d.from,pts:[],cursor:null};this.status(this.t('Wire started: click another pin to finish it, or press Cancel wire.'));this.render();}}
  finishWire(to){const wr=this.wiring;this.wiring=null;this.addWire(wr.from,to,wr.pts);this.status('');}
- addWire(a,b,pts=[]){if(a===b)return;if(this.diagram.wires.some(w=>(w.a===a&&w.b===b)||(w.a===b&&w.b===a))){this.render();return;}this.diagram.wires.push({a,b,color:this.wireColor(a,b),pts});this.render();this.changed();}
+ addWire(a,b,pts=[]){if(a===b)return;if(this.diagram.wires.some(w=>(w.a===a&&w.b===b)||(w.a===b&&w.b===a))){this.render();return;}this.snap();this.diagram.wires.push({a,b,color:this.wireColor(a,b),pts});this.render();this.changed();}
  // screen position of a pin or part anchor (used by the browser tests)
  pinScreen(key){const [x,y]=this.pinPosByKey(key);const r=this.svg.getBoundingClientRect();return [r.left+this.view.x+x*this.view.z,r.top+this.view.y+y*this.view.z];}
  worldToScreen(x,y){const r=this.svg.getBoundingClientRect();return [r.left+this.view.x+x*this.view.z,r.top+this.view.y+y*this.view.z];}
- setDiagram(d){this.stop(true);this.diagram=clone(d);this.sel=null;this.render();this.renderInputs();this.fit();}
+ setDiagram(d){this.stop(true);this.diagram=clone(d);this.past=[];this.future=[];this.undoState();this.sel=null;this.render();this.renderInputs();this.fit();}
 }
