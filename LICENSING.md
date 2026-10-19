@@ -4,7 +4,7 @@ Policy adopted 2026-10-19. Copyright (c) 2026 Emin Bulut, to the extent owned.
 
 | Material | License offered for new contributions |
 |---|---|
-| Original platform software: simulator, interpreter, solver, UI, renderer, styles, tests and tooling | Pin by Pin Lab NonCommercial Software License 1.0 |
+| Original platform software: simulator, interpreter, solver, UI, renderer, styles, tests and tooling | PolyForm Noncommercial License 1.0.0 |
 | Learner-facing Arduino/ESP32 starter/solution sketches, quiz/checkpoint code snippets, code-comment translations and downloaded examples | MIT; commercial reuse allowed with the MIT notice |
 | Original course prose, hints, quizzes, translations, illustrations, part artwork and educational media | CC BY-NC-SA 4.0 |
 | Learners' original code and project data | Remains theirs |
@@ -34,7 +34,7 @@ ticari kullanımı ayrıca yazılı izin gerektirir; kişisel öğrenme ve ticar
 ücretsizdir. Yeni özgün ders/çizim/görseller CC BY-NC-SA kapsamındadır. Eski MIT sürümünün
 ticari kullanımı bu değişiklikle engellenmez.
 
-Full software terms: [NonCommercial Software License 1.0](LICENSES/Pin-by-Pin-NonCommercial-1.0.txt).
+Full software terms: [PolyForm Noncommercial License 1.0.0](LICENSES/PolyForm-Noncommercial-1.0.0.md).
 
 ## Existing rights and exclusions / Önceki haklar ve istisnalar
 

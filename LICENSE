@@ -2,8 +2,10 @@ Copyright (c) 2026 Emin Bulut, to the extent owned.
 
 Different material has different licenses. Read LICENSING.md for exact scope.
 
-New original platform software: Pin by Pin Lab NonCommercial Software License 1.0.
-Full text: LICENSES/Pin-by-Pin-NonCommercial-1.0.txt.
+New original platform software: PolyForm Noncommercial License 1.0.0.
+Full text: LICENSES/PolyForm-Noncommercial-1.0.0.md
+https://polyformproject.org/licenses/noncommercial/1.0.0
+Required Notice: Copyright (c) 2026 Emin Bulut (https://github.com/emjnbulut)
 
 Learner-facing Arduino/ESP32 examples: MIT.
 Full text: LICENSES/MIT.txt.

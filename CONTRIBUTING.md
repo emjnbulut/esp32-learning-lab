@@ -9,7 +9,7 @@ By submitting a pull request, issue attachment or any other contribution you con
 1. You wrote it yourself, or you have the right to submit it (Developer Certificate of Origin 1.1,
    https://developercertificate.org). Add `Signed-off-by: Your Name <email>` to your commits (`git commit -s`).
 2. It is licensed under the license that applies to the part you changed, as described in
-   [LICENSING.md](LICENSING.md) (platform software: Pin by Pin Lab NonCommercial Software License 1.0;
+   [LICENSING.md](LICENSING.md) (platform software: PolyForm Noncommercial License 1.0.0;
    Arduino/ESP32 teaching examples: MIT; course text and artwork: CC BY-NC-SA 4.0).
 3. You also grant the project owner (Emin Bulut) a perpetual, worldwide, non-exclusive, royalty-free,
    irrevocable license to use, modify, sublicense and relicense your contribution, including under
