@@ -1,0 +1,58 @@
+Pin by Pin Lab NonCommercial Software License 1.0
+Copyright (c) 2026 Emin Bulut
+
+1. Scope and existing rights
+This license covers only copyright owned by Emin Bulut in the platform software
+identified by the accompanying LICENSE and LICENSING.md notices (Software).
+It does not revoke or restrict earlier MIT, Creative Commons or other valid
+grants. Earlier grants remain available for their material, including unchanged
+old material in a later release. New copyrightable contributions first offered
+under these terms are covered unless separately marked. Third-party material
+retains its own terms.
+
+2. Noncommercial permission
+Subject to these terms, you may use, study, copy, modify, redistribute in source
+or compiled form, and host the Software without a fee solely for Noncommercial
+Purposes. These are purposes not primarily intended for or directed toward
+commercial advantage or monetary compensation. Personal learning, hobbies and
+free education not primarily directed at commercial advantage are allowed.
+
+3. Commercial permission reserved
+This license does not authorize selling or licensing the Software, charging for
+access, including it in a paid course, or providing it as a paid, advertising-
+supported, sponsored, affiliate-funded or other revenue-generating product or
+service. A free interface does not authorize such monetization. Commercial use
+of the Software or derivatives requires separate written permission from Emin
+Bulut; request it at https://github.com/emjnbulut. A request is not permission.
+The owner may separately use or license their own work commercially.
+
+4. Notices and redistribution
+Retain this license, copyright notice, applicable third-party notices, and the
+scope/prior-grant notices with copies or substantial portions. Mark your changes.
+Redistribute modifications only on terms preserving these permissions and
+restrictions for covered Software and derivative portions. No trademark rights
+or permission to imply endorsement are granted.
+
+5. Examples, learners and independent work
+Separately identified Arduino/ESP32 teaching examples remain MIT, including
+snippets copied out of a page or downloaded as a sketch. This license does not
+cover or claim ownership of learners' original code or project data. Learned
+ideas, techniques and MIT examples may be used in independent commercial
+projects; that does not authorize copying covered platform code or restricted
+course material. Copyright exceptions and limitations are preserved.
+
+6. Compliance
+Permissions under this license end automatically upon noncompliance. They are
+reinstated automatically if you cure the violation within 30 days of discovering
+it, or upon express reinstatement by the copyright holder. This does not limit
+remedies for prior violations. Other valid grants retain their own terms.
+
+7. Disclaimer
+THE SOFTWARE IS PROVIDED AS IS, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE AND
+NON-INFRINGEMENT. TO THE EXTENT PERMITTED BY LAW, THE COPYRIGHT HOLDER IS NOT
+LIABLE FOR CLAIMS, DAMAGES OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT OR
+OTHERWISE, ARISING FROM THE SOFTWARE OR ITS USE.
+
+This is a custom source-available license, not an OSI-approved open-source
+license and not a Creative Commons license.
