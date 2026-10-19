@@ -30,6 +30,7 @@ export const TR_LESSONS={
  nowait:{"title": "Aynı anda iki iş","tag": "MEYDAN OKUMA","intro": "LED yanıp sönerken butonu da dinlemek istiyoruz. Her basış yanıp sönmeyi durdurur ya da yeniden başlatır. Önce delay() sürümünde butona birkaç kez kısaca bas. Sonra millis() sürümüne geç ve üst üste üç basışı kaçırmadan yakala.","hint": "delay() beklerken ESP32 butona hiç bakmaz; buton yalnızca beklemelerin arasında okunur. millis() sürümünde loop hiç beklemez."}
 };
 export const TR={
+ 'Licenses':'Lisanslar',
  'Pin by Pin Lab — It starts with a pin.':'Pin by Pin Lab — Bir pinle başlar.',
  'Skip to content':'İçeriğe geç',
  'Start without a kit. Build, test and learn step by step with ESP32 From Zero. A free electronics workshop.':'Kitin olmadan başla. ESP32 From Zero ile adım adım devre kur, dene ve öğren. Ücretsiz elektronik atölyesi.',

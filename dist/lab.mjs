@@ -1,5 +1,6 @@
 // Wokwi-style lab: code editor + circuit editor + simulator + serial monitor.
 // Used by missions (with goal checks) and by the free workshop (with saved projects).
+import {sketchDownload} from './sketch-export.mjs';
 import {Simulator} from './sim/runtime.mjs';
 import {PARTS,PITCH,partPins,pinPos,LED_COLORS,ESP_GPIO} from './sim/circuit.mjs';
 import {partSvg,partIcon,fmtOhms} from './sim/parts-view.mjs';
@@ -78,7 +79,7 @@ export class Lab{
   this.$('#lab-sound').onclick=e=>{this.sound=!this.sound;e.currentTarget.textContent=this.sound?'🔊':'🔇';e.currentTarget.setAttribute('aria-pressed',String(this.sound));if(!this.sound)this.stopAudio();};
   this.$('#lab-clear').onclick=()=>{if(this.sim)this.sim.out='';this.lastOut='';this.$('#lab-out').textContent='';};
   this.$('#lab-baud').onchange=e=>{this.baud=Number(e.target.value);this.lastOut=null;};
-  this.$('#lab-ino').onclick=()=>{const url=URL.createObjectURL(new Blob([this.code],{type:'text/plain'}));const a=document.createElement('a');a.href=url;a.download='sketch.ino';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+  this.$('#lab-ino').onclick=()=>{const url=URL.createObjectURL(new Blob([sketchDownload(this.code)],{type:'text/plain'}));const a=document.createElement('a');a.href=url;a.download='sketch.ino';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
   this.root.querySelectorAll('[data-labtab]').forEach(b=>b.onclick=()=>{this.tab=b.dataset.labtab;this.root.querySelector('.lab').dataset.tab=this.tab;this.root.querySelectorAll('[data-labtab]').forEach(x=>x.setAttribute('aria-selected',String(x===b)));if(this.tab==='circuit')requestAnimationFrame(()=>{this.fit();this.render();});});
   this.$('#lab-undo').onclick=()=>this.undo();this.$('#lab-redo').onclick=()=>this.redo();this.$('#lab-cancel').onclick=()=>{this.wiring=null;this.render();};
   this.root.addEventListener('keydown',e=>{if(e.target===this.ta||!(e.ctrlKey||e.metaKey))return;const k=e.key.toLowerCase();if(k==='z'&&!e.shiftKey){e.preventDefault();this.undo();}else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();this.redo();}});

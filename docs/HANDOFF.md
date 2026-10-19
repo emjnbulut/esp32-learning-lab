@@ -1,5 +1,11 @@
 # Development handoff — 2026-10-19 (1.0)
 
+
+## Licensing update — 2026-10-19
+
+Owner's policy: MIT teaching sketches; custom Pin by Pin Lab NonCommercial Software License 1.0 for new original platform code; CC BY-NC-SA 4.0 for new course prose/art. Read ../LICENSING.md before changing notices. Earlier MIT grants through 23f45a3 remain valid, including commercial use. Third-party rights and learners' work remain separate. Public licensing.html is bilingual; dist/licenses/ copies must match LICENSES/. Footer links the page. sketch-export.mjs adds an MIT notice to .ino downloads for provided examples only. Unit releases and progression were not changed.
+
+
 Project: Pin by Pin Lab, a free hands-on ESP32 course site parallel to ESP32 From Zero. The owner wants it to work
 like Wokwi: practice first (real code, real wiring, Run), quizzes second. Distinctive design, not an AI template.
 

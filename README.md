@@ -51,3 +51,15 @@ projects under `pin-by-pin-projects-v1`, language under `pin-by-pin-lang`. There
 authentication. Published with GitHub Pages (see below).
 
 See `docs/HANDOFF.md`, `docs/ROADMAP.md`, `docs/CURRICULUM.md` and `docs/REBUILD.md`.
+
+## License
+
+Personal learning remains free. Arduino/ESP32 teaching snippets are **MIT**, including use in
+your own commercial projects. New original platform software uses the **Pin by Pin Lab
+NonCommercial Software License 1.0**; paid, ad-supported or other commercial reuse requires
+separate written permission. New original course text/artwork is **CC BY-NC-SA 4.0**.
+
+Earlier MIT platform rights, third-party licenses and learners' own work remain valid.
+New restrictions cover new copyrightable contributions, not already-released old code.
+See [LICENSING.md](LICENSING.md), [LICENSE](LICENSE), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md),
+and the public [license page](dist/licensing.html).

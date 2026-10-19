@@ -10,7 +10,7 @@
     "e2e": "node --test tests/e2e.test.mjs"
   },
   "description": "Pin by Pin Lab: a free guided ESP32 learning workshop",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "devDependencies": {
     "playwright": "1.48.2"
   }
