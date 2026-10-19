@@ -24,6 +24,8 @@ first builder); do not create another Site.
 - `i18n.mjs` — Turkish: `TR` (English UI string → Turkish, also sketch comments and warning templates),
   `TR_LESSONS`, `TR_UNITS`, `TR_MISSIONS` (same shape as missions, arrays by index).
 
+- `releases.mjs` — which units are public (`PUBLIC_RELEASED`). `model.mjs` `canOpen`/`unitOpen` refuse closed units; `app.mjs` shows only released lessons. Units 3–5 exist but wait for their videos.
+
 ## Rules
 
 - English is the source text. Wrap UI strings in `t('…')`; `tests/i18n.test.mjs` fails on anything untranslated.

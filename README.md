@@ -40,6 +40,10 @@ float, String), arrays, functions, control flow, `#define`, `Serial` (print/prin
 interrupts are reported as unsupported. The circuit solver is DC with piecewise-linear diodes (LED forward voltages,
 ~10 Ω GPIO output resistance, 45 kΩ pull-ups); PWM brightness is averaged by duty cycle.
 
+## Releasing units
+
+Only the units listed in `dist/releases.mjs` (`PUBLIC_RELEASED`) are open on the public site; the other units show as "waiting for the video" and cannot be opened, not even by URL. Add a unit number to the list on the day its video is published. Tests open everything with `RELEASE_ALL=1` (`npm run check` and `npm run e2e` do this; `tests/release.test.mjs` checks the public list).
+
 ## Data and access
 
 Progress lives in localStorage under `pin-by-pin-progress-v1`, mission work under `pin-by-pin-work-v1`, workshop

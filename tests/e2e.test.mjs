@@ -3,7 +3,7 @@ import {MISSIONS} from '../dist/missions.mjs';
 const PORT=4300+Math.floor(Math.random()*500),BASE=`http://127.0.0.1:${PORT}/`;
 const KEY='pin-by-pin-progress-v1';
 let server,browser;
-test.before(async()=>{server=spawn(process.execPath,['tools/serve.mjs'],{env:{...process.env,PORT:String(PORT)},stdio:['ignore','pipe','inherit']});await new Promise(r=>server.stdout.once('data',r));browser=await chromium.launch();});
+test.before(async()=>{server=spawn(process.execPath,['tools/serve.mjs'],{env:{...process.env,PORT:String(PORT),RELEASE_ALL:'1'},stdio:['ignore','pipe','inherit']});await new Promise(r=>server.stdout.once('data',r));browser=await chromium.launch();});
 test.after(async()=>{await browser?.close();server?.kill();});
 async function open(hash='',{completed=[],width=1440,height=900,lang}={}){
  const context=await browser.newContext({viewport:{width,height},acceptDownloads:true});const page=await context.newPage();const errors=[];
@@ -68,7 +68,7 @@ test('experienced learners test out of unit 1 with the checkpoint',async()=>{con
  await page.click('#cp-submit');await page.click('#cp-submit');await page.waitForSelector('.success');await page.click('.success [data-nav="home"]');await page.waitForSelector('.lesson-node');assert.equal(await page.locator('[data-lesson="circuit"].lesson-node').isDisabled(),false);await page.close();});
 
 test('notebook export, reset and import',async()=>{const page=await open('#/notebook',{completed:['hello','serial']});await page.waitForSelector('#export-progress');const [d]=await Promise.all([page.waitForEvent('download'),page.click('#export-progress')]);const file=await d.path();
- await page.click('#reset-progress');await page.waitForFunction(()=>document.querySelector('.stat-star b').textContent==='0');await page.setInputFiles('#progress-file',file);await page.waitForFunction(()=>document.querySelector('.stat-star b').textContent!=='0');await page.close();});
+ await page.click('#reset-progress');await page.waitForFunction(()=>document.querySelector('.stat-tasks b').textContent==='0');await page.setInputFiles('#progress-file',file);await page.waitForFunction(()=>document.querySelector('.stat-tasks b').textContent!=='0');await page.close();});
 
 test('phone width: lab tabs switch between code, circuit and serial without page scroll',async()=>{const page=await open('#/lesson/blink',{completed:[...U1,...U2],width:390,height:844});await lab(page);
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);assert.equal(await page.locator('.lab-code').isVisible(),true);await page.click('[data-labtab="circuit"]');assert.equal(await page.locator('#lab-svg').isVisible(),true);
@@ -113,3 +113,11 @@ test('a second breadboard can be added, moved on its own, and old duplicate ids 
  // a project saved by an older version with two breadboards named "bb"
  await page.evaluate(()=>{const ps=JSON.parse(localStorage.getItem('pin-by-pin-projects-v1'));const d=ps.list[0].diagram;d.parts.push({id:'bb',type:'breadboard',x:400,y:0,rot:0,attrs:{}});localStorage.setItem('pin-by-pin-projects-v1',JSON.stringify(ps));});
  await page.reload();await lab(page);const ids2=await page.evaluate(()=>document.querySelector('#lab-root').__lab.diagram.parts.map(p=>p.id));assert.equal(new Set(ids2).size,ids2.length);assert.deepEqual(page.errors,[]);await page.close();});
+
+test('the public site: only released units are open, the rest wait for their video',async()=>{const P2=PORT+700;const srv=spawn(process.execPath,['tools/serve.mjs'],{env:{...process.env,PORT:String(P2),RELEASE_ALL:''},stdio:['ignore','pipe','inherit']});await new Promise(r=>srv.stdout.once('data',r));
+ try{const context=await browser.newContext({viewport:{width:1440,height:900}});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(`http://127.0.0.1:${P2}/`);await page.waitForSelector('.lesson-node');
+  assert.equal(await page.locator('.unit').count(),2);assert.equal(await page.locator('.upcoming').count(),9);assert.match(await page.locator('.upcoming').first().innerText(),/WAITING FOR THE VIDEO/);assert.equal(await page.locator('[data-lesson="blink"]').count(),0);
+  assert.match(await page.locator('.stat-tasks').innerText(),/\/ 1[0-9] tasks/);
+  await page.goto(`http://127.0.0.1:${P2}/#/lesson/blink`);await page.waitForSelector('.lesson-node');assert.equal(await page.locator('.mission-panel').count(),0,'closed unit cannot be opened by URL');
+  await page.goto(`http://127.0.0.1:${P2}/#/workshop`);await page.waitForSelector('#ws-example');const opts=await page.locator('#ws-example option').allInnerTexts();assert.ok(opts.some(o=>/Hello/.test(o)));assert.ok(!opts.some(o=>/Blink an LED|Read a button/.test(o)),'examples of closed units are hidden: '+opts.join('|'));
+  assert.deepEqual(errors,[]);await context.close();}finally{srv.kill();}});

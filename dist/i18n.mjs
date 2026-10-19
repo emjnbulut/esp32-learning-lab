@@ -80,7 +80,7 @@ export const TR={
  'Your progress is saved in this browser.<br>You can download a copy from My notebook.':'İlerlemen bu tarayıcıda saklanır.<br>Defterim’den bir kopya alabilirsin.',
  'YOUR WORKSHOP NOTEBOOK':'KİŞİSEL ATÖLYE DEFTERİN',
  'What you’ve learned.':'Öğrendiklerin burada.',
- '{n} tasks · {xp} XP · you practised on {d} different days.':'{n} görev · {xp} XP · {d} farklı günde çalıştın.',
+ '{n} tasks · you practised on {d} different days.':'{n} görev · {d} farklı günde çalıştın.',
  'This record lives only in this browser. Download a copy before switching devices.':'Bu kayıt yalnızca bu tarayıcıda tutulur. Cihaz değiştirmeden önce bir kopya indir.',
  'UNIT':'ÜNİTE',
  'Repeat ↗':'Tekrar et ↗',
@@ -138,7 +138,6 @@ export const TR={
  'Complete task ↗':'Görevi tamamla ↗',
  'FREE WORKSHOP':'SERBEST ATÖLYE',
  'Change a connection.':'Bir bağlantıyı değiştir.',
- 'Experiment with the first LED circuit. This space gives no XP; it is always open for curiosity.':'İlk LED devresiyle denemeler yap. Bu alan ilerleme puanı vermez; merak etmek için her zaman açık.',
  'ONE MORE STEP DONE':'BİR ADIM DAHA ATTIN',
  'Your first light is on.':'İlk ışığın yandı.',
  'You set the rhythm.':'Ritmi sen belirledin.',
@@ -148,7 +147,7 @@ export const TR={
  'Now you know this.':'Artık bunu biliyorsun.',
  'You completed {title}.':'{title} görevini tamamladın.',
  'Your wiring and your program’s behaviour meet the goal of this lesson.':'Bağlantın ve programının davranışı bu dersin hedefini karşılıyor.',
- 'COMPLETED AGAIN · XP ALREADY EARNED':'TEKRAR TAMAMLANDI · XP ZATEN KAZANILMIŞTI',
+ 'COMPLETED AGAIN':'TEKRAR TAMAMLANDI',
  'Next step ↗':'Sıradaki adım ↗',
  'Explore the workshop ↗':'Atölyede keşfet ↗',
  'Task completed.':'Görev tamamlandı.',
@@ -280,7 +279,6 @@ Object.assign(TR_LESSONS,{
 Object.assign(TR,{
  'PASSED':'SINAVLA GEÇİLDİ',
  'Program':'Program',
- 'Build freely: an LED, a resistor and a button on the breadboard, or mix colors and turn a knob. No XP here; it is always open for curiosity.':'Serbestçe kur: breadboard’da LED, direnç ve buton; ya da renk karıştır ve düğme çevir. Burada XP yok; merak etmek için her zaman açık.',
  'Workshop area':'Atölye alanı',
  'Breadboard':'Breadboard',
  'PWM & color':'PWM ve renk',
@@ -920,3 +918,4 @@ Object.assign(TR_MISSIONS,{
   ]
  }
 });
+Object.assign(TR,{'WAITING FOR THE VIDEO':'VİDEO BEKLENİYOR'});

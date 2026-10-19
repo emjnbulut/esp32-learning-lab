@@ -17,4 +17,4 @@ Every available unit ends with a checkpoint (5 questions, 4 to pass) that experi
 
 Unit 5 is written before source episode 5 exists. Pins (LED 23, RGB 25/26/27, potentiometer 34) and `analogWrite()` (ESP32 core 3.x) are assumptions; align them when the episode is recorded and set `source` on unit 5 in `model.mjs`.
 
-Principles: a short explanation, a concrete action, feedback, and independent transfer. No paywall or lives system. Current XP rewards completion once, not repeated clicking. Future task validation must accept equivalent correct circuits instead of checking one exact layout.
+Principles: a short explanation, a concrete action, feedback, and independent transfer. No paywall or lives system. There are no points or XP: progress is just the list of finished tasks. Future task validation must accept equivalent correct circuits instead of checking one exact layout.
