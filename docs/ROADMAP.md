@@ -1,5 +1,8 @@
 # Roadmap
 
+## 1.0 — Hands-on rebuild (done 2026-10-19)
+Own browser simulator (Arduino C interpreter + circuit solver), Wokwi-style lab, 15 missions from episodes 1–4 (+ planned 5) with live goal checks, workshop projects. Next: unit 6 (LDR module, active/passive buzzer with `tone`) with an LDR part; Serial input in the monitor; `attachInterrupt` for unit 8; OLED/DHT parts for unit 7; a breadboard layout where the board straddles the board like in the videos.
+
 ## 0.1 — First three units
 Learning path, 9 tasks, local progress, guided LED circuit model, downloadable Arduino code. All later units explicitly marked preparing.
 

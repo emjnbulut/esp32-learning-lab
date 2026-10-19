@@ -9,7 +9,7 @@ function hash(a,b){let h=(a*374761393+b*668265263)|0;h=Math.imul(h^(h>>>13),1274
 export class Simulator{
  constructor(diagram,code){this.diagram=diagram;this.code=code;this.baud=115200;this.reset();}
  reset(){this.clock=0;this.deadline=0;this.now=0;this.pins={};this.out='';this.serialLog=[];this.ledLog=[];this.writes=[];this.events=[];this.warnings=[];this.warned=new Set();
-  this.leds={};this.buzzers={};this.status='idle';this.error=null;this.begun=false;this.codeBaud=null;this.dirty=true;this.contactSig='';this.seed=1;this.rand=null;
+  this.leds={};this.ledI={};this.logged={};this.buzzers={};this.status='idle';this.error=null;this.begun=false;this.codeBaud=null;this.dirty=true;this.contactSig='';this.seed=1;this.rand=null;
   this.inputs={};for(const p of this.diagram.parts){if(p.type==='button')this.inputs[p.id]={down:false,ev:[]};if(p.type==='pot')this.inputs[p.id]={pos:p.attrs.pos??0.5};}}
  compile(){try{this.program=compile(this.code);return null;}catch(e){if(e instanceof CodeError)return e;throw e;}}
  start(){this.reset();const e=this.compile();if(e){this.error=e;this.status='error';return e;}
@@ -25,7 +25,8 @@ export class Simulator{
   while(this.now<end&&this.status==='running'){const next=todo.length?Math.min(todo[0].at*1000,end):end;const step=Math.min(next-this.now,10000);if(step>0)this.advance(step);
    while(todo.length&&todo[0].at*1000<=this.now){const a=todo.shift();if(a.press!==undefined)this.press(a.press,true);if(a.release!==undefined)this.press(a.release,false);if(a.pot!==undefined)this.setPot(a.pot,a.pos);}}
   return this;}
- warn(key,msg){if(this.warned.has(key))return;this.warned.add(key);this.warnings.push({key,msg,t:this.clock/1000});}
+ // warnings keep an English template so the UI can translate them; msg is the filled-in English text
+ warn(key,tpl,vars={}){if(this.warned.has(key))return;this.warned.add(key);let msg=tpl;for(const k in vars)msg=msg.split('{'+k+'}').join(vars[k]);this.warnings.push({key,tpl,vars,msg,t:this.clock/1000});}
  random(){if(this.rand)return this.rand();return Math.random();}
  randomSeed(s){let x=(Number(s)>>>0)||1;this.rand=()=>{x^=x<<13;x>>>=0;x^=x>>>17;x^=x<<5;x>>>=0;return x/4294967296;};}
  // ---------- inputs ----------
@@ -34,11 +35,11 @@ export class Simulator{
  contact(part,t){const s=this.inputs[part.id];const e=s.ev.filter(x=>x.t<=t).pop();if(!e)return false;const dt=t-e.t;
   if(part.attrs.bounce&&dt<e.dur){const slot=Math.floor(dt/500);return hash(slot,Math.round(e.t))<0.5?!e.down:e.down;}return e.down;}
  // ---------- host API used by the interpreter ----------
- gpioOk(pin,fn){pin=Number(pin);if(!(pin in GPIO_PIN)){this.warn('pin'+pin,`GPIO ${pin} is not on this ESP32 DevKit board (${fn}). Check the pin number.`);return false;}
-  if(pin===1||pin===3)this.warn('uart'+pin,`GPIO ${pin} is used by the USB serial connection. Pick another pin.`);return true;}
+ gpioOk(pin,fn){pin=Number(pin);if(!(pin in GPIO_PIN)){this.warn('pin'+pin,'GPIO {pin} is not on this ESP32 DevKit board ({fn}). Check the pin number.',{pin,fn});return false;}
+  if(pin===1||pin===3)this.warn('uart'+pin,'GPIO {pin} is used by the USB serial connection. Pick another pin.',{pin});return true;}
  pin(p){return this.pins[p]||(this.pins[p]={mode:null,out:0,duty:null,tone:null});}
- pinMode(p,m){if(!this.gpioOk(p,'pinMode'))return;const s=this.pin(p);s.mode=MODE[m]||'INPUT';if(s.mode==='OUTPUT'&&INPUT_ONLY.has(Number(p)))this.warn('io'+p,`GPIO ${p} is input-only: it cannot drive an LED. Use a pin such as 23 or 25.`);this.dirty=true;this.refresh();}
- digitalWrite(p,v){if(!this.gpioOk(p,'digitalWrite'))return;const s=this.pin(p);if(s.mode!=='OUTPUT'){if(s.mode&&s.mode.startsWith('INPUT')){s.mode=v?'INPUT_PULLUP':'INPUT';}else this.warn('nomode'+p,`digitalWrite(${p}) before pinMode(${p}, OUTPUT): the pin is not driven.`);}
+ pinMode(p,m){if(!this.gpioOk(p,'pinMode'))return;const s=this.pin(p);s.mode=MODE[m]||'INPUT';if(s.mode==='OUTPUT'&&INPUT_ONLY.has(Number(p)))this.warn('io'+p,'GPIO {pin} is input-only: it cannot drive an LED. Use a pin such as 23 or 25.',{pin:p});this.dirty=true;this.refresh();}
+ digitalWrite(p,v){if(!this.gpioOk(p,'digitalWrite'))return;const s=this.pin(p);if(s.mode!=='OUTPUT'){if(s.mode&&s.mode.startsWith('INPUT')){s.mode=v?'INPUT_PULLUP':'INPUT';}else this.warn('nomode'+p,'digitalWrite({pin}) before pinMode({pin}, OUTPUT): the pin is not driven.',{pin:p});}
   s.out=v?1:0;s.duty=null;this.writes.push({t:this.clock/1000,pin:Number(p),v:s.out});this.dirty=true;this.refresh();}
  analogWrite(p,v){if(!this.gpioOk(p,'analogWrite'))return;const s=this.pin(p);s.mode='OUTPUT';const d=Math.min(255,Math.max(0,Math.round(v)))/255;s.duty=d>0&&d<1?d:null;s.out=d>=1?1:0;if(s.duty!==null)s.out=0;this.writes.push({t:this.clock/1000,pin:Number(p),v:Math.round(d*255),pwm:true});this.dirty=true;this.refresh();}
  ledcAttach(p){this.pin(p).mode='OUTPUT';return 1;}
@@ -48,9 +49,9 @@ export class Simulator{
  attachInterrupt(){throw new CodeError('attachInterrupt() is not supported in the simulator yet. Read the pin in loop() instead.');}
  detachInterrupt(){}
  digitalRead(p){if(!this.gpioOk(p,'digitalRead'))return 0;const s=this.pin(p);if(s.mode==='OUTPUT')return s.duty!==null?(s.duty>=0.5?1:0):s.out;
-  if(!s.mode)this.warn('nomodeR'+p,`digitalRead(${p}) before pinMode(${p}, INPUT…).`);this.ensure();const n=this.nodeOf(p);
+  if(!s.mode)this.warn('nomodeR'+p,'digitalRead({pin}) before pinMode({pin}, INPUT…).',{pin:p});this.ensure();const n=this.nodeOf(p);
   if(!n||!this.sol.driven(n))return this.random()<0.5?0:1;return this.sol.v(n)>V33/2?1:0;}
- analogRead(p){if(!this.gpioOk(p,'analogRead'))return 0;if(![32,33,34,35,36,39,4,0,2,15,13,12,14,27,25,26].includes(Number(p)))this.warn('adc'+p,`GPIO ${p} cannot read analog values.`);
+ analogRead(p){if(!this.gpioOk(p,'analogRead'))return 0;if(![32,33,34,35,36,39,4,0,2,15,13,12,14,27,25,26].includes(Number(p)))this.warn('adc'+p,'GPIO {pin} cannot read analog values.',{pin:p});
   this.ensure();const n=this.nodeOf(p);if(!n||!this.sol.driven(n))return Math.floor(this.random()*4096);
   const raw=Math.round(this.sol.v(n)/V33*4095+(this.random()*4-2));return Math.max(0,Math.min(4095,raw));}
  serial(m,args,types){
@@ -85,14 +86,14 @@ export class Simulator{
   // PWM pins: average each LED between its LOW and HIGH state, weighted by duty
   const pwm=Object.entries(this.pins).filter(([g,s])=>s.mode==='OUTPUT'&&s.duty!==null);
   for(const [g,s] of pwm){const hiEls=this.elements({[g]:1});solve(hiEls);for(const e of hiEls)if(e.t==='D'){const key=e.tag.ch?e.tag.led+':'+e.tag.ch:e.tag.led;leds[key]+=(e.i-(els.find(x=>x.t==='D'&&x.tag.led===e.tag.led&&x.tag.ch===e.tag.ch)?.i||0))*s.duty;}
-   for(const e of hiEls)if(e.tag?.buzzer&&Math.abs(e.i)>0.005)this.buzzers[e.tag.buzzer]=s.tone?s.tone.f:0;}
+  }
   for(const e of els){
-   if(e.tag?.gpio!==undefined&&Math.abs(e.i)>0.04)this.warn('over'+e.tag.gpio,`GPIO ${e.tag.gpio} is supplying ${Math.round(Math.abs(e.i)*1000)} mA: that is a short circuit or a missing resistor. A real pin can be damaged.`);
-   if(e.tag?.src&&e.i>0.5)this.warn('short'+e.tag.src,`Short circuit: ${e.tag.src} is connected straight to GND. Remove that wire.`);
-   if(e.t==='D'&&e.i>0.03)this.warn('led'+e.tag.led+(e.tag.ch||''),`${e.tag.led} gets about ${Math.round(e.i*1000)} mA. A real LED burns out without a resistor: add 220 Ω in series.`);}
+   if(e.tag?.gpio!==undefined&&Math.abs(e.i)>0.04)this.warn('over'+e.tag.gpio,'GPIO {pin} is supplying {mA} mA: that is a short circuit or a missing resistor. A real pin can be damaged.',{pin:e.tag.gpio,mA:Math.round(Math.abs(e.i)*1000)});
+   if(e.tag?.src&&e.i>0.5)this.warn('short'+e.tag.src,'Short circuit: {src} is connected straight to GND. Remove that wire.',{src:e.tag.src});
+   if(e.t==='D'&&e.i>0.03)this.warn('led'+e.tag.led+(e.tag.ch||''),'{part} gets about {mA} mA. A real LED burns out without a resistor: add 220 Ω in series.',{part:e.tag.led,mA:Math.round(e.i*1000)});}
   const bz={};for(const e of els)if(e.tag?.buzzer){const on=Math.abs(e.i)>0.005;const drv=Object.entries(this.pins).find(([g,s])=>s.tone&&this.node(this.board.id+':'+GPIO_PIN[g])===e.a);if(drv)bz[e.tag.buzzer]=drv[1].tone.f;else if(on)bz[e.tag.buzzer]=(this.diagram.parts.find(p=>p.id===e.tag.buzzer).attrs.kind==='active'?2300:0);}
   this.buzzers=bz;
-  const t=this.clock/1000;for(const [key,i] of Object.entries(leds)){const b=Math.max(0,Math.min(1,i/LED_FULL));const prev=this.leds[key];if(prev===undefined||Math.abs(prev-b)>0.02){this.ledLog.push({t,id:key,b});if(this.ledLog.length>6000)this.ledLog.splice(0,2000);}this.leds[key]=b;}}
+  this.ledI=leds;const t=this.clock/1000;for(const [key,i] of Object.entries(leds)){const b=Math.max(0,Math.min(1,i/LED_FULL));const prev=this.logged[key];if(prev===undefined||Math.abs(prev-b)>0.02||(b===0)!==(prev===0)){this.logged[key]=b;this.ledLog.push({t,id:key,b});if(this.ledLog.length>6000)this.ledLog.splice(0,2000);}this.leds[key]=b;}}
  // ---------- view for the UI ----------
  view(){return {leds:this.leds,buzzers:this.buzzers,pressed:Object.fromEntries(Object.entries(this.inputs).filter(([k,s])=>'down' in s).map(([k,s])=>[k,s.down])),pots:Object.fromEntries(Object.entries(this.inputs).filter(([k,s])=>'pos' in s).map(([k,s])=>[k,s.pos])),builtin:this.pins[2]?.mode==='OUTPUT'?(this.pins[2].duty??this.pins[2].out):0,time:this.now/1000};}
 }

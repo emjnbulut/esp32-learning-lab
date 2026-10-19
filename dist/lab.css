@@ -1,0 +1,69 @@
+.lab{display:flex;flex-direction:column;height:min(calc(100vh - 120px),860px);min-height:560px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--white)}
+.lab-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--line);background:#f1efe7;flex-wrap:wrap}
+.lab-run{background:#2f9a3c;color:#fff;font-weight:800;border-radius:6px;padding:8px 18px;min-height:38px;font-size:13px}
+.lab-run:hover{background:#278433}.lab-run.on{background:#c0392b}
+.lab-icon{min-width:38px;min-height:38px;border-radius:6px;border:1px solid var(--line);background:var(--white);font-size:16px}
+.lab-time{font:12px var(--mono);color:var(--ink);min-width:78px}
+.lab-status{font-size:11px;color:var(--muted)}
+.lab-spacer{flex:1}
+.lab-tabs{display:none;gap:4px}
+.lab-tabs button{padding:7px 12px;border-radius:6px;border:1px solid var(--line);background:var(--white);font:11px var(--mono)}
+.lab-tabs button[aria-selected=true]{background:var(--ink);color:var(--white)}
+.lab-body{flex:1;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);grid-template-rows:minmax(0,1fr) 200px;grid-template-areas:"code diagram" "code serial";min-height:0}
+.lab-code{grid-area:code;display:flex;flex-direction:column;border-right:1px solid var(--line);min-height:0;min-width:0}
+.lab-diagram{grid-area:diagram;display:flex;flex-direction:column;min-height:0;min-width:0}
+.lab-serial{grid-area:serial;display:flex;flex-direction:column;border-top:1px solid #2f3b35;min-height:0;background:#1d2622;color:#d8e3dc}
+.lab-head{display:flex;align-items:center;gap:8px;padding:6px 10px;font:10px var(--mono);color:var(--muted);border-bottom:1px solid var(--line);min-height:36px}
+.lab-serial .lab-head{border-color:#2f3b35;color:#9fb0a5}
+.lab-serial select{font:10px var(--mono);background:#26322d;color:#d8e3dc;border:1px solid #3a4a42;border-radius:4px;padding:3px}
+.lab-link{font:10px var(--mono);padding:5px 9px;border-radius:5px;background:var(--white);border:1px solid var(--line);color:var(--ink)}
+.lab-serial .lab-link{background:#26322d;border-color:#3a4a42;color:#d8e3dc}
+.editor{flex:1;display:flex;min-height:0;background:#1e2a25;font:12.5px/1.6 var(--mono)}
+.ed-gutter{margin:0;padding:10px 8px 10px 4px;color:#5f7268;text-align:right;user-select:none;overflow:hidden;background:#19231f;border-radius:0;min-width:40px;font:inherit;white-space:pre}
+.ed-gutter b{color:#fff;background:#a3361f;border-radius:3px;padding:0 3px;font-weight:400}
+.ed-wrap{position:relative;flex:1;min-width:0}
+.ed-hl,.ed-wrap textarea{position:absolute;inset:0;margin:0;padding:10px 12px;font:inherit;white-space:pre;overflow:auto;tab-size:2;border:0;border-radius:0;letter-spacing:0}
+.ed-hl{background:transparent;color:#d8e3dc;pointer-events:none;overflow:hidden}
+.ed-wrap textarea{background:transparent;color:transparent;caret-color:#e5f292;resize:none;outline:none;-webkit-text-fill-color:transparent}
+.ed-wrap textarea::selection{background:#e5f29255}
+.ed-wrap textarea:focus-visible{box-shadow:inset 0 0 0 2px #f28c1c66}
+.c-kw{color:#7fc7ff}.c-fn{color:#e5f292}.c-num{color:#ffb86b}.c-str{color:#a6e3a1}.c-com{color:#7d9286;font-style:italic}.c-pre{color:#f5a3c7}
+.lab-error{padding:9px 12px;background:#fff0ea;color:#8f2e19;font-size:12px;line-height:1.5;border-top:1px solid #f1c4b5}
+.lab-error b{font:700 11px var(--mono);margin-right:6px}
+.lab-canvas{position:relative;flex:1;min-height:0;background-color:#eef0e8;background-image:radial-gradient(#cfd5c6 1px,transparent 1px);background-size:16px 16px;overflow:hidden}
+#lab-svg{width:100%;height:100%;display:block;touch-action:none;outline:none;user-select:none}
+.lab-zoom{position:absolute;right:10px;bottom:10px;display:flex;gap:4px}
+.lab-zoom button{width:34px;height:34px;border-radius:6px;background:var(--white);border:1px solid var(--line);font-size:15px}
+.lab-tip{position:absolute;pointer-events:none;background:#243c35;color:#fff;font:10px var(--mono);padding:3px 7px;border-radius:4px;white-space:nowrap;z-index:3}
+.lab-props{position:absolute;top:10px;right:10px;width:230px;background:var(--white);border:1px solid var(--line);border-radius:8px;padding:12px;display:grid;gap:8px;box-shadow:0 6px 18px #0000001a;font-size:12px;z-index:2}
+.lab-props small{font:10px var(--mono);color:var(--muted)}
+.lab-props label{display:grid;gap:4px;font-size:11px}
+.lab-props label.check{display:flex;align-items:center;gap:6px}
+.lab-props select{padding:6px;border:1px solid var(--line);border-radius:5px;background:var(--white)}
+.prop-row{display:flex;gap:6px}
+.prop-row button,.lab-del{padding:7px 10px;border-radius:5px;border:1px solid var(--line);background:var(--paper);font-size:11px}
+.lab-del{color:#a3361f}
+.swatches{display:flex;gap:5px;flex-wrap:wrap}.swatches button{width:22px;height:22px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #0003}
+.lab-palette{position:absolute;top:8px;right:10px;width:270px;max-height:calc(100% - 16px);overflow:auto;background:var(--white);border:1px solid var(--line);border-radius:8px;padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;box-shadow:0 6px 18px #0000001a;z-index:4}
+.lab-palette[hidden]{display:none}
+.lab-palette button{display:grid;justify-items:center;gap:4px;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--paper);font-size:10px}
+.lab-palette button:hover{border-color:var(--ink)}
+.lab-palette svg{width:64px;height:46px}
+.lab-inputs{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:6px 10px;border-top:1px solid var(--line);font:10px var(--mono)}
+.lab-inputs:empty{display:none}
+.lab-inputs label{display:flex;align-items:center;gap:6px}
+.lab-press{padding:7px 12px;border-radius:5px;border:1px solid var(--ink);background:var(--white);font:700 11px var(--sans);touch-action:none;user-select:none}
+.lab-press.down{background:var(--lime)}.lab-press:disabled{opacity:.4}
+.lab-warn p{margin:0;padding:6px 10px;background:#4a3a16;color:#ffd98a;font-size:11px;line-height:1.5;border-bottom:1px solid #5f4a1c}
+.lab-out{flex:1;margin:0;padding:8px 12px;background:transparent;color:#d8e3dc;font:12px/1.5 var(--mono);overflow:auto;border-radius:0;white-space:pre-wrap}
+.part.selected .sel-box{fill:none;stroke:#f28c1c;stroke-width:1;stroke-dasharray:3 2}
+.wire-hit{fill:none;stroke:transparent;stroke-width:8;cursor:pointer}
+.wire-line{fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.wire.selected .wire-line{stroke-width:3.2}
+.wire-preview{fill:none;stroke:#f28c1c;stroke-width:2;stroke-dasharray:4 3;pointer-events:none}
+.pin-hover{fill:#f28c1c55;stroke:#f28c1c;stroke-width:1;pointer-events:none}
+.part{cursor:grab}.is-running .part{cursor:default}.is-running .part-button,.is-running .part-pot{cursor:pointer}
+@media(max-width:900px){.lab{height:calc(100vh - 90px);min-height:520px}.lab-tabs{display:flex}.lab-time{min-width:0}.lab-status{display:none}
+ .lab-body{grid-template-columns:1fr;grid-template-rows:1fr;grid-template-areas:"main"}.lab-body>section{display:none;grid-area:main;border:0}
+ .lab[data-tab=code] .lab-code,.lab[data-tab=circuit] .lab-diagram,.lab[data-tab=serial] .lab-serial{display:flex}}
+.lab-props[hidden],.lab-tip[hidden],.lab-error[hidden]{display:none}

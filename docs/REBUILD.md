@@ -13,11 +13,13 @@ episodes; quizzes stay but are secondary. The free workshop becomes a Wokwi-like
 3. [x] `dist/sim/runtime.mjs` — Simulator: pin modes, PWM, tone, contact bounce, pot, Serial, warnings,
    LED/serial logs for goal checks (`tests/sim.test.mjs`, runs the real episode sketches when the
    sibling `esp32-from-zero` repo is present).
-4. [ ] Lab UI (`dist/lab.mjs`): code editor, SVG diagram editor (parts, wires, rotate, delete, props),
+4. [x] Lab UI (`dist/lab.mjs`): code editor, SVG diagram editor (parts, wires, rotate, delete, props),
    run/stop, serial monitor, interactive parts while running; project storage.
-5. [ ] Missions: each unit = hands-on projects with starter code/diagram, steps, live goal checks, hints,
+5. [x] Missions: each unit = hands-on projects with starter code/diagram, steps, live goal checks, hints,
    solution; quizzes and checkpoints kept as secondary. Every mission solution is run headless in tests.
-6. [ ] Workshop = free Lab with saved projects, import/export, .ino download.
-7. [ ] TR translations (Sonnet low subagent), e2e tests, screenshots, docs.
+6. [x] Workshop = free Lab with saved projects, import/export, .ino download.
+7. [x] TR translations (Sonnet low subagent), e2e tests, screenshots, docs.
 
 Units 1–5 follow episodes 01–04 (+ planned 05). Pins: LED 23, button 22, second LED 25, RGB 25/26/27, pot 34.
+
+Status 2026-10-19: 1.0 done — 15 missions (units 1–5), quizzes and checkpoints secondary, Wokwi-style workshop.

@@ -348,3 +348,412 @@ Object.assign(TR,{
  '0–4095':'0–4095',
  'video coming soon':'video yakında'
 });
+
+// Turkish mission text (title, intro, steps[], hints[], goals[] by index) — see dist/missions.mjs
+export const TR_MISSIONS={
+ "hello": {
+  "title": "Merhaba, ESP32!",
+  "intro": "Tarayıcıda 1. bölüm: sürücü yok, kablo yok. ESP32’n seninle Serial Monitor üzerinden konuşur.",
+  "steps": [
+   "setup() içinde seri bağlantıyı başlat: `Serial.begin(115200);`",
+   "Sonraki satırda bir selam yazdır: `Serial.println(\"Hello, ESP32!\");`",
+   "▶ Çalıştır’a bas ve devrenin altındaki Serial Monitor’ü izle."
+  ],
+  "hints": [
+   "Her kod satırı noktalı virgül ; ile biter.",
+   "Metin çift tırnak içine yazılır: \"Hello, ESP32!\". Büyük/küçük harf önemlidir: Serial, println."
+  ],
+  "goals": [
+   "Serial 115200 baud ile başlatıldı",
+   "Monitörde Hello, ESP32! görünüyor",
+   "Selam bir kez görünüyor, tekrar tekrar değil"
+  ]
+ },
+ "counter": {
+  "title": "Saniyeleri say",
+  "intro": "loop() tekrar tekrar çalışır. Tıpkı 1. bölümün sonundaki gibi, onunla sayı say.",
+  "steps": [
+   "loop() içinde değişkene bir ekle: `seconds = seconds + 1;`",
+   "Cümleyi sayıyla birlikte yazdır: `Serial.printf(\"I have been running for %d seconds\\n\", seconds);`",
+   "Bir saniye bekle: `delay(1000);` sonra ▶ Çalıştır’a bas."
+  ],
+  "hints": [
+   "printf içindeki %d, virgülden sonra verdiğin sayıyla değiştirilir.",
+   "delay(1000) olmazsa sayılar saniyede binlerce kez akıp gider."
+  ],
+  "goals": [
+   "“I have been running for N seconds” yazdırıyor",
+   "Sayı her satırda bir artıyor",
+   "Saniyede bir satır"
+  ]
+ },
+ "circuit": {
+  "title": "İlk devren",
+  "intro": "2. bölüm: 3,3 V pininden yanan bir LED. Onu breadboard üzerine kur, sonra Çalıştır’a bas (bu, USB kablosunu takmak demek).",
+  "steps": [
+   "Kartın 3V3 pininden breadboard’un kırmızı + rayına, bir GND pininden de mavi − rayına kablo sürükle.",
+   "Direnci + ray ile boş bir sütun arasına koy (seç ve dik çevirmek için R’ye bas).",
+   "LED’in uzun bacağını (+) direncin olduğu sütuna, kısa bacağını (−) yan sütuna tak.",
+   "Kısa bacağın sütununu − rayına kabloyla bağla. ▶ Çalıştır’a bas."
+  ],
+  "hints": [
+   "Beş delikli her sütun (a–e veya f–j) tek bir bağlantıdır; ortadaki boşluk iki yarıyı ayırır.",
+   "Bir pinin ya da deliğin adını görmek için üzerine gel. LED’in + bacağı anottur.",
+   "LED yanmıyor mu? LED’in yönünü ve iki bacağının farklı sütunlarda olduğunu kontrol et."
+  ],
+  "goals": [
+   "LED yanıyor",
+   "Bir direnç akımı güvenli tutuyor (20 mA altında)",
+   "Kısa devre veya aşırı yük yok"
+  ]
+ },
+ "fix": {
+  "title": "Hataları bul",
+  "intro": "Biri 2. bölümdeki devreyi kurmuş ama LED yanmıyor. Devrede iki klasik hata var. Bul ve düzelt.",
+  "steps": [
+   "▶ Çalıştır’a bas ve Serial Monitor’ün altındaki uyarıları oku.",
+   "Her kabloyu kontrol et: GND gerçekten mavi − rayına gidiyor mu?",
+   "LED’i kontrol et: uzun bacak (+) direnç tarafında mı? Seç ve ters çevirmek için R’ye iki kez bas ya da sürükle."
+  ],
+  "hints": [
+   "Bir kablo GND’yi 3V3’ün hemen yanındaki + rayına bağlıyor: bu bir kısa devre.",
+   "LED ters takılmış: + bacağı dirençten uzağa bakıyor."
+  ],
+  "goals": [
+   "Kısa devre yok",
+   "LED yanıyor"
+  ]
+ },
+ "blink": {
+  "title": "LED’i yakıp söndür",
+  "intro": "3. bölüm: direnci 3V3’ten GPIO 23’e taşı, böylece programın LED’i açıp kapatabilsin.",
+  "steps": [
+   "3V3’ten gelen kırmızı kabloyu sil (tıkla, Delete’e bas).",
+   "Direnci bir ucu boş bir sütunda olacak şekilde taşı ve D23’ü o sütuna kabloyla bağla. LED öbür uçta eskisi gibi kalsın.",
+   "setup() içinde: `pinMode(LED_PIN, OUTPUT);` ve `Serial.begin(115200);`",
+   "loop() içinde: `digitalWrite(LED_PIN, HIGH);`, \"LED on\" yazdır, `delay(500);`, sonra aynısını LOW ve \"LED off\" ile yap. ▶ Çalıştır’a bas."
+  ],
+  "hints": [
+   "HIGH pine 3,3 V verir, LOW 0 V verir.",
+   "LED hep yanık mı kalıyor? Direnç büyük ihtimalle hâlâ + rayından güç alıyor.",
+   "Hep sönük mü? D23’ün gerçekten direncin sütununa ulaştığını kontrol et."
+  ],
+  "goals": [
+   "GPIO 23 bir çıkış",
+   "LED yanıp sönüyor: 500 ms yanık, 500 ms sönük",
+   "Monitörde LED on / LED off görünüyor"
+  ]
+ },
+ "fast": {
+  "title": "Saniyede beş yanıp sönme",
+  "intro": "Sayıları değiştirmek hiçbir şeyi bozmaz. LED’i saniyede beş kez yanıp söndür.",
+  "steps": [
+   "Bekleme süresini hesapla: bir yanıp sönme, bir “yanık” artı bir “sönük” süredir.",
+   "İki delay() değerini de değiştir ve yeniden başlatmak için ↺ tuşuna bas."
+  ],
+  "hints": [
+   "1000 ms / 5 = yanıp sönme başına 200 ms, iki eşit yarıya bölünmüş."
+  ],
+  "goals": [
+   "LED saniyede 5 kez yanıp sönüyor (100 ms yanık, 100 ms sönük)"
+  ]
+ },
+ "pair": {
+  "title": "Meydan okuma: sırayla yanın",
+  "intro": "GPIO 25’e yeşil bir LED ekle. İki LED sırayla yansın: kırmızı yanık, yeşil sönük; sonra tersi.",
+  "steps": [
+   "İkinci bir LED devresi kur: GPIO 25 → direnç → yeşil LED → GND. Üstteki − rayının kendi GND kablosu olmalı.",
+   "GREEN_PIN = 25 tanımla ve onu çıkış yap.",
+   "loop() içinde iki LED’i de değiştir, sonra 500 ms bekle, bunu iki kez yap."
+  ],
+  "hints": [
+   "Güvenli olan her GPIO olur: 4, 13, 14, 16–19, 21–23, 25–27, 32, 33. Ders kontrolü pin numarasına değil, LED’lere bakar.",
+   "loop() içindeki iki blok birbirinin aynadaki yansımasıdır: birincide HIGH olan ikincide LOW olur."
+  ],
+  "goals": [
+   "İki LED yanıp sönüyor (her biri 500 ms)",
+   "Hiçbir zaman aynı anda yanmıyorlar"
+  ]
+ },
+ "press": {
+  "title": "Butonu oku",
+  "intro": "4. bölüm: ESP32 dinliyor. Butonu ortadaki boşluğun üzerine koy ve GPIO 22 ile GND arasına bağla.",
+  "steps": [
+   "Butonu ortadaki boşluğun üzerine yerleştir (bacakları e ve f satırlarında).",
+   "D22’yi butonun bir tarafına, öbür tarafı − rayına kabloyla bağla.",
+   "setup() içinde: `pinMode(BUTTON_PIN, INPUT_PULLUP);`",
+   "loop() içinde: `digitalRead(BUTTON_PIN)` ile oku, değeri yazdır ve LOW iken LED’i yak.",
+   "Çalıştır, sonra butonu basılı tut (ona tıkla ya da Kontroller çubuğunu kullan)."
+  ],
+  "hints": [
+   "INPUT_PULLUP ile pin, bırakılmışken 1 (HIGH), basılıyken 0 (LOW) okur.",
+   "Soldaki iki bacak hep bağlıdır, sağdaki ikisi de. D22 ile GND’yi farklı taraflara bağla.",
+   "INPUT_PULLUP yerine INPUT dene ve sayıların zıpladığını izle: boşta bir pin."
+  ],
+  "goals": [
+   "GPIO 22 INPUT_PULLUP kullanıyor",
+   "Basılıyken: LED yanık",
+   "Bırakılınca: LED yine sönük",
+   "Monitörde 1 ve 0 görünüyor"
+  ]
+ },
+ "toggle": {
+  "title": "Aç, kapat: her basışta bir kez",
+  "intro": "Her basış LED’i ters çevirmeli. Bu kod neredeyse çalışıyor ama kontaklar zıplıyor: çalıştır, birkaç kez bas ve sayacı izle.",
+  "steps": [
+   "Kodu çalıştır ve butona beş kez bas. Say ve monitördeki “presses:” ile karşılaştır.",
+   "Butonun değiştiği yeri bul ve 4. bölümdeki çözümü ekle: her değişiklikten sonra 50 ms bekle.",
+   "Yeniden başlat ve tekrar bas: her basış LED’i tam bir kez ters çevirmeli."
+  ],
+  "hints": [
+   "Metal kontaklar birkaç milisaniye zıplar, bu yüzden tek bir basış birkaç basış gibi görünür.",
+   "`delay(50);` satırını `if (state != lastState) { … }` içine, iç if’ten sonra ekle."
+  ],
+  "goals": [
+   "En az 4 kez bastın",
+   "Her basış LED’i tam bir kez ters çevirdi",
+   "Sayaç basışlarınla uyuşuyor"
+  ]
+ },
+ "nowait": {
+  "title": "Aynı anda iki iş",
+  "intro": "delay() her şeyi dondurur. Bunun yerine millis() ile yanıp söndür, böylece buton her an duyulur.",
+  "steps": [
+   "“2. LED” bölümünün altında saati kontrol et: `if (blinking && now - lastBlink >= 500) { … }`",
+   "İçinde: zamanı kaydet, ledOn’u ters çevir ve pine yaz.",
+   "Yanıp sönme kapalıyken LED’in söndüğünden emin ol.",
+   "Çalıştır: LED yanıp söner, bir basış onu hemen durdurur, bir basış daha tekrar başlatır."
+  ],
+  "hints": [
+   "Her zaman çıkar: now − lastBlink. Burada asla delay() ile bekleme.",
+   "Durduktan sonra: `if (!blinking && ledOn) { ledOn = false; digitalWrite(LED_PIN, LOW); }`"
+  ],
+  "goals": [
+   "LED her 500 ms’de yanıp sönüyor",
+   "Bir basış yanıp sönmeyi durduruyor",
+   "Basış 60 ms içinde fark ediliyor"
+  ]
+ },
+ "two": {
+  "title": "Meydan okuma: iki LED, iki hız",
+  "intro": "Kırmızı her 500 ms’de yanıp söner ve buton onu açıp kapatır. Yeşil her zaman 150 ms’de bir yanıp söner. Hiçbir şey asla beklemez.",
+  "steps": [
+   "GPIO 25’e yeşil bir LED bağla (kendi direnci ve GND’siyle).",
+   "Her LED’e kendi zamanlayıcısını ver: lastRed ve lastGreen.",
+   "Kırmızı LED için önceki görevdeki buton kodunu koru."
+  ],
+  "hints": [
+   "“Belirli aralıkla” yapılan her iş kendi `if (now - last… >= interval)` bloğunu alır.",
+   "Önceki görevdeki çözümünle başla ve LED bloğunu yeşil için kopyala."
+  ],
+  "goals": [
+   "Bir LED her 500 ms’de yanıp sönüyor",
+   "Başka bir LED aynı anda her 150 ms’de yanıp sönüyor",
+   "Bir basış yavaş LED’i durduruyor, hızlı olan devam ediyor"
+  ]
+ },
+ "fade": {
+  "title": "Nefes al, nefes ver",
+  "intro": "PWM pini çok hızlı açıp kapatır; analogWrite(pin, 0–255) açık kalma süresini belirler. LED’i yavaşça parlat ve karart.",
+  "steps": [
+   "0’dan 255’e bir for döngüsü yaz: `for (int v = 0; v <= 255; v++) { … }`",
+   "İçine: `analogWrite(LED_PIN, v);` ve kısa bir `delay(4);`",
+   "0’a kadar geri sayan ikinci bir döngü ekle. Çalıştır."
+  ],
+  "hints": [
+   "255 adım × 4 ms ≈ 1 saniye yukarı, 1 saniye aşağı.",
+   "ESP32’de analogWrite() senin için LEDC PWM donanımını kullanır."
+  ],
+  "goals": [
+   "LED birçok parlaklık seviyesi gösteriyor",
+   "Karanlıktan parlağa ve geri gidiyor"
+  ]
+ },
+ "colors": {
+  "title": "Tek LED’de üç renk",
+  "intro": "RGB LED, tek kılıfta üç LED’dir. Üç analogWrite() çağrısıyla ışığı karıştır.",
+  "steps": [
+   "color() fonksiyonunu doldur: her pin için bir tane olmak üzere üç analogWrite() çağrısı.",
+   "loop() içinde kırmızı, yeşil, mavi ve mor göster, her biri bir saniye.",
+   "Çalıştır ve LED’in değiştiğini izle."
+  ],
+  "hints": [
+   "Mor, kırmızı + mavidir: color(255, 0, 255).",
+   "Bu ortak katotlu bir RGB LED: uzun bacak GND’ye gider ve 255 tam parlaklık demektir."
+  ],
+  "goals": [
+   "Kırmızı",
+   "Yeşil",
+   "Mavi",
+   "Mor (kırmızı + mavi)"
+  ]
+ },
+ "dimmer": {
+  "title": "Bir parlaklık düğmesi",
+  "intro": "Potansiyometre orta bacağında 0–3,3 V verir; analogRead() bunu 0–4095’e çevirir. LED parlaklığını ayarlamak için kullan.",
+  "steps": [
+   "Başlangıç kodunu çalıştır ve düğmeyi çevir (sürükle ya da Kontroller çubuğunu kullan). Sayıları izle.",
+   "Dönüştür: `int level = map(raw, 0, 4095, 0, 255);`",
+   "LED’e yaz: `analogWrite(LED_PIN, level);` Yeniden başlat ve düğmeyi bir uçtan öbürüne çevir."
+  ],
+  "hints": [
+   "ESP32 ADC’si 12 bitliktir: 0’dan 4095’e. Eski Arduino anlatımları 1023 kullanır, çünkü Uno 10 bitliktir.",
+   "analogWrite() 0’dan 255’e kadar değer alır."
+  ],
+  "goals": [
+   "Düğme bir uçta: LED sönük",
+   "Düğme öbür uçta: LED tam parlak",
+   "Düğme ortada: LED yarı parlak"
+  ]
+ },
+ "speed": {
+  "title": "Meydan okuma: hız düğmesi",
+  "intro": "Şimdi düğme yanıp sönme hızını ayarlıyor: bir uçta hızlı, öbür uçta yavaş.",
+  "steps": [
+   "Düğmeyi oku ve bir bekleme süresine eşle, örneğin 50 ile 1000 ms arası.",
+   "O bekleme süresiyle yanıp söndür.",
+   "Çalışırken düğmeyi iki uca da çevir."
+  ],
+  "hints": [
+   "`int wait = map(analogRead(POT_PIN), 0, 4095, 50, 1000);`"
+  ],
+  "goals": [
+   "Bir uçta hızlı yanıp sönüyor (200 ms altında)",
+   "Öbür uçta yavaş yanıp sönüyor (700 ms üstünde)"
+  ]
+ }
+};
+Object.assign(TR,{
+ "Write real Arduino code, wire a circuit and run it in your browser. Free ESP32 lessons based on ESP32 From Zero.": "Gerçek Arduino kodu yaz, devreyi kur ve tarayıcında çalıştır. ESP32 From Zero’ya dayanan ücretsiz ESP32 dersleri.",
+ "A code editor next to an ESP32 circuit with a glowing LED": "Parlayan bir LED’li ESP32 devresinin yanında bir kod editörü",
+ "WRITE. WIRE. RUN.": "YAZ. KUR. ÇALIŞTIR.",
+ "Write real Arduino code, wire the circuit and press Run. Everything happens in your browser: no kit, no installation. Every unit follows an ESP32 From Zero episode.": "Gerçek Arduino kodu yaz, devreyi kur ve Çalıştır’a bas. Her şey tarayıcında olur: kit yok, kurulum yok. Her ünite bir ESP32 From Zero bölümünü izler.",
+ "Start the first project": "İlk projeye başla",
+ "Open the free workshop": "Ücretsiz atölyeyi aç",
+ "BUILD FIRST · QUIZZES IN BETWEEN": "ÖNCE YAP · ARALARDA SORULAR",
+ "CHALLENGE": "MEYDAN OKUMA",
+ "BUILD": "YAP",
+ "QUIZ": "SORU",
+ "HOW IT WORKS": "NASIL ÇALIŞIR",
+ "Build, run, check.": "Kur, çalıştır, kontrol et.",
+ "Each project lists its goals. They are checked live while your circuit runs. Stuck? Open a hint, or look at the solution.": "Her projede hedefler listelenir. Devren çalışırken hedefler canlı olarak kontrol edilir. Takıldın mı? Bir ipucu aç ya da çözüme bak.",
+ "GOALS · CHECKED WHILE IT RUNS": "HEDEFLER · ÇALIŞIRKEN KONTROL EDİLİR",
+ "done": "tamam",
+ "not yet": "henüz değil",
+ "All goals reached. Well done!": "Tüm hedeflere ulaştın. Aferin!",
+ "Complete project →": "Projeyi tamamla →",
+ "Show a hint ({i} / {n})": "İpucu göster ({i} / {n})",
+ "Load the solution": "Çözümü yükle",
+ "Start over": "Baştan başla",
+ "My project": "Projem",
+ "Build anything.": "İstediğini yap.",
+ "Your own projects: write code, add parts from “+ Add part”, drag a wire from pin to pin and press Run. Projects are saved in this browser.": "Kendi projelerin: kod yaz, “+ Parça ekle” ile parça ekle, bir pinden diğerine kablo sürükle ve Çalıştır’a bas. Projeler bu tarayıcıda kaydedilir.",
+ "Project": "Proje",
+ "New": "Yeni",
+ "Rename": "Yeniden adlandır",
+ "Open an example": "Bir örnek aç",
+ "Examples…": "Örnekler…",
+ "Export": "Dışa aktar",
+ "Import": "İçe aktar",
+ "Delete": "Sil",
+ "Project file": "Proje dosyası",
+ "Project name": "Proje adı",
+ "Keep at least one project.": "En az bir proje kalmalı.",
+ "Delete this project?": "Bu proje silinsin mi?",
+ "Example opened as a new project.": "Örnek yeni bir proje olarak açıldı.",
+ "This is not a Pin by Pin Lab project file.": "Bu bir Pin by Pin Lab proje dosyası değil.",
+ "It works!": "Çalışıyor!",
+ "Your circuit and your code reached every goal. Your work stays saved in this project.": "Devren ve kodun tüm hedeflere ulaştı. Çalışman bu projede kayıtlı kalır.",
+ "Replace your code and circuit with the solution?": "Kodun ve devren çözümle değiştirilsin mi?",
+ "Solution loaded. Press ▶ Run to see it work.": "Çözüm yüklendi. Çalıştığını görmek için ▶ Çalıştır’a bas.",
+ "Start this project again from the beginning?": "Bu proje baştan başlasın mı?",
+ "▶ Run": "▶ Çalıştır",
+ "Restart": "Yeniden başlat",
+ "Sound": "Ses",
+ "Download .ino": ".ino indir",
+ "Arduino code": "Arduino kodu",
+ "Circuit": "Devre",
+ "+ Add part": "+ Parça ekle",
+ "Circuit diagram. Drag parts to move them. Drag from one pin to another to connect a wire.": "Devre şeması. Parçaları taşımak için sürükle. Kablo bağlamak için bir pinden diğerine sürükle.",
+ "Zoom out": "Uzaklaştır",
+ "Fit": "Sığdır",
+ "Zoom in": "Yakınlaştır",
+ "Baud rate": "Baud hızı",
+ "Clear": "Temizle",
+ "Code changed: press ↺ to restart with it.": "Kod değişti: yeniden başlatmak için ↺ tuşuna bas.",
+ "Line {n}": "Satır {n}",
+ "Error": "Hata",
+ "Fix the error, then run again.": "Hatayı düzelt, sonra tekrar çalıştır.",
+ "Running": "Çalışıyor",
+ "Stopped": "Durdu",
+ "The program stopped with an error.": "Program bir hatayla durdu.",
+ "Your code uses {b} baud, the monitor is set to {m}. Choose {b} above, otherwise you see garbage.": "Kodun {b} baud kullanıyor, monitör {m} olarak ayarlı. Yukarıdan {b} seç, yoksa anlamsız karakterler görürsün.",
+ "Breadboard {h}": "Breadboard {h}",
+ "Wire": "Kablo",
+ "Color": "Renk",
+ "Resistance": "Direnç",
+ "Contact bounce (realistic)": "Kontak zıplaması (gerçekçi)",
+ "Type": "Tür",
+ "passive (tone)": "pasif (tone)",
+ "active (beeps on HIGH)": "aktif (HIGH’da bip sesi çıkarır)",
+ "common cathode (−)": "ortak katot (−)",
+ "common anode (+)": "ortak anot (+)",
+ "↻ Rotate": "↻ Döndür",
+ "Controls": "Kontroller",
+ "Press {id}": "{id} butonuna bas",
+ "Turn {id}": "{id} düğmesini çevir",
+ "Wire started: click another pin to finish it (Esc cancels).": "Kablo başladı: bitirmek için başka bir pine tıkla (Esc iptal eder).",
+ "Only the first ESP32 is simulated.": "Yalnızca ilk ESP32 simüle edilir.",
+ "GPIO {pin} is not on this ESP32 DevKit board ({fn}). Check the pin number.": "GPIO {pin} bu ESP32 DevKit kartında yok ({fn}). Pin numarasını kontrol et.",
+ "GPIO {pin} is used by the USB serial connection. Pick another pin.": "GPIO {pin} USB seri bağlantısı tarafından kullanılıyor. Başka bir pin seç.",
+ "GPIO {pin} is input-only: it cannot drive an LED. Use a pin such as 23 or 25.": "GPIO {pin} yalnızca giriştir: LED sürmez. 23 veya 25 gibi bir pin kullan.",
+ "digitalWrite({pin}) before pinMode({pin}, OUTPUT): the pin is not driven.": "digitalWrite({pin}), pinMode({pin}, OUTPUT)’tan önce çağrıldı: pin sürülmüyor.",
+ "digitalRead({pin}) before pinMode({pin}, INPUT…).": "digitalRead({pin}), pinMode({pin}, INPUT…)’tan önce çağrıldı.",
+ "GPIO {pin} cannot read analog values.": "GPIO {pin} analog değer okuyamaz.",
+ "Serial.begin(115200) is missing in setup(): nothing is printed.": "setup() içinde Serial.begin(115200) eksik: hiçbir şey yazdırılmaz.",
+ "GPIO {pin} is supplying {mA} mA: that is a short circuit or a missing resistor. A real pin can be damaged.": "GPIO {pin} {mA} mA veriyor: bu bir kısa devre ya da eksik bir direnç. Gerçek bir pin zarar görebilir.",
+ "Short circuit: {src} is connected straight to GND. Remove that wire.": "Kısa devre: {src} doğrudan GND’ye bağlı. O kabloyu kaldır.",
+ "{part} gets about {mA} mA. A real LED burns out without a resistor: add 220 Ω in series.": "{part} yaklaşık {mA} mA çekiyor. Gerçek bir LED dirençsiz bozulur: seri olarak 220 Ω ekle.",
+ "Code": "Kod",
+ "Serial": "Seri",
+ "ESP32 DevKit": "ESP32 DevKit",
+ "LED": "LED",
+ "Push button": "Buton",
+ "Potentiometer": "Potansiyometre",
+ "Buzzer": "Buzzer",
+ "yellow": "sarı",
+ "white": "beyaz",
+ "orange": "turuncu",
+ "anode +": "anot +",
+ "cathode −": "katot −",
+ "common": "ortak",
+ "signal": "sinyal",
+ "1. start the serial connection at 115200 baud": "1. seri bağlantıyı 115200 baud ile başlat",
+ "2. print a greeting": "2. bir selam yazdır",
+ "add one to seconds, print the sentence, wait one second": "saniyeye bir ekle, cümleyi yazdır, bir saniye bekle",
+ "No code today: this LED gets its power from the 3V3 pin.": "Bugün kod yok: bu LED gücünü 3V3 pininden alıyor.",
+ "the GPIO our LED is wired to": "LED’imizin bağlı olduğu GPIO",
+ "make LED_PIN an output": "LED_PIN’i çıkış yap",
+ "on, wait 500 ms, off, wait 500 ms": "yan, 500 ms bekle, sön, 500 ms bekle",
+ "our code drives this pin": "kodumuz bu pini sürüyor",
+ "3.3 V -> LED on": "3,3 V -> LED yanar",
+ "0 V -> LED off": "0 V -> LED söner",
+ "the button pin: input with the internal pull-up": "buton pini: dahili pull-up’lı giriş",
+ "read the button, print it, light the LED while it reads LOW": "butonu oku, yazdır, LOW okurken LED’i yak",
+ "HIGH until pressed": "basılana kadar HIGH",
+ "the button is not pressed at the start": "buton başlangıçta basılı değil",
+ "the button changed": "buton değişti",
+ "...and it's now pressed: a new press": "...ve şimdi basılı: yeni bir basış",
+ "debounce: wait until the contacts stop bouncing": "debounce: kontaklar zıplamayı bırakana kadar bekle",
+ "when the LED last changed (ms)": "LED’in en son değiştiği an (ms)",
+ "when the button last changed (ms)": "butonun en son değiştiği an (ms)",
+ "1. the button: a new press switches blinking on or off": "1. buton: yeni bir basış yanıp sönmeyi açar veya kapatır",
+ "2. the LED: flip it every 500 ms, without waiting": "2. LED: beklemeden her 500 ms’de bir ters çevir",
+ "switched on/off by the button": "buton tarafından açılıp kapatılır",
+ "always blinking": "her zaman yanıp söner",
+ "count from 0 to 255 and back, writing each value with analogWrite()": "0’dan 255’e ve geri say, her değeri analogWrite() ile yaz",
+ "write r, g and b to the three pins": "r, g ve b değerlerini üç pine yaz",
+ "then green, blue and purple": "sonra yeşil, mavi ve mor",
+ "purple": "mor",
+ "turn raw into a brightness 0–255 with map(), then analogWrite it": "raw değerini map() ile 0–255 arası bir parlaklığa çevir, sonra analogWrite ile yaz"
+});
