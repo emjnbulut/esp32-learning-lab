@@ -17,6 +17,12 @@ npm run e2e     # Playwright regression suite (Chromium)
 
 Open http://127.0.0.1:4177. `dist/` is the complete static website and works under a hosting subdirectory.
 
+## Version 0.5
+
+- Unit checkpoints (units 1–5) for experienced learners: 5 harder questions each, multiple choice plus typed numeric answers (tolerance, decimal comma accepted), 4/5 to pass, explanations after checking, wrong answers cleared on retry. A checkpoint can be taken as soon as its unit opens; passing it opens every lesson of the unit and the next unit (no XP for skipped lessons). The next unit also opens the normal way, after the unit’s lessons.
+- Unit 5 "Light at your command" (PWM, RGB, potentiometer): 3 quizzes, a PWM brightness-target simulation with waveform, an RGB color-mixing simulation with channel hints, and a map() dimmer challenge with a potentiometer.
+- Free workshop: Breadboard tab with a program choice (LED on, blink, button → LED) and the button part; PWM & color tab with a free RGB mixer and dimmer knob.
+
 ## Version 0.4
 
 - English is the main language; an EN/TR switch in the top bar and lesson header changes the whole site, and the choice is remembered (`pin-by-pin-lang` in localStorage).

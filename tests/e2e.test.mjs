@@ -96,3 +96,38 @@ test('language switch: English by default, Turkish on request and remembered',as
 
 test('Turkish lab messages and sketch comments are translated',async()=>{const page=await open('#/lesson/button',{completed:[...unit13,'pullup','floating']});await page.waitForSelector('#bench');await page.click('[data-lang="tr"]');
  assert.match(await page.locator('#sketch').innerText(),/buton bu pini GND’ye çeker/);await page.click('#run-lab');assert.match(await page.locator('#lab-state').innerText(),/Önce butonu/);await page.close();});
+
+const setRange=(page,sel,v)=>page.$eval(sel,(el,x)=>{el.value=String(x);el.dispatchEvent(new Event('input',{bubbles:true}));},v);
+async function answerCheckpoint(page,id,{wrong=[]}={}){const {lessons}=await import('../dist/model.mjs');const qs=lessons.find(l=>l.id===id).questions;for(const [i,q] of qs.entries()){const bad=wrong.includes(i);if(q.choices)await page.click(`[data-cp-choice="${i}-${bad?(q.answer+1)%q.choices.length:q.answer}"]`);else await page.fill(`[data-cp-input="${i}"]`,String(bad?q.answer+1000:q.answer).replace('.',','));}}
+
+test('experienced learners test out of unit 1 and land in unit 2',async()=>{const page=await open();await page.waitForSelector('.unit-check');assert.match(await page.locator('.unit-check').first().innerText(),/Test out/);
+ await page.click('.unit-check [data-lesson="check1"]');await page.waitForSelector('.checkpoint');assert.equal(await page.locator('#cp-submit').isDisabled(),true);
+ await answerCheckpoint(page,'check1');await page.click('#cp-submit');assert.match(await page.locator('#feedback').innerText(),/5 \/ 5 correct/);await page.click('#cp-submit');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/Unit 1 passed/);
+ await page.click('.success [data-nav="home"]');await page.waitForSelector('.unit');assert.equal(await page.locator('[data-lesson="rows"].lesson-node').isDisabled(),false);assert.equal(await page.locator('[data-lesson="setup"].lesson-node').isDisabled(),false);assert.match(await page.locator('.unit .unit-status').first().innerText(),/PASSED/);assert.match(await page.locator('.continue-card h2').innerText(),/Hidden connections/);assert.deepEqual(page.errors,[]);await page.close();});
+
+test('a failed checkpoint explains, keeps right answers and allows a retry',async()=>{const page=await open('#/lesson/check3',{completed:unit12});await page.waitForSelector('.checkpoint');await answerCheckpoint(page,'check3',{wrong:[0,1]});await page.click('#cp-submit');
+ assert.match(await page.locator('#feedback').innerText(),/3 \/ 5 correct\. You need 4/);assert.equal(await page.locator('.cp-q.bad').count(),2);assert.match(await page.locator('.cp-q.bad .cp-explain').first().innerText(),/Answer: 100 ms/);
+ await page.click('#cp-submit');assert.equal(await page.locator('[data-cp-input="0"]').inputValue(),'');assert.equal(await page.locator('[data-cp-input="2"]').inputValue(),'25');assert.equal(await page.locator('#cp-submit').isDisabled(),true);await page.close();});
+
+test('unit 5 dimmer: hit three PWM targets',async()=>{const page=await open('#/lesson/dimmer',{completed:['check1','check2','check3','check4','pwm']});await page.waitForSelector('#pwm-value');
+ await setRange(page,'#pwm-value',100);await page.click('#pwm-check');assert.match(await page.locator('#pwm-state').innerText(),/Not yet: 100 is 39%/);
+ for(const v of [64,191,26]){await setRange(page,'#pwm-value',v);assert.ok((await page.locator('#sketch').innerText()).includes(`analogWrite(LED_PIN, ${v})`));await page.click('#pwm-check');}
+ await page.click('#finish-lab');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/You control the brightness/);assert.deepEqual(page.errors,[]);await page.close();});
+
+test('unit 5 mixer: match three colors with channel hints',async()=>{const page=await open('#/lesson/mixer',{completed:['check1','check2','check3','check4','pwm','dimmer','rgb']});await page.waitForSelector('#rgb-0');
+ await page.click('#rgb-check');assert.match(await page.locator('#rgb-state').innerText(),/more red, more green/);
+ for(const c of [[255,128,0],[0,255,255],[128,0,255]]){for(const i of [0,1,2])await setRange(page,`#rgb-${i}`,c[i]);await page.click('#rgb-check');}
+ await page.click('#finish-lab');await page.waitForSelector('.success');await page.close();});
+
+test('unit 5 knob: wrong map() range clips, right range passes after both ends',async()=>{const page=await open('#/lesson/knob',{completed:['check1','check2','check3','check4','pwm','dimmer','rgb','mixer','adc']});await page.waitForSelector('#kb-raw');
+ await page.fill('#kb-in','1023');await page.fill('#kb-out','255');await setRange(page,'#kb-raw',3000);assert.match(await page.locator('#kb-state').innerText(),/goes above 255/);assert.match(await page.locator('#kb-sketch').innerText(),/map\(raw, 0, 1023, 0, 255\)/);
+ await page.fill('#kb-in','4095');await setRange(page,'#kb-raw',0);assert.equal(await page.locator('#finish-lab').isDisabled(),true);await setRange(page,'#kb-raw',4095);assert.match(await page.locator('#kb-serial').innerText(),/level 255/);
+ await page.click('#finish-lab');await page.waitForSelector('.success');assert.match(await page.locator('h1').innerText(),/Your own dimmer/);await page.close();});
+
+test('free workshop: button program on the breadboard and a free color lab',async()=>{const page=await open('#/workshop');await page.waitForSelector('#ws-program');await page.selectOption('#ws-program','button');
+ await page.click('[data-add="resistor"]');await page.click(hole(3,0));await page.click('[data-add="led"]');await page.click(hole(6,0));await page.click('[data-pin="gpio"]');await page.click(hole(3,2));await page.click(hole(7,2));await page.click('[data-pin="gnd"]');
+ await page.click('[data-add="button"]');await page.click(hole(9,1));await page.click('[data-pin="gpio22"]');await page.click(hole(9,7));await page.click(hole(11,7));await page.click('[data-pin="gnd"]');await page.click('#run-lab');
+ const box=await page.locator('#press').boundingBox();await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.waitForFunction(()=>document.querySelector('#led-bulb').getAttribute('fill')==='#ff8348');await page.mouse.up();
+ await page.click('[data-ws="color"]');await page.waitForSelector('#rgb-0');await setRange(page,'#rgb-2',255);assert.match(await page.locator('#rgb-sketch').innerText(),/analogWrite\(BLUE_PIN, 255\)/);await setRange(page,'#kb-raw',4095);assert.match(await page.locator('#kb-serial').innerText(),/level 255/);assert.deepEqual(page.errors,[]);await page.close();});
+
+test('checkpoint questions switch to Turkish',async()=>{const page=await open('#/lesson/check1');await page.waitForSelector('.checkpoint');await page.click('[data-lang="tr"]');assert.match(await page.locator('.cp-q h3').first().innerText(),/İlk 5 saniyede/);assert.match(await page.locator('#cp-submit').innerText(),/Cevapları kontrol et/);await page.close();});

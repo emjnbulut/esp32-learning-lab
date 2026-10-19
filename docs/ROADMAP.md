@@ -13,6 +13,9 @@ Done (2026-10-19): unit 4 with 6 activities. Not yet: the two-LED wiring of the 
 
 Model switch state, INPUT_PULLUP, a stable-state debounce algorithm and millis-based independent activities. Align with source episode 4 after its debounce review. Expand free workshop parts.
 
+## 0.5 — Checkpoints and unit 5
+Done (2026-10-19): unit checkpoints for experienced learners, unit 5 (PWM, RGB, potentiometer), workshop tabs. Next: align unit 5 with source episode 5 when it exists; unit 6 (LDR, buzzers).
+
 ## Runtime proof (separate from UI milestones)
 Evaluate reusable firmware emulation and licensing. Compile actual ESP32 sketches, expose GPIO changes, drive those pins through the connectivity graph, then test changed pin, changed delay, unplugged wire and unsupported APIs. Never label a behavior model as full firmware execution. Compare browser resource cost and server compile cost before selecting architecture.
 
