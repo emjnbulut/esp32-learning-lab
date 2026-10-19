@@ -921,3 +921,4 @@ Object.assign(TR_MISSIONS,{
   ]
  }
 });
+Object.assign(TR,{'OWNER ACCESS':'SAHİP GİRİŞİ','You are signed in.':'Giriş yaptın.','Course owner sign-in':'Kurs sahibi girişi','Every lesson is open for you while review mode is on. Your own progress is not changed by lessons you open this way.':'İnceleme modu açıkken bütün dersler senin için açık. Bu şekilde açtığın derslerle kendi ilerlemen değişmez.','For the person who made this course. Visitors do not need to sign in: lessons open one after another as usual.':'Bu kursu hazırlayan kişi için. Ziyaretçilerin giriş yapmasına gerek yok: dersler her zamanki gibi sırayla açılır.','Passphrase':'Parola','Sign in':'Giriş yap','Sign out':'Çıkış yap','That is not the passphrase.':'Parola yanlış.','Signed out.':'Çıkış yapıldı.','Signed in. Review mode is on.':'Giriş yapıldı. İnceleme modu açık.'});

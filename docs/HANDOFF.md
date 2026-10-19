@@ -24,6 +24,8 @@ first builder); do not create another Site.
 - `i18n.mjs` — Turkish: `TR` (English UI string → Turkish, also sketch comments and warning templates),
   `TR_LESSONS`, `TR_UNITS`, `TR_MISSIONS` (same shape as missions, arrays by index).
 
+- `owner.mjs` + `tools/owner-key.mjs` — owner passphrase hash and sign-in flag; `app.mjs` `owner`/`review` decide `canOpen`.
+
 ## Rules
 
 - English is the source text. Wrap UI strings in `t('…')`; `tests/i18n.test.mjs` fails on anything untranslated.
