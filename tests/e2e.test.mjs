@@ -10,7 +10,7 @@ async function open(hash='',{completed=[],width=1440,height=900,lang}={}){
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});page.on('dialog',d=>d.type()==='prompt'?d.accept('Renamed'):d.accept());
  await context.addInitScript(([k,v,l])=>{if(!sessionStorage.getItem('seeded')){if(v)localStorage.setItem(k,v);if(l)localStorage.setItem('pin-by-pin-lang',l);sessionStorage.setItem('seeded','1');}},[KEY,completed.length?JSON.stringify({version:1,completed,dates:['2026-10-19']}):'',lang||'']);
  await page.goto(BASE+hash);page.errors=errors;return page;}
-const U1=['hello','serial','counter','check1'],U2=['circuit','rows','fix','resistor','check2'],U3=['blink','fast','polarity','pair','check3'],U4=['press','pullup','toggle','nowait','millis','two','check4'];
+const U1=['hello','hello2','serial','counter','counter2','check1'],U2=['circuit','circuit2','rows','fix','resistor','check2'],U3=['blink','blink2','fast','polarity','pair','check3'],U4=['press','press2','pullup','toggle','toggle2','nowait','nowait2','millis','two','check4'];
 const lab=page=>page.waitForFunction(()=>document.querySelector('#lab-root')?.__lab?.view);
 const goalsOk=page=>page.$$eval('.goal.ok',e=>e.length);
 async function dragPins(page,a,b){await page.click('[data-tool="wire"]');const [x1,y1]=await page.evaluate(k=>document.querySelector('#lab-root').__lab.pinScreen(k),a);const [x2,y2]=await page.evaluate(k=>document.querySelector('#lab-root').__lab.pinScreen(k),b);
@@ -47,7 +47,7 @@ test('mission press: hold the button with the Controls bar',async()=>{const page
  await page.waitForTimeout(300);await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();await page.waitForTimeout(500);await page.mouse.up();
  await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length===4,null,{timeout:8000});await page.close();});
 
-test('mission dimmer: the knob slider changes the brightness',async()=>{const page=await open('#/lesson/dimmer',{completed:[...U1,...U2,...U3,...U4,'fade','pwm','colors','rgb']});await lab(page);await page.click('#show-solution');await lab(page);
+test('mission dimmer: the knob slider changes the brightness',async()=>{const page=await open('#/lesson/dimmer',{completed:[...U1,...U2,...U3,...U4,'fade','fade2','pwm','colors','colors2','rgb']});await lab(page);await page.click('#show-solution');await lab(page);
  await page.click('#lab-run');await page.waitForSelector('[data-potin="pot1"]:not([disabled])');
  for(const v of [0,1000,500]){await page.$eval('[data-potin="pot1"]',(el,x)=>{el.value=String(x);el.dispatchEvent(new Event('input',{bubbles:true}));},v);await page.waitForTimeout(400);}
  await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length===3,null,{timeout:6000});await page.close();});
@@ -60,7 +60,7 @@ test('workshop: run the default project, add a part, new project, export and imp
  await page.setInputFiles('#ws-file',file);await lab(page);assert.equal(await page.locator('#ws-project option').count(),3);assert.equal(await page.locator('#lab-svg [data-part="buzzer1"]').count(),1);
  await page.selectOption('#ws-example','two');await lab(page);assert.equal(await page.locator('#lab-svg [data-part="led2"]').count(),1);assert.deepEqual(page.errors,[]);await page.close();});
 
-test('quiz between projects: wrong then right answer',async()=>{const page=await open('#/lesson/serial',{completed:['hello']});await page.waitForSelector('.quiz');await page.click('[data-choice="1"]');await page.click('#check-answer');await page.waitForSelector('#feedback.bad');
+test('quiz between projects: wrong then right answer',async()=>{const page=await open('#/lesson/serial',{completed:['hello','hello2']});await page.waitForSelector('.quiz');await page.click('[data-choice="1"]');await page.click('#check-answer');await page.waitForSelector('#feedback.bad');
  await page.click('[data-choice="0"]');await page.click('#check-answer');await page.click('#check-answer');await page.waitForSelector('.success');await page.close();});
 
 test('experienced learners test out of unit 1 with the checkpoint',async()=>{const {lessons}=await import('../dist/model.mjs');const page=await open('#/lesson/check1');await page.waitForSelector('.checkpoint');
@@ -99,3 +99,18 @@ test('move tool: drag a wire end to another hole; the wire tool shows the connec
 test('review mode unlocks every lesson without changing progress',async()=>{const page=await open('#/review');await page.waitForSelector('.review-banner');assert.equal(await page.locator('[data-lesson="speed"].lesson-node').isDisabled(),false);
  await page.goto(BASE+'#/lesson/serial');await page.waitForSelector('.quiz');await page.click('[data-choice="0"]');await page.click('#check-answer');await page.click('#check-answer');await page.waitForSelector('.success');assert.match(await page.locator('.earned').innerText(),/REVIEW MODE/);
  await page.click('.success [data-nav="home"]');await page.click('#review-off');await page.waitForSelector('.lesson-node');assert.equal(await page.locator('[data-lesson="speed"].lesson-node').isDisabled(),true);assert.equal(await page.locator('.stat-star b').innerText(),'0');await page.close();});
+
+test('a your-turn task starts from the learner own work on the project before it',async()=>{const page=await open('#/lesson/blink2',{completed:[...U1,...U2,'blink']});await lab(page);
+ assert.match(await page.locator('.mission-panel .eyebrow').innerText(),/YOUR TURN/);const code=await page.inputValue('#ed-text');assert.ok(code.includes('delay(500)'),'starts from the blink solution');
+ await page.goto(BASE+'#/lesson/blink');await lab(page);await page.fill('#ed-text','// my own blink\n'+code);await page.waitForTimeout(100);
+ await page.goto(BASE+'#/lesson/blink2');await lab(page);assert.ok((await page.inputValue('#ed-text')).startsWith('// my own blink'),'carries the learner code over');assert.deepEqual(page.errors,[]);await page.close();});
+
+test('a second breadboard can be added, moved on its own, and old duplicate ids are repaired',async()=>{const page=await open('#/workshop');await lab(page);
+ await page.click('#lab-add');await page.click('[data-addpart="breadboard"]');const ids=await page.evaluate(()=>document.querySelector('#lab-root').__lab.diagram.parts.map(p=>p.id));assert.equal(new Set(ids).size,ids.length);assert.ok(ids.includes('bb2'));
+ await page.click('[data-tool="select"]');const pos=id=>page.evaluate(i=>{const p=document.querySelector('#lab-root').__lab.diagram.parts.find(q=>q.id===i);return [p.x,p.y];},id);
+ const a0=await pos('bb'),b0=await pos('bb2');const box=await page.locator('#lab-svg [data-part="bb2"]').first().boundingBox();const sx=box.x+box.width/2,sy=box.y+box.height/2;
+ await page.mouse.move(sx,sy);await page.mouse.down();await page.mouse.move(sx+30,sy+20,{steps:5});await page.mouse.move(sx+60,sy+40,{steps:5});await page.mouse.up();
+ const a1=await pos('bb'),b1=await pos('bb2');assert.deepEqual(a1,a0,'first breadboard stays');assert.notDeepEqual(b1,b0,'second breadboard moved');
+ // a project saved by an older version with two breadboards named "bb"
+ await page.evaluate(()=>{const ps=JSON.parse(localStorage.getItem('pin-by-pin-projects-v1'));const d=ps.list[0].diagram;d.parts.push({id:'bb',type:'breadboard',x:400,y:0,rot:0,attrs:{}});localStorage.setItem('pin-by-pin-projects-v1',JSON.stringify(ps));});
+ await page.reload();await lab(page);const ids2=await page.evaluate(()=>document.querySelector('#lab-root').__lab.diagram.parts.map(p=>p.id));assert.equal(new Set(ids2).size,ids2.length);assert.deepEqual(page.errors,[]);await page.close();});

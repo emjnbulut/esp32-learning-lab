@@ -520,6 +520,138 @@ void loop() {
 };
 function potAt(s){const p=Object.values(s.inputs).find(i=>'pos' in i);return p?p.pos:-1;}
 function rgbIs(s,r,g,b){const id=Object.keys(s.leds).find(k=>k.endsWith(':R'));if(!id)return false;const base=id.slice(0,-2);const v=['R','G','B'].map(c=>s.leds[base+':'+c]||0);const want=[r,g,b];return v.every((x,i)=>want[i]?x>0.1:x<0.02);}
+// "Your turn" tasks: small follow-ups that start from the learner's own work on the parent mission
+Object.assign(MISSIONS,{
+ hello2:{parent:'hello',xp:20,solution:{diagram:D([]),code:`void setup() {
+  Serial.begin(115200);
+  Serial.println("Hello, ESP32!");
+  Serial.println("My name is Pin by Pin.");
+}
+
+void loop() {
+}
+`},title:'Your turn: say more',intro:'Print a second line under the greeting, for example your name. Each line should appear once.',
+  steps:['Add a second `Serial.println(…)` in setup() with your own text.','Run it and read the monitor.'],
+  hints:['Put it right under the greeting, still inside setup(). Code in loop() would repeat.'],
+  goals:[{text:'Two different lines are printed',check:s=>new Set(lines(s)).size>=2},{text:'Each line appears only once',check:s=>s.now>1.5e6&&lines(s).length>=2&&lines(s).length===new Set(lines(s)).size}],script:{ms:2000}},
+ counter2:{parent:'counter',xp:20,solution:{diagram:D([]),code:`int seconds = 0;
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("Hello, ESP32!");
+}
+
+void loop() {
+  seconds = seconds + 1;
+  Serial.printf("Count: %d\\n", seconds);
+  delay(500);
+}
+`},title:'Your turn: count faster',intro:'Make the counter go up twice a second.',
+  steps:['Change the wait in loop() so a new line comes every half second.','Restart and watch the timing.'],
+  hints:['Half a second is 500 milliseconds.'],
+  goals:[{text:'The number goes up by one each line',check:s=>{const n=lines(s).map(l=>l.match(/(\d+)\D*$/)).filter(Boolean).map(m=>+m[1]);return n.length>=3&&n.slice(-3).every((v,i,a)=>i===0||v===a[i-1]+1);}},{text:'A new line every 500 ms',check:s=>{const t=s.serialLog.filter(e=>/\d/.test(e.s)&&!/Hello/.test(e.s)).map(e=>e.t);return t.length>=3&&t.slice(-3).every((v,i,a)=>i===0||Math.abs(v-a[i-1]-500)<40);}}],script:{ms:2200}},
+ circuit2:{parent:'circuit',xp:20,solution:{diagram:D([{id:'r1',type:'resistor',at:'bb:bp8',rot:270},{id:'led1',type:'led',at:'bb:f8'},{id:'r2',type:'resistor',at:'bb:bp14',rot:270},{id:'led2',type:'led',at:'bb:f14',attrs:{color:'green'}}],[W_3V3,W_GND,{a:'bb:j9',b:'bb:bn9',color:'#2b2b2b'},{a:'bb:j15',b:'bb:bn15',color:'#2b2b2b'}]),code:`void setup() {
+}
+
+void loop() {
+}
+`},title:'Your turn: a second LED',intro:'Add a second LED with its own resistor, also powered from the + rail. Both should light.',
+  steps:['Add an LED and a resistor with “+ Add part”.','Build the same path again in other columns: + rail → resistor → LED long leg … short leg → − rail.','Run it.'],
+  hints:['Every LED needs its own resistor.','The rails run along the whole board, so you can use any free column.'],
+  goals:[{text:'Two LEDs light',check:s=>ledKeys(s).filter(k=>lit(s,k)).length>=2},{text:'Both stay under 20 mA',check:s=>{const on=ledKeys(s).filter(k=>lit(s,k));return on.length>=2&&on.every(k=>(s.ledI[k]||0)<0.02);}}],script:{ms:500}},
+ blink2:{parent:'blink',xp:20,solution:{diagram:BLINK,code:`const int LED_PIN = 23;
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(100);
+  digitalWrite(LED_PIN, LOW);
+  delay(1900);
+}
+`},title:'Your turn: a lighthouse',intro:'From episode 3: a short flash, then a long dark pause. Make the LED shine for 100 ms and stay dark for 1900 ms.',
+  steps:['Change the two delay() values.','Restart and count: one flash every two seconds.'],
+  hints:['The first delay comes after HIGH (on time), the second after LOW (off time).'],
+  goals:[{text:'100 ms on, 1900 ms off',check:s=>!!blinkKey(s,100,1900,0.15)}],script:{ms:6500}},
+ press2:{parent:'press',xp:20,solution:{diagram:D([...BLINK_PARTS,BUTTON_PART],[...BLINK_WIRES,...BUTTON_WIRES]),code:`const int BUTTON_PIN = 22;
+const int LED_PIN = 23;
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  int state = digitalRead(BUTTON_PIN);
+  if (state == LOW) {
+    digitalWrite(LED_PIN, LOW);
+  } else {
+    digitalWrite(LED_PIN, HIGH);
+  }
+  delay(50);
+}
+`},title:'Your turn: the other way round',intro:'Now the LED is on all the time and goes dark only while you hold the button.',
+  steps:['Swap HIGH and LOW in the two digitalWrite() lines.','Run, then hold the button and let go.'],
+  hints:['Pressed still reads LOW; only what you do with it changes.'],
+  goals:[{text:'Released: the LED is on',check:s=>(s.mem.on=s.mem.on||(!pressed(s)&&s.now>200e3&&ledKeys(s).some(k=>lit(s,k))))},{text:'Held down: the LED is off',check:s=>(s.mem.off=s.mem.off||(pressed(s)&&!ledKeys(s).some(k=>lit(s,k))))}],
+  script:{ms:1200,actions:[{at:500,press:'btn1'},{at:900,release:'btn1'}],ticks:[300,750]}},
+ toggle2:{parent:'toggle',xp:20,solution:{diagram:D([...BLINK_PARTS,BUTTON_PART],[...BLINK_WIRES,...BUTTON_WIRES]),code:`const int BUTTON_PIN = 22;
+const int LED_PIN = 23;
+
+int lastState = HIGH;
+bool ledOn = false;
+
+void setup() {
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(LED_PIN, OUTPUT);
+  Serial.begin(115200);
+}
+
+void loop() {
+  int state = digitalRead(BUTTON_PIN);
+  if (state != lastState) {
+    if (state == LOW) {
+      ledOn = !ledOn;
+      digitalWrite(LED_PIN, ledOn ? HIGH : LOW);
+      Serial.println(ledOn ? "LED ON" : "LED OFF");
+    }
+    delay(50);
+  }
+  lastState = state;
+}
+`},title:'Your turn: say ON or OFF',intro:'Instead of counting, print what the LED is doing: “LED ON” or “LED OFF”.',
+  steps:['Replace the two Serial lines with one: `Serial.println(ledOn ? "LED ON" : "LED OFF");`','Run and press a few times.'],
+  hints:['`? :` picks the first text when ledOn is true, otherwise the second.'],
+  goals:[{text:'Prints LED ON and LED OFF',check:s=>/LED ON/.test(s.out)&&/LED OFF/.test(s.out)&&presses(s)>=2},{text:'The last message matches the LED',check:s=>{const l=lines(s).filter(x=>/LED (ON|OFF)/.test(x)).pop();if(!l||presses(s)<3)return false;return /ON/.test(l)===ledKeys(s).some(k=>lit(s,k));}}],
+  script:{ms:1800,actions:[300,700,1100].flatMap(t=>[{at:t,press:'btn1'},{at:t+150,release:'btn1'}])}},
+ nowait2:{parent:'nowait',xp:20,solution:null,title:'Your turn: faster, still listening',intro:'Make the LED blink every 200 ms. The button must still stop it at once.',
+  steps:['Change the interval in the blink check from 500 to 200.','Run, then press the button while it blinks.'],
+  hints:['Only one number changes: `now - lastBlink >= 200`.'],
+  goals:[{text:'The LED blinks every 200 ms',check:s=>!!blinkKey(s,200,200,0.2)},{text:'A press still stops it',check:s=>{if(/stopped/.test(s.out)&&!ledKeys(s).some(k=>lit(s,k))){const t=s.serialLog.filter(e=>/stopped/.test(e.s)).pop()?.t;if(t!==undefined&&s.now/1000-t>500)s.mem.stop=true;}return !!s.mem.stop;}}],
+  script:{ms:2600,actions:[{at:1300,press:'btn1'},{at:1450,release:'btn1'}],ticks:[1250]}},
+ fade2:{parent:'fade',xp:20,solution:null,title:'Your turn: halfway',intro:'Let the LED fade up only to half brightness, then back down.',
+  steps:['Change the top of both loops from 255 to about 127.','Restart and watch: it never gets fully bright.'],
+  hints:['Half of 255 is about 127. Change it in both for loops.'],
+  goals:[{text:'It still fades smoothly',check:s=>s.writes.filter(w=>w.pwm).length>50},{text:'It stops at about half (around 127)',check:s=>{const v=s.writes.filter(w=>w.pwm).map(w=>w.v);return v.length>50&&Math.max(...v)>=115&&Math.max(...v)<=140;}}],script:{ms:1500}},
+ colors2:{parent:'colors',xp:20,solution:null,title:'Your turn: yellow and white',intro:'Add two more colors to the show: yellow (red + green) and white (all three).',
+  steps:['Add `color(255, 255, 0);` with a delay for yellow.','Add white with all three channels on. Run it.'],
+  hints:['Light mixes differently from paint: red + green = yellow.'],
+  goals:[{text:'Yellow',check:s=>(s.mem.y=s.mem.y||rgbIs(s,1,1,0))},{text:'White',check:s=>(s.mem.w=s.mem.w||rgbIs(s,1,1,1))}],script:{ms:6300,ticks:[500,1500,2500,3500,4500,5500]}},
+ dimmer2:{parent:'dimmer',xp:20,solution:null,title:'Your turn: turn it around',intro:'Make the knob work the other way: bright where it was dark, dark where it was bright.',
+  steps:['Swap the last two numbers in map(): `map(raw, 0, 4095, 255, 0)`.','Restart and turn the knob to both ends.'],
+  hints:['map() can count down as well as up.'],
+  goals:[{text:'Knob at the start: LED fully bright',check:s=>(s.mem.lo=s.mem.lo||(potAt(s)<0.03&&ledKeys(s).some(k=>(s.leds[k]||0)>0.45)))},{text:'Knob at the end: LED dark',check:s=>(s.mem.hi=s.mem.hi||(potAt(s)>0.97&&ledKeys(s).every(k=>(s.leds[k]||0)<0.03)))}],
+  script:{ms:1100,actions:[{at:200,pot:'pot1',pos:0},{at:600,pot:'pot1',pos:1}],ticks:[500,1000]}}
+});
+// solutions written as a small change of the parent's solution
+const tweak=(id,from,to)=>({diagram:MISSIONS[MISSIONS[id].parent].solution.diagram,code:MISSIONS[MISSIONS[id].parent].solution.code.split(from).join(to)});
+MISSIONS.nowait2.solution=tweak('nowait2','now - lastBlink >= 500','now - lastBlink >= 200');
+MISSIONS.fade2.solution=tweak('fade2','255','127');
+MISSIONS.colors2.solution=tweak('colors2','  color(255, 0, 255); // purple\n  delay(1000);\n','  color(255, 0, 255); // purple\n  delay(1000);\n  color(255, 255, 0); // yellow\n  delay(1000);\n  color(255, 255, 255); // white\n  delay(1000);\n');
+MISSIONS.dimmer2.solution=tweak('dimmer2','map(raw, 0, 4095, 0, 255)','map(raw, 0, 4095, 255, 0)');
+for(const m of Object.values(MISSIONS))if(m.parent)m.starter={code:MISSIONS[m.parent].solution.code,diagram:MISSIONS[m.parent].solution.diagram};
 // missions whose starter keeps the previous mission's code take it from there
 const PREV={fast:'blink',pair:'blink',two:'nowait',speed:'dimmer'};
 for(const [id,m] of Object.entries(MISSIONS)){m.id=id;if(m.starter.code===null)m.starter.code=MISSIONS[PREV[id]].solution.code;}

@@ -5,6 +5,11 @@ import {PARTS,PITCH,partPins,pinPos,LED_COLORS,ESP_GPIO} from './sim/circuit.mjs
 import {partSvg,partIcon,fmtOhms} from './sim/parts-view.mjs';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clone=o=>JSON.parse(JSON.stringify(o));
+// every part needs its own id (wires and selection use it); older saved projects may contain duplicates
+const BASE_ID={esp32:'esp',breadboard:'bb',led:'led',resistor:'r',button:'btn',pot:'pot',rgb:'rgb',buzzer:'buzzer'};
+// boards keep a plain name for the first one (esp, bb, then bb2…); small parts are numbered from 1 (led1, r1, btn1…)
+export function uniqueId(parts,type){const base=BASE_ID[type]||type,single=type==='esp32'||type==='breadboard';if(single&&!parts.some(p=>p.id===base))return base;let n=single?2:1;while(parts.some(p=>p.id===base+n))n++;return base+n;}
+export function repairIds(diagram){const seen=new Set();for(const p of diagram.parts){if(seen.has(p.id)){const keep=diagram.parts.filter(q=>q!==p&&seen.has(q.id));p.id=uniqueId([...keep,...diagram.parts.filter(q=>q!==p)],p.type);}seen.add(p.id);}return diagram;}
 const KW=/\b(void|int|long|short|char|float|double|bool|boolean|byte|word|unsigned|signed|const|static|volatile|String|uint8_t|int8_t|uint16_t|int16_t|uint32_t|int32_t|size_t|if|else|for|while|do|return|break|continue|switch|case|default|true|false|HIGH|LOW|INPUT|OUTPUT|INPUT_PULLUP|INPUT_PULLDOWN|LED_BUILTIN)\b/;
 export function highlight(code){return code.split('\n').map(line=>{let out='',rest=line;
  while(rest.length){let m;
@@ -18,7 +23,7 @@ export function highlight(code){return code.split('\n').map(line=>{let out='',re
 const WIRE_COLORS=['#2f9a3c','#2f6fd0','#f28c1c','#c9a400','#8a3fc8','#16a3a3'];
 const ADDABLE=['esp32','breadboard','led','resistor','button','pot','rgb','buzzer'];
 export class Lab{
- constructor(o){this.t=o.t||(s=>s);this.code=o.code||'';this.diagram=clone(o.diagram||{parts:[],wires:[]});this.past=[];this.future=[];this.tool='select';this.wcolor=null;this.onChange=o.onChange||(()=>{});this.onTick=o.onTick||(()=>{});this.onRun=o.onRun||(()=>{});
+ constructor(o){this.t=o.t||(s=>s);this.code=o.code||'';this.diagram=repairIds(clone(o.diagram||{parts:[],wires:[]}));this.past=[];this.future=[];this.tool='select';this.wcolor=null;this.onChange=o.onChange||(()=>{});this.onTick=o.onTick||(()=>{});this.onRun=o.onRun||(()=>{});
   this.readOnlyParts=new Set(o.lockedParts||[]);this.view=null;this.sel=null;this.sim=null;this.wiring=null;this.drag=null;this.tab='code';this.sound=true;this.baud=115200;this.lastOut='';this.raf=0;this.lastTick=0;}
  get running(){return this.sim?.status==='running';}
  mount(root){this.root=root;root.__lab=this;const t=this.t;
@@ -163,9 +168,12 @@ export class Lab{
  deleteSel(){if(!this.sel)return;if(this.sel.part&&this.readOnlyParts.has(this.sel.part))return;this.snap();if(this.sel.wire!==undefined)this.diagram.wires.splice(this.sel.wire,1);
   else{const id=this.sel.part;if(this.readOnlyParts.has(id))return;this.diagram.parts=this.diagram.parts.filter(p=>p.id!==id);this.diagram.wires=this.diagram.wires.filter(w=>!w.a.startsWith(id+':')&&!w.b.startsWith(id+':'));}
   this.sel=null;this.closeProps();this.render();this.changed();}
- addPart(type){if(this.running)this.stop();const r=this.svg.getBoundingClientRect();let n=1;while(this.diagram.parts.some(p=>p.id===type+n))n++;const id=type==='esp32'?'esp':type==='breadboard'&&n===1?'bb':type+n;
-  const cx=(r.width/2-this.view.x)/this.view.z,cy=(r.height/2-this.view.y)/this.view.z;const p={id,type,x:Math.round(cx/PITCH)*PITCH,y:Math.round(cy/PITCH)*PITCH,rot:0,attrs:{...(PARTS[type].attrs||{})}};
-  this.snap();this.diagram.parts.push(p);this.select({part:id});this.changed();this.renderInputs();}
+ addPart(type){if(this.running)this.stop();const r=this.svg.getBoundingClientRect();const id=uniqueId(this.diagram.parts,type);
+  const cx=(r.width/2-this.view.x)/this.view.z,cy=(r.height/2-this.view.y)/this.view.z;let px=Math.round(cx/PITCH)*PITCH,py=Math.round(cy/PITCH)*PITCH;
+  // a breadboard or board is large: put it to the right of everything so it does not cover the others
+  if(type==='breadboard'||type==='esp32'){let right=-Infinity,top=Infinity;for(const q of this.diagram.parts){const b=PARTS[q.type].box;right=Math.max(right,q.x+b[2]);top=Math.min(top,q.y+b[1]);}if(right>-Infinity){const b=PARTS[type].box;px=Math.round((right-b[0]+20)/PITCH)*PITCH;py=Math.round((top-b[1])/PITCH)*PITCH;}}
+  const p={id,type,x:px,y:py,rot:0,attrs:{...(PARTS[type].attrs||{})}};
+  this.snap();this.diagram.parts.push(p);this.select({part:id});this.changed();this.renderInputs();if(type==='breadboard'||type==='esp32')this.fit();}
  renderInputs(){const box=this.$('#lab-inputs');if(!box)return;const t=this.t;const ins=this.diagram.parts.filter(p=>p.type==='button'||p.type==='pot');
   box.innerHTML=ins.length?`<span>${t('Controls')}</span>`+ins.map(p=>p.type==='button'?`<button class="lab-press" data-press="${esc(p.id)}" ${this.running?'':'disabled'}>${t('Press {id}',{id:esc(p.id)})}</button>`:`<label>${esc(p.id)} <input type="range" min="0" max="1000" value="${Math.round((this.sim?.inputs?.[p.id]?.pos??p.attrs.pos??0.5)*1000)}" data-potin="${esc(p.id)}" ${this.running?'':'disabled'} aria-label="${t('Turn {id}',{id:esc(p.id)})}"></label>`).join(''):'';
   box.querySelectorAll('[data-press]').forEach(b=>{const id=b.dataset.press;const down=e=>{e.preventDefault();this.sim?.press(id,true);b.classList.add('down');};const up=()=>{this.sim?.press(id,false);b.classList.remove('down');};
@@ -221,5 +229,5 @@ export class Lab{
  // screen position of a pin or part anchor (used by the browser tests)
  pinScreen(key){const [x,y]=this.pinPosByKey(key);const r=this.svg.getBoundingClientRect();return [r.left+this.view.x+x*this.view.z,r.top+this.view.y+y*this.view.z];}
  worldToScreen(x,y){const r=this.svg.getBoundingClientRect();return [r.left+this.view.x+x*this.view.z,r.top+this.view.y+y*this.view.z];}
- setDiagram(d){this.stop(true);this.diagram=clone(d);this.past=[];this.future=[];this.undoState();this.sel=null;this.render();this.renderInputs();this.fit();}
+ setDiagram(d){this.stop(true);this.diagram=repairIds(clone(d));this.past=[];this.future=[];this.undoState();this.sel=null;this.render();this.renderInputs();this.fit();}
 }

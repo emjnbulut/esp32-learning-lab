@@ -247,7 +247,7 @@ Object.assign(TR_LESSONS,{
   {q:'Hangisi doğru?',choices:['pinMode() bir GPIO’yu giriş ya da çıkış yapar','digitalWrite() GND’yi kapatabilir','3V3 koddan kapatılabilir'],explain:'GPIO’lar programlanabilen pinlerdir. GND ve 3V3 sabittir: toprak ve besleme.'},
   {q:'loop() içinde yalnızca iki kez delay(1000); var. loop() bir turu kaç saniye sürer?',explain:'İki bekleme toplanır: 1000 ms + 1000 ms = 2 sn.'}]},
  check2:{title:'Ünite 2 sınavı',tag:'ÜNİTE SINAVI',intro:'Breadboard’u ve Ohm kanununu biliyor musun? Bu sınavı geçersen Ünite 3 hemen açılır.',hint:'Sorularda ipucu yok. Kontrol ettikten sonra her sorunun açıklaması görünür.',questions:[
-  {q:'Aynı devre (3,3 V GPIO, 2 V kırmızı LED) ama 330 Ω dirençle. Yaklaşık kaç mA akar?',explain:'(3,3 − 2) / 330 = 1,3 / 330 ≈ 0,0039 A, yani yaklaşık 3,9 mA. Büyük direnç daha az akım ve daha sönük LED demek.'},
+  {q:'Aynı devre (3V3’ten 3,3 V, 2 V kırmızı LED) ama 330 Ω dirençle. Yaklaşık kaç mA akar?',explain:'(3,3 − 2) / 330 = 1,3 / 330 ≈ 0,0039 A, yani yaklaşık 3,9 mA. Büyük direnç daha az akım ve daha sönük LED demek.'},
   {q:'Direnç a4–a7’de, LED’in + bacağı a7’de, − bacağı a8’de. GPIO 23’ten gelen kablo nereye gitmeli?',choices:['c4','c7','f4'],explain:'GPIO 23 direncin boştaki ucuna ulaşmalı: a–e grubundaki 4. sütun. 7. sütun direnci atlar; f4 diğer gruptadır.'},
   {q:'LED’i dirençsiz olarak doğrudan GPIO 23 ile GND arasına bağlarsan ne olur?',choices:['Çok akım akar; LED ve pin zarar görebilir','Hiçbir şey, LED kendi akımını sınırlar','LED daha verimli yanar'],explain:'LED iletime geçince akımı neredeyse hiç sınırlamaz. Güvenli akımı direnç belirler.'},
   {q:'3,3 V pinde 2 V’luk bir LED için yaklaşık 10 mA veren direnç kaç Ω?',explain:'R = (3,3 − 2) / 0,010 = 130 Ω. Uygulamada bir üst standart değer seçilir, örneğin 150 Ω.'},
@@ -259,7 +259,7 @@ Object.assign(TR_LESSONS,{
   {q:'pinMode(LED_PIN, OUTPUT) satırını unuttun. Muhtemelen ne olur?',choices:['LED sönük kalır ya da hiç yanmaz: pin çıkış olarak sürülmüyor','Hiçbir şey, pinler zaten çıkıştır','Kart yeniden başlar'],explain:'pinMode(…, OUTPUT) olmadan pin sürülmez; digitalWrite() LED’i düzgün besleyemez.'},
   {q:'Bağlantı: GPIO 23 → direnç → LED − bacağı, LED + bacağı → GND. LED yanmıyor. Çözüm?',choices:['LED’i ters çevir','Daha büyük direnç kullan','İkinci bir delay() ekle'],explain:'Akım uzun bacaktan (+, anot) girmeli. Ters takılan LED akımı engeller.'}]},
  check4:{title:'Ünite 4 sınavı',tag:'ÜNİTE SINAVI',intro:'INPUT_PULLUP, debounce ve millis() sana rahat mı geliyor? Bu sınavı geçersen Ünite 5 hemen açılır.',hint:'Sorularda ipucu yok. Kontrol ettikten sonra her sorunun açıklaması görünür.',questions:[
-  {q:'INPUT_PULLUP ve GND’ye giden bir butonla hangi koşul “basıldı” demektir?',choices:['digitalRead(pin) == LOW','digitalRead(pin) == HIGH','analogRead(pin) > 0'],explain:'Pull-up pini HIGH tutar; basınca pin GND’ye bağlanır ve LOW okunur.'},
+  {q:'INPUT_PULLUP ve GND’ye giden bir butonla hangi koşul “basıldı” demektir?',choices:['digitalRead(pin) == LOW','digitalRead(pin) == HIGH','pinMode(pin, OUTPUT)'],explain:'Pull-up pini HIGH tutar; basınca pin GND’ye bağlanır ve LOW okunur.'},
   {q:'lastChange = 4980 ve now = 5020. 50 ms debounce ile yeni bir değişimin kabulüne kaç ms kaldı?',explain:'5020 − 4980 = 40 ms geçti. 50 − 40 = 10 ms kaldı.'},
   {q:'Buton burada neden tepkisiz hissettiriyor?',choices:['Buton 2 saniyede yalnızca bir kez okunuyor','INPUT_PULLUP çok zayıf','digitalWrite() butonu engelliyor'],explain:'İki delay loop()’u 2 saniye dondurur; buton her turda yalnızca bir kez kontrol edilir.'},
   {q:'millis() ile yeşil LED her 150 ms’de durum değiştiriyor. 3 saniyede kaç değişim olur?',explain:'3000 / 150 = 20 değişim; loop başka ne yaparsa yapsın.'},
@@ -760,3 +760,164 @@ Object.assign(TR,{
 Object.assign(TR,{'Undo':'Geri al','Redo':'Yinele','Undo (Ctrl+Z)':'Geri al (Ctrl+Z)','Redo (Ctrl+Y)':'Yinele (Ctrl+Y)','Cancel wire':'Kabloyu iptal et','Wire started: click another pin to finish it, or press Cancel wire.':'Kablo başladı: bitirmek için başka bir pine tıkla ya da “Kabloyu iptal et”e bas.'});
 Object.assign(TR,{'Tool':'Araç','Move':'Taşı','Wire':'Kablo','Move parts, select wires (V)':'Parçaları taşı, kabloları seç (V)','Draw wires (W)':'Kablo çek (W)','Automatic colour':'Otomatik renk','Wire tool: click a pin or hole, then another one. Press Esc or ✋ Move to stop.':'Kablo aracı: bir pine ya da deliğe, sonra bir başkasına tıkla. Bırakmak için Esc’e ya da ✋ Taşı’ya bas.'});
 Object.assign(TR,{'Review mode: every lesson is unlocked.':'İnceleme modu: bütün dersler açık.','Turn off':'Kapat','Lock lessons again':'Dersleri yeniden kilitle','Unlock every lesson (review mode)':'Bütün dersleri aç (inceleme modu)','Lessons are locked again.':'Dersler yeniden kilitlendi.','REVIEW MODE · PROGRESS NOT CHANGED':'İNCELEME MODU · İLERLEME DEĞİŞMEDİ'});
+// questions replaced so that nothing is asked before it is taught
+Object.assign(TR_LESSONS.check1.questions[0],{q:'Bu program ilk 3 saniyede ne yazdırır?',choices:['1, 2, 3','0, 1, 2','1, 1, 1'],explain:'n ilk yazdırmadan önce 1 olur, sonra loop her saniye yeniden çalışır: 1, 2, 3.'});
+Object.assign(TR_LESSONS.check1.questions[3],{q:'Kart açılırken yalnızca bir kez çalışması gereken kodu nereye yazarsın?',choices:['setup() içine','loop() içine','loop()’tan sonra'],explain:'setup() açılışta bir kez çalışır; loop() ondan sonra tekrar tekrar çalışır.'});
+Object.assign(TR_LESSONS.check2.questions[1],{q:'Direnç a4–a7’de, LED’in + bacağı a7’de, − bacağı a8’de. 3V3’ten gelen kablo nereye gitmeli?',explain:'3V3 direncin boştaki ucuna ulaşmalı: a–e grubundaki 4. sütun. 7. sütun direnci atlar; f4 diğer gruptadır.'});
+Object.assign(TR_LESSONS.check2.questions[2],{q:'LED’i dirençsiz olarak doğrudan 3V3 ile GND arasına bağlarsan ne olur?',choices:['Çok akım akar; LED bozulabilir','Hiçbir şey, LED kendi akımını sınırlar','LED daha verimli yanar']});
+Object.assign(TR_LESSONS.check5.questions[4],{q:'analogWrite(LED_PIN, 64): pin zamanın yaklaşık yüzde kaçında açık?',explain:'64 / 255 ≈ 0,25; yani pin zamanın yaklaşık %25’inde açık.'});
+TR_LESSONS.resistor.intro=TR_LESSONS.resistor.intro.replace('GPIO için 3,3 V','3V3 pininden 3,3 V');
+Object.assign(TR,{'YOUR TURN':'SIRA SENDE'});
+Object.assign(TR_MISSIONS,{
+ "hello2": {
+  "title": "Sıra sende: biraz daha konuş",
+  "intro": "Selamlamanın altına ikinci bir satır yazdır, mesela adını. Her satır yalnızca bir kez görünmeli.",
+  "steps": [
+   "setup() içine kendi metninle ikinci bir `Serial.println(…)` ekle.",
+   "Çalıştır ve monitöre bak."
+  ],
+  "hints": [
+   "Selamlamanın hemen altına, yine setup() içine koy. loop() içindeki kod tekrar eder."
+  ],
+  "goals": [
+   "İki farklı satır yazdırılıyor",
+   "Her satır yalnızca bir kez görünüyor"
+  ]
+ },
+ "counter2": {
+  "title": "Sıra sende: daha hızlı say",
+  "intro": "Sayacı saniyede iki kez artır.",
+  "steps": [
+   "loop() içindeki bekleme süresini değiştir, yeni satır her yarım saniyede bir gelsin.",
+   "Yeniden başlat ve zamanlamayı izle."
+  ],
+  "hints": [
+   "Yarım saniye 500 milisaniyedir."
+  ],
+  "goals": [
+   "Sayı her satırda bir artıyor",
+   "Her 500 ms’de yeni bir satır"
+  ]
+ },
+ "circuit2": {
+  "title": "Sıra sende: ikinci bir LED",
+  "intro": "Kendi direnciyle ikinci bir LED ekle; o da + rayından beslensin. İkisi de yanmalı.",
+  "steps": [
+   "“+ Parça ekle” ile bir LED ve bir direnç ekle.",
+   "Aynı yolu başka sütunlarda yeniden kur: + ray → direnç → LED uzun bacak … kısa bacak → − ray.",
+   "Çalıştır."
+  ],
+  "hints": [
+   "Her LED’in kendi direnci olmalı.",
+   "Raylar tahtanın boyunca uzanır, bu yüzden boş olan herhangi bir sütunu kullanabilirsin."
+  ],
+  "goals": [
+   "İki LED yanıyor",
+   "İkisi de 20 mA altında"
+  ]
+ },
+ "blink2": {
+  "title": "Sıra sende: deniz feneri",
+  "intro": "3. bölümden: kısa bir parlama, sonra uzun bir karanlık bekleme. LED 100 ms yansın, 1900 ms sönük kalsın.",
+  "steps": [
+   "İki delay() değerini değiştir.",
+   "Yeniden başlat ve say: her iki saniyede bir parlama."
+  ],
+  "hints": [
+   "İlk delay HIGH’dan sonra gelir (yanık süre), ikincisi LOW’dan sonra (sönük süre)."
+  ],
+  "goals": [
+   "100 ms yanık, 1900 ms sönük"
+  ]
+ },
+ "press2": {
+  "title": "Sıra sende: tersine çevir",
+  "intro": "Şimdi LED hep yanık, sadece butona basılı tutarken sönüyor.",
+  "steps": [
+   "İki digitalWrite() satırında HIGH ile LOW’u değiştir.",
+   "Çalıştır, sonra butona basılı tut ve bırak."
+  ],
+  "hints": [
+   "Basılı hâlâ LOW okunur; sadece onunla ne yaptığın değişir."
+  ],
+  "goals": [
+   "Bırakınca: LED yanık",
+   "Basılı tutunca: LED sönük"
+  ]
+ },
+ "toggle2": {
+  "title": "Sıra sende: ON ya da OFF yaz",
+  "intro": "Saymak yerine LED’in ne yaptığını yazdır: “LED ON” ya da “LED OFF”.",
+  "steps": [
+   "İki Serial satırını tek satırla değiştir: `Serial.println(ledOn ? \"LED ON\" : \"LED OFF\");`",
+   "Çalıştır ve birkaç kez bas."
+  ],
+  "hints": [
+   "`? :` ledOn true ise ilk metni, değilse ikinciyi seçer."
+  ],
+  "goals": [
+   "LED ON ve LED OFF yazdırılıyor",
+   "Son mesaj LED’in durumuyla uyuşuyor"
+  ]
+ },
+ "nowait2": {
+  "title": "Sıra sende: daha hızlı, hâlâ dinliyor",
+  "intro": "LED’i her 200 ms’de bir yanıp söndür. Buton yine de onu hemen durdurmalı.",
+  "steps": [
+   "Yanıp sönme kontrolündeki aralığı 500’den 200’e değiştir.",
+   "Çalıştır, sonra LED yanıp sönerken butona bas."
+  ],
+  "hints": [
+   "Sadece tek bir sayı değişir: `now - lastBlink >= 200`."
+  ],
+  "goals": [
+   "LED her 200 ms’de yanıp sönüyor",
+   "Basınca hâlâ duruyor"
+  ]
+ },
+ "fade2": {
+  "title": "Sıra sende: yarıya kadar",
+  "intro": "LED yalnızca yarım parlaklığa kadar yavaşça yansın, sonra geri sönsün.",
+  "steps": [
+   "İki döngünün üst sınırını 255’ten yaklaşık 127’ye değiştir.",
+   "Yeniden başlat ve izle: hiç tam parlaklığa çıkmıyor."
+  ],
+  "hints": [
+   "255’in yarısı yaklaşık 127’dir. İki for döngüsünde de değiştir."
+  ],
+  "goals": [
+   "Hâlâ yumuşak geçiyor",
+   "Yaklaşık yarıda duruyor (127 civarı)"
+  ]
+ },
+ "colors2": {
+  "title": "Sıra sende: sarı ve beyaz",
+  "intro": "Gösteriye iki renk daha ekle: sarı (kırmızı + yeşil) ve beyaz (üçü birden).",
+  "steps": [
+   "Sarı için bir delay ile `color(255, 255, 0);` ekle.",
+   "Üç kanalı da açık olan beyazı ekle. Çalıştır."
+  ],
+  "hints": [
+   "Işık boyadan farklı karışır: kırmızı + yeşil = sarı."
+  ],
+  "goals": [
+   "Sarı",
+   "Beyaz"
+  ]
+ },
+ "dimmer2": {
+  "title": "Sıra sende: tersine çevir",
+  "intro": "Düğmeyi ters çalıştır: önceden karanlık olan yerde parlak, parlak olan yerde karanlık olsun.",
+  "steps": [
+   "map() içindeki son iki sayıyı değiştir: `map(raw, 0, 4095, 255, 0)`.",
+   "Yeniden başlat ve düğmeyi iki uca da çevir."
+  ],
+  "hints": [
+   "map() yukarı sayabildiği gibi aşağı da sayabilir."
+  ],
+  "goals": [
+   "Düğme başta: LED tam parlak",
+   "Düğme sonda: LED sönük"
+  ]
+ }
+});
