@@ -1,0 +1,5 @@
+{
+  "name":"esp32-learning-lab","version":"0.1.0","private":true,"type":"module",
+  "scripts":{"test":"node --test tests/*.test.mjs","dev":"node tools/serve.mjs","check":"node tools/check.mjs"},
+  "description":"Pin by Pin Lab: a free guided ESP32 learning workshop", "license":"MIT"
+}

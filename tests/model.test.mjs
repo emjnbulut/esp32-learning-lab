@@ -1,0 +1,17 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {lessons,units,sanitizeProgress,nextLesson,canOpen,complete,totalXP,circuitState,holeId,makeSketch} from '../dist/model.mjs';
+const circuit=()=>({parts:[{kind:'resistor',col:3,row:0},{kind:'led',col:6,row:0}],wires:[['gpio','t3'],['t7','gnd']]});
+test('breadboard has separate banks and connected five-hole columns',()=>{assert.equal(holeId(7,0),holeId(7,4));assert.notEqual(holeId(7,4),holeId(7,5));assert.notEqual(holeId(7,0),holeId(8,0));});
+test('correct series circuit lights LED',()=>assert.equal(circuitState(circuit()).ok,true));
+test('moving parts to another valid position still works',()=>{const c=circuit();c.parts=[{kind:'resistor',col:8,row:5},{kind:'led',col:11,row:9}];c.wires=[['gpio','b8'],['b12','gnd']];assert.equal(circuitState(c).ok,true);});
+test('a missing ground opens the circuit',()=>{const c=circuit();c.wires.pop();assert.equal(circuitState(c).code,'open');});
+test('opposite breadboard bank does not magically connect',()=>{const c=circuit();c.parts[1].row=5;assert.equal(circuitState(c).ok,false);});
+test('LED polarity matters',()=>{const c=circuit();c.parts[1].reversed=true;assert.equal(circuitState(c).code,'reversed');});
+test('direct GPIO to ground is detected',()=>{const c=circuit();c.wires.push(['gpio','gnd']);assert.equal(circuitState(c).code,'short');});
+test('resistor bypass is rejected',()=>{const c=circuit();c.wires.push(['t3','t6']);assert.equal(circuitState(c).code,'no-resistor');});
+test('fixed supply does not satisfy programmable GPIO task',()=>{const c=circuit();c.wires[0]=['vcc','t3'];assert.equal(circuitState(c).code,'fixed-power');});
+test('resistor may also be on LED cathode side',()=>{const c={parts:[{kind:'led',col:2,row:0},{kind:'resistor',col:3,row:0}],wires:[['gpio','t2'],['t6','gnd']]};assert.equal(circuitState(c).ok,true);});
+test('missing components do not pass',()=>assert.equal(circuitState({parts:[],wires:[]}).ok,false));
+test('progress validates ids and deduplicates XP',()=>{const p=sanitizeProgress({completed:['board','board','unknown'],dates:['2026-10-19','invalid']});assert.equal(totalXP(p),20);assert.deepEqual(p.completed,['board']);assert.equal(nextLesson(p).id,'serial');});
+test('future lessons stay locked until all predecessors completed',()=>{let p=sanitizeProgress({});assert.equal(canOpen('light',p),false);assert.equal(complete(p,'light','2026-10-19').completed.length,0);for(const l of lessons){assert.equal(canOpen(l.id,p),true);p=complete(p,l.id,'2026-10-19');}assert.equal(totalXP(p),260);assert.equal(p.dates.length,1);assert.equal(nextLesson(p),undefined);assert.equal(totalXP(complete(p,'challenge','2026-10-20')),260);});
+test('curriculum maps to 11 units and has unique activities',()=>{assert.equal(units.length,11);assert.equal(new Set(lessons.map(l=>l.id)).size,9);for(const l of lessons)assert.ok(units.some(u=>u.id===l.unit&&u.available));});
+test('Arduino export uses the selected timing and pin',()=>{const s=makeSketch('blink',250);assert.match(s,/LED_PIN = 23/);assert.equal((s.match(/delay\(250\)/g)||[]).length,2);assert.doesNotMatch(makeSketch('steady',500),/delay/);});
