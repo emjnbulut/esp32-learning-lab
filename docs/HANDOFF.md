@@ -1,4 +1,12 @@
-# Development handoff — 2026-10-20 (1.2)
+# Development handoff — 2026-10-20 (1.2.1)
+
+## Progress and Turkish diagnostics - 2026-10-20 (1.2.1)
+
+- model.releasedProgress() counts only released lessons in the header, home actions, progress bar, notebook and completion screen. Imported future-unit IDs remain in storage and exports. Public release gates remain [1,2].
+- dist/error-text.mjs translates compiler/runtime diagnostics at the UI boundary, including names, operators, argument counts and array bounds. Original English compiler messages and source locations stay unchanged. Unknown errors offer escaped technical details.
+- Regression coverage: future-only/all-unit notebook imports on the public site, preserved exports, Turkish compile/runtime errors, line highlighting, phone layout, technical-detail escaping and recovery after correcting code.
+- Validation: npm run check (109 tests) and npm run e2e (33 browser tests) passed. No dependency or storage-format changes.
+
 
 ## Accessible circuit building — 2026-10-20 (1.2)
 

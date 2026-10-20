@@ -120,6 +120,27 @@ test('the public site: only released units are open, the rest wait for their vid
   assert.match(await page.locator('.stat-tasks').innerText(),/\/ 1[0-9] tasks/);
   await page.goto(`http://127.0.0.1:${P2}/#/lesson/blink`);await page.waitForSelector('.lesson-node');assert.equal(await page.locator('.mission-panel').count(),0,'closed unit cannot be opened by URL');
   await page.goto(`http://127.0.0.1:${P2}/#/workshop`);await page.waitForSelector('#ws-example');const opts=await page.locator('#ws-example option').allInnerTexts();assert.ok(opts.some(o=>/Hello/.test(o)));assert.ok(!opts.some(o=>/Blink an LED|Read a button/.test(o)),'examples of closed units are hidden: '+opts.join('|'));
+
+  // Import progress from a version where later units were available.
+  await page.goto('http://127.0.0.1:'+P2+'/#/notebook');await page.waitForSelector('#progress-file');
+  const notebook=completed=>({name:'notebook.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({version:1,completed,dates:['2026-10-19']}))});
+  await page.setInputFiles('#progress-file',notebook(['blink']));
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('pin-by-pin-progress-v1')).completed.includes('blink'));
+  assert.match(await page.locator('.stat-tasks').innerText(),/^0 \/ 12 tasks$/);assert.equal(await page.locator('.empty-note').count(),1);
+  await page.goto('http://127.0.0.1:'+P2+'/');await page.waitForSelector('.hero-actions');
+  assert.match(await page.locator('.hero-actions .primary').innerText(),/Start the first project/);
+  assert.equal(await page.locator('.tiny-progress > div').evaluate(el=>el.style.width),'0%');
+  await page.goto('http://127.0.0.1:'+P2+'/#/notebook');await page.waitForSelector('#progress-file');
+  const {lessons:allLessons}=await import('../dist/model.mjs');const all=allLessons.map(l=>l.id);
+  await page.setInputFiles('#progress-file',notebook(all));
+  await page.waitForFunction(total=>JSON.parse(localStorage.getItem('pin-by-pin-progress-v1')).completed.length===total,all.length);
+  assert.match(await page.locator('.stat-tasks').innerText(),/^12 \/ 12 tasks$/);
+  assert.equal(await page.locator('.record').count(),12);assert.match(await page.locator('.notebook > p').innerText(),/^12 tasks/);
+  const [backup]=await Promise.all([page.waitForEvent('download'),page.click('#export-progress')]);
+  assert.deepEqual(new Set(JSON.parse(fs.readFileSync(await backup.path(),'utf8')).completed),new Set(all),'future records survive export');
+  await page.goto('http://127.0.0.1:'+P2+'/');await page.waitForSelector('.tiny-progress');
+  assert.equal(await page.locator('.tiny-progress > div').evaluate(el=>el.style.width),'100%');
+
   assert.deepEqual(errors,[]);await context.close();}finally{srv.kill();}});
 
 test('workshop retains live edits when exporting, renaming and switching projects',async()=>{
@@ -307,4 +328,28 @@ test('laptop: the pin connector leaves room for the circuit and serial monitor',
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),1440);
  fs.mkdirSync('artifacts',{recursive:true});await page.locator('.lab').screenshot({path:'artifacts/desktop-pin-connections.png'});
  assert.deepEqual(page.errors,[]);await page.close();
+});
+
+test('Turkish code diagnostics preserve source lines, recover after fixes and fit a phone',async()=>{
+ const page=await open('#/lesson/hello',{lang:'tr',width:390,height:844});await lab(page);
+ const cases=[
+ ['void setup() {\n Serial.begin(115200)\n}\nvoid loop() {}',/Satır 2.*Noktalı virgül/],
+ ['void setup() {\n pinMode(LEDPIN, OUTPUT);\n}\nvoid loop() {}',/Satır 2.*"LEDPIN" tanımlanmamış/],
+ ['void setup() {\n digitalWrite(23);\n}\nvoid loop() {}',/Satır 2.*digitalWrite\(\).*2.*1/],
+ ['int a[3];\nvoid setup() {\n a[3]=1;\n}\nvoid loop() {}',/Satır 3.*3 indeksi "a".*0 ile 2/]
+ ];
+ for(const [code,re] of cases){await page.fill('#ed-text',code);await page.click('#lab-run');
+  await page.waitForFunction(()=>!document.querySelector('#lab-error').hidden);assert.match((await page.locator('#lab-error').innerText()).replace(/\n/g,' '),re);
+  assert.equal(await page.locator('#ed-text').isVisible(),true);assert.equal(await page.locator('.ed-gutter b').count(),1);
+ }
+ const original='Simulator error: <img src=x onerror="window.injected=true"> {name}';
+ await page.evaluate(message=>document.querySelector('#lab-root').__lab.showError({message,line:2}),original);
+ await page.locator('#lab-error summary').click();assert.equal(await page.locator('#lab-error img').count(),0);
+ assert.match(await page.locator('#lab-error').innerText(),/Teknik ayrıntılar/);assert.ok((await page.locator('#lab-error details').innerText()).includes(original));
+ assert.equal(await page.evaluate(()=>window.injected),undefined);
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ fs.mkdirSync('artifacts',{recursive:true});await page.screenshot({path:'artifacts/turkish-code-error-phone.png',fullPage:true});
+ await page.fill('#ed-text',MISSIONS.hello.solution.code);await page.click('#lab-run');
+ await page.waitForFunction(()=>!document.querySelector('#mission-done').disabled);assert.equal(await page.locator('#lab-error').isHidden(),true);
+ assert.deepEqual(page.errors,[]);await page.context().close();
 });

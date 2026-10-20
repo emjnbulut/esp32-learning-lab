@@ -2,6 +2,9 @@
 
 ## Implemented in this revision
 
+- Released-lesson progress counts consistently across the header, notebook, home page and completion screen; importing future-unit records preserves the backup without inflating visible progress.
+- Turkish compiler/runtime explanations preserve names and source lines, with expandable technical details for unfamiliar errors; English diagnostics stay unchanged.
+
 - Full local backup in My notebook / Defterim: progress, lesson sketches and wiring, and all workshop projects.
 - Restore merges progress, keeps existing lesson drafts, preserves different workshop projects even when their IDs collide, and avoids duplicates when the same backup is restored again.
 - Strict project/backup validation before storing: version, component types, unique IDs, pin endpoints, coordinates, rotation, attributes and wire colors/points. File limit: 10 MB; per sketch: 100,000 characters; per circuit: 200 parts and 1,000 wires; per backup: 200 projects.

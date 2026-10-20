@@ -65,6 +65,12 @@ const regular=u=>lessons.filter(l=>l.unit===u&&l.type!=='checkpoint');
 export const checkpointOf=u=>lessons.find(l=>l.unit===u&&l.type==='checkpoint');
 export const unitPassed=(u,p)=>{const c=checkpointOf(u);return !!c&&p.completed.includes(c.id);};
 export const isReleased=l=>RELEASED_UNITS.includes(l.unit);
+// Imported future-unit records remain stored; only released lessons count in the UI.
+export function releasedProgress(p){
+ const done=new Set(p.completed),visible=lessons.filter(isReleased);
+ const count=visible.filter(l=>done.has(l.id)).length,total=visible.length;
+ return {count,total,percent:total?count/total*100:0};
+}
 export function unitOpen(u,p){if(!RELEASED_UNITS.includes(u))return false;if(u===1)return true;const prev=regular(u-1);return prev.length>0&&(unitPassed(u-1,p)||prev.every(l=>p.completed.includes(l.id)));}
 export function nextLesson(p){return lessons.find(l=>!p.completed.includes(l.id)&&canOpen(l.id,p)&&!(l.type!=='checkpoint'&&unitPassed(l.unit,p)));}
 export function canOpen(id,p){const l=lessons.find(x=>x.id===id);if(!l||!unitOpen(l.unit,p))return false;if(l.type==='checkpoint'||unitPassed(l.unit,p))return true;const ls=regular(l.unit);return ls.slice(0,ls.indexOf(l)).every(x=>p.completed.includes(x.id));}

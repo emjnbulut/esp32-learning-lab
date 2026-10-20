@@ -2,6 +2,7 @@
 // Used by missions (with goal checks) and by the free workshop (with saved projects).
 import {CircuitHelp,connectionMarkup} from './lab-help.mjs';
 import {sketchDownload} from './sketch-export.mjs';
+import {explainError} from './error-text.mjs';
 import {Simulator} from './sim/runtime.mjs';
 import {PARTS,PITCH,partPins,pinPos,LED_COLORS,ESP_GPIO} from './sim/circuit.mjs';
 import {partSvg,partIcon,fmtOhms} from './sim/parts-view.mjs';
@@ -82,7 +83,7 @@ export class Lab{
    if(e.key==='Enter'){e.preventDefault();const line=v.slice(lineStart,s);let ind=line.match(/^\s*/)[0];if(/\{\s*$/.test(line))ind+='  ';const closing=v[en]==='}';put('\n'+ind+(closing&&ind.length>=2?'\n'+ind.slice(2):''),s,en,s+1+ind.length);return;}
    if(e.key==='}'&&/^\s+$/.test(v.slice(lineStart,s))&&s-lineStart>=2){e.preventDefault();put('}',s-2,en);return;}
    if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();this.restart();}});}
- showError(err){this.errLine=err.line||null;const box=this.$('#lab-error');box.hidden=false;box.innerHTML=`<b>${err.line?this.t('Line {n}',{n:err.line}):this.t('Error')}</b> ${esc(err.message)}`;this.syncEditor();
+ showError(err){this.errLine=err.line||null;const box=this.$('#lab-error');box.hidden=false;const diagnostic=explainError(err.message,this.t);box.innerHTML=`<b>${err.line?this.t('Line {n}',{n:err.line}):this.t('Error')}</b> ${esc(diagnostic.text)}${diagnostic.details?`<details><summary>${this.t('Technical details')}</summary>${esc(diagnostic.details)}</details>`:''}`;this.syncEditor();
   if(err.line){const lh=parseFloat(getComputedStyle(this.ta).lineHeight)||18;this.ta.scrollTop=Math.max(0,(err.line-4)*lh);}this.help?.showTab('code');}
  // ---------- toolbar ----------
  bindBar(){this.$('#lab-save-retry')?.addEventListener('click',()=>this.persistence.onRetry());this.$('#lab-save-download')?.addEventListener('click',()=>this.persistence.onDownload());this.$('#lab-run').onclick=()=>this.running?this.stop():this.start();this.$('#lab-restart').onclick=()=>this.restart();
