@@ -11,7 +11,7 @@ export function sensorMissions({D,BLINK_PARTS,BLINK_WIRES,W_GND,W_3V3,lines,ledK
  const lastLine=(s,re)=>lines(s).filter(l=>re.test(l.trim())).pop()||'';
  const percentNow=s=>{const m=lastLine(s,/^Light: \d+ %$/).match(/\d+/);return m?+m[0]:-1;};
  const screen=s=>(s.oledState.screen||[]).filter(x=>x.t==='text').map(x=>x.s);
- const screenText=s=>screen(s).join('|');
+ const screenText=s=>screen(s).join('');
  const anyLit=s=>ledKeys(s).some(k=>lit(s,k));
  const notes=s=>s.buzzerLog.map(e=>e.f).filter(f=>f>0);
  const pulses=s=>s.events.filter(e=>e.motion===true).length;
@@ -281,9 +281,9 @@ ${body}}
 `;
  M.relay={starter:{diagram:build(relaySet),code:RELAYBLINK('  // switch the relay on (LOW), wait, switch it off (HIGH), wait\n')},solution:{diagram:build(relaySet),code:RELAYBLINK('  digitalWrite(RELAY_PIN, LOW);\n  delay(2000);\n  digitalWrite(RELAY_PIN, HIGH);\n  delay(2000);\n')},
   title:'Click: switch with a relay',intro:'A relay is a switch that a small signal can close. Many modules are active-low: LOW switches them on and HIGH switches them off. That is why setup() starts with HIGH.',
-  steps:['Run the starter: the relay stays off.','In loop() write LOW to the relay pin and wait two seconds.','Write HIGH and wait two seconds again. Watch the indicator light and the click.'],
+  steps:['Run the starter: the relay stays off.','In loop() write LOW to the relay pin and wait two seconds.','Write HIGH and wait two seconds again. Watch the indicator and the switch.'],
   hints:['If the relay clicks on at start-up, you forgot the first `digitalWrite(RELAY_PIN, HIGH);`.','Only ever switch a relay module you were given with low-voltage things. Never touch mains electricity yourself.'],
-  goals:[{text:'The relay switches on',check:s=>s.relayLog.some(e=>e.on===true)},{text:'And off again',check:s=>{const i=s.relayLog.findIndex(e=>e.on===true);return i>=0&&s.relayLog.slice(i).some(e=>e.on===false);}}],
+  goals:[{text:'The relay switches on',check:s=>s.relayLog.some((e,i)=>e.on&&(s.relayLog[i+1]?.t??s.now/1000)-e.t>=1000)},{text:'And off again',check:s=>{const i=s.relayLog.findIndex((e,i)=>e.on&&(s.relayLog[i+1]?.t??s.now/1000)-e.t>=1000);return i>=0&&s.relayLog.slice(i+1).some(e=>e.on===false);}}],
   script:{ms:5000,ticks:[3000]}};
  const RELAYBTN=(body)=>String.raw`const int BUTTON_PIN = 22;
 const int RELAY_PIN = 26;
@@ -445,7 +445,7 @@ void loop() {
   steps:['Run the starter and click the routes in the preview: the LED does not react.','In handleOn() switch the LED on and send an answer.','In handleOff() switch it off and send an answer. Try both links.'],
   hints:['Every handler must call `server.send()`, otherwise the browser waits for an answer.','The links in the page are ordinary HTML: `<a href=\'/on\'>`.'],
   goals:[{text:'/on switches the LED on',check:s=>(s.mem.on=s.mem.on||(s.webState.uri==='/on'&&anyLit(s)))},{text:'/off switches it off again',check:s=>s.mem.on&&s.webState.uri==='/off'&&!anyLit(s)}],
-  script:{ms:3500,actions:[{at:1500,http:'/on'},{at:2500,http:'/off'}],ticks:[2200,3400]}};
+  script:{ms:4500,actions:[{at:2000,http:'/on'},{at:3000,http:'/off'}],ticks:[2700,4400]}};
  // ---------- unit 11: your own smart room ----------
  const ROOM=(body)=>String.raw`const int LDR_PIN = 34;
 const int PIR_PIN = 27;

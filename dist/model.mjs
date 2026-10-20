@@ -1,3 +1,4 @@
+import {sensorLessons} from './sensor-curriculum.mjs';
 import {RELEASED_UNITS} from './releases.mjs';
 export const STORAGE_KEY='pin-by-pin-progress-v1';
 export {RELEASED_UNITS};
@@ -42,18 +43,19 @@ export const lessons=[
  {"id":"speed","unit":5,"type":"mission","minutes":12,"tag":"CHALLENGE"},
  {"id":"check5","unit":5,"title":"Unit 5 checkpoint","minutes":6,"type":"checkpoint","tag":"CHECKPOINT","pass":4,"intro":"Already know PWM, RGB mixing and analogRead()? Pass this checkpoint to finish the unit.","hint":"There are no hints per question. After you check, every question shows an explanation.","questions":[{"q":"8-bit PWM: which analogWrite() value gives a 50% duty cycle?","input":true,"answer":128,"tolerance":1,"explain":"255 / 2 ≈ 127.5, so 127 or 128."},{"q":"The potentiometer reads 3072. What does map(raw, 0, 4095, 0, 255) return?","input":true,"answer":191,"tolerance":1,"explain":"3072 × 255 / 4095 ≈ 191.3; map() uses whole numbers, so 191."},{"q":"Common-cathode RGB LED: red 255, green 0, blue 255. Which color?","choices":["Purple (magenta)","Yellow","Cyan"],"answer":0,"explain":"Red + blue light = purple/magenta."},{"q":"Why does a PWM-driven LED look dim instead of flickering?","choices":["The switching is faster than your eye; you see the average","PWM lowers the voltage to a steady value","The resistor smooths the light"],"answer":0,"explain":"The LED really switches fully on and off, hundreds or thousands of times a second. Your eye averages it."},{"q":"analogWrite(LED_PIN, 64): for about what percentage of the time is the pin on?","input":true,"unit":"%","answer":25,"tolerance":1,"explain":"64 / 255 ≈ 0.25, so the pin is on about 25% of the time."}]}
 ];
+lessons.push(...sensorLessons);
 export const units=[
  {id:1,title:'Meet the board',subtitle:'A computer in the palm of your hand.',source:'01-setup',available:true},
  {id:2,title:'Explore the connections',subtitle:'There’s an order under the holes.',source:'02-board-and-breadboard',available:true},
  {id:3,title:'Light your first LED',subtitle:'Build the circuit. Change the code. See the result.',source:'03-blink-an-led',available:true},
  {id:4,title:'Buttons and time',subtitle:'digitalRead, debounce and millis()',source:'04-buttons-and-millis',available:true},
  {id:5,title:'Light at your command',subtitle:'PWM, RGB and a potentiometer',available:true},
- {id:6,title:'Light and sound',subtitle:'LDR, buzzer and melodies'},
- {id:7,title:'Sense the room',subtitle:'DHT11, I²C and an OLED screen'},
- {id:8,title:'Catch the motion',subtitle:'PIR, obstacle sensor and interrupts'},
- {id:9,title:'Connect to the world',subtitle:'Relays and Wi-Fi'},
- {id:10,title:'Give your sensor a web page',subtitle:'Web server and live data'},
- {id:11,title:'Your own smart room',subtitle:'Combine everything in one project'}
+ {id:6,title:'Light and sound',subtitle:'LDR, buzzer and melodies',available:true},
+ {id:7,title:'Sense the room',subtitle:'DHT11, I²C and an OLED screen',available:true},
+ {id:8,title:'Catch the motion',subtitle:'PIR, edge detection and interrupts',available:true},
+ {id:9,title:'Connect to the world',subtitle:'Relays and Wi-Fi',available:true},
+ {id:10,title:'Give your sensor a web page',subtitle:'Web server and live data',available:true},
+ {id:11,title:'Your own smart room',subtitle:'Combine everything in one project',available:true}
 ];
 export function sanitizeProgress(value){
  const known=new Set(lessons.map(l=>l.id));

@@ -16,8 +16,14 @@ export function wiringReference(diagram){
  }
  return [...groups.entries()].filter(([net])=>active.has(net)).map(([,g])=>({terminals:g.terminals,holes:[...g.holes]}));
 }
-export function hardwareGuide(diagram,t){
+const LIBRARIES=[
+ {header:'DHT.h',names:['DHT sensor library','Adafruit Unified Sensor'],url:'https://github.com/adafruit/DHT-sensor-library'},
+ {header:'Adafruit_SSD1306.h',names:['Adafruit SSD1306','Adafruit GFX Library'],url:'https://github.com/adafruit/Adafruit_SSD1306'}
+];
+export function hardwareGuide(diagram,t,code=''){
  const nets=wiringReference(diagram);
+ const libraries=LIBRARIES.filter(l=>code.split('\n').some(line=>/^\s*#\s*include\s*[<"]/.test(line)&&line.includes(l.header)));
+ const libraryStep=libraries.length?'<li>'+t('In Arduino Library Manager, install the libraries used by this sketch and accept their dependencies:')+' <ul>'+libraries.map(l=>'<li><a target="_blank" rel="noopener" href="'+l.url+'">'+l.names.join(' + ')+'</a></li>').join('')+'</ul></li>':'';
  const pins=[...new Set(nets.flatMap(n=>n.terminals.filter(p=>p.board).map(p=>p.key+(p.gpio===undefined?'':' / GPIO '+p.gpio))))];
  const rows=nets.map((n,i)=>'<tr><th scope="row">'+(i+1)+'</th><td>'+n.terminals.map(p=>esc(p.key)).join('<br>')+'</td><td>'+n.holes.map(esc).join('<br>')+'</td></tr>').join('');
  const p=s=>'<p>'+t(s)+'</p>';
@@ -35,7 +41,7 @@ export function hardwareGuide(diagram,t){
  '<h3>'+t('2. Download and upload')+'</h3><ol>'+
  '<li>'+t('Close this guide and use Download .ino to save the code currently in the editor.')+'</li>'+
  '<li>'+t('Install Arduino IDE and the esp32 package by Espressif Systems in Boards Manager. Select your exact board and its USB port.')+'</li>'+
- '<li>'+t('Open the .ino file and click Verify, then Upload. If the IDE asks, save it in a folder with the same sketch name. If upload stalls, follow your board instructions for the BOOT button.')+'</li>'+
+ libraryStep+'<li>'+t('Open the .ino file and click Verify, then Upload. If the IDE asks, save it in a folder with the same sketch name. If upload stalls, follow your board instructions for the BOOT button.')+'</li>'+
  '<li>'+t('Open Serial Monitor at the baud rate in Serial.begin(). For readStringUntil with a newline delimiter, select Newline (LF).')+'</li></ol>'+
  '<h3>'+t('3. Know what the simulator supports')+'</h3>'+
  p('This is an Arduino behavior simulator, not an ESP32 firmware emulator. It supports basic variables, functions, loops, one-dimensional arrays and String; GPIO, timing, PWM, analog input, tone and USB Serial input/output are modeled.')+

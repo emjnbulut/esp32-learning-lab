@@ -1,5 +1,6 @@
 // Hands-on missions. Each one has a starter (what the learner opens), a solution, steps, hints and
 // goals checked live against the running simulation. `script` drives tests/missions.test.mjs.
+import {sensorMissions} from './missions-sensors.mjs';
 import {resolveDiagram} from './sim/circuit.mjs';
 const ESP={id:'esp',type:'esp32',x:0,y:0},BB={id:'bb',type:'breadboard',x:160,y:0};
 const tray=(id,type,i,extra={})=>({id,type,x:190+i*60,y:250,...extra});
@@ -652,6 +653,7 @@ MISSIONS.fade2.solution=tweak('fade2','255','127');
 MISSIONS.colors2.solution=tweak('colors2','  color(255, 0, 255); // purple\n  delay(1000);\n','  color(255, 0, 255); // purple\n  delay(1000);\n  color(255, 255, 0); // yellow\n  delay(1000);\n  color(255, 255, 255); // white\n  delay(1000);\n');
 MISSIONS.dimmer2.solution=tweak('dimmer2','map(raw, 0, 4095, 0, 255)','map(raw, 0, 4095, 255, 0)');
 for(const m of Object.values(MISSIONS))if(m.parent)m.starter={code:MISSIONS[m.parent].solution.code,diagram:MISSIONS[m.parent].solution.diagram};
+Object.assign(MISSIONS,sensorMissions({D,BLINK_PARTS,BLINK_WIRES,W_GND,W_3V3,lines,ledKeys,lit,changes}));
 // missions whose starter keeps the previous mission's code take it from there
 const PREV={fast:'blink',pair:'blink',two:'nowait',speed:'dimmer'};
 for(const [id,m] of Object.entries(MISSIONS)){m.id=id;if(m.starter.code===null)m.starter.code=MISSIONS[PREV[id]].solution.code;}

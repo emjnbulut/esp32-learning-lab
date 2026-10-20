@@ -178,7 +178,7 @@ export const BUILTINS={
  isDigit:{n:[1,1],r:B,run:(h,a)=>/\d/.test(String.fromCharCode(a[0]))?1:0},isAlpha:{n:[1,1],r:B,run:(h,a)=>/[A-Za-z]/.test(String.fromCharCode(a[0]))?1:0},
  bitRead:{n:[2,2],r:I,run:(h,a)=>(a[0]>>a[1])&1},bit:{n:[1,1],r:U,run:(h,a)=>(1<<a[0])>>>0},
  attachInterrupt:{n:[3,3],r:V,fnArg:1,run:(h,a)=>h.attachInterrupt(a[0],a[1],a[2])},detachInterrupt:{n:[1,1],r:V,run:(h,a)=>h.detachInterrupt(a[0])},digitalPinToInterrupt:{n:[1,1],r:I,run:(h,a)=>a[0]},
- interrupts:{n:[0,0],r:V,run:()=>{}},noInterrupts:{n:[0,0],r:V,run:()=>{}}
+ interrupts:{n:[0,0],r:V,run:h=>{h.interruptsEnabled=true;}},noInterrupts:{n:[0,0],r:V,run:h=>{h.interruptsEnabled=false;}}
 };
 const SERIAL_METHODS={begin:{n:[1,4],r:V},print:{n:[1,2],r:I},println:{n:[0,2],r:I},printf:{n:[1,20],r:I},write:{n:[1,1],r:I},available:{n:[0,0],r:I},read:{n:[0,0],r:I},peek:{n:[0,0],r:I},flush:{n:[0,0],r:V},
  readString:{n:[0,0],r:S},readStringUntil:{n:[1,1],r:S},parseInt:{n:[0,0],r:I},parseFloat:{n:[0,0],r:F},setTimeout:{n:[1,1],r:V},end:{n:[0,0],r:V}};
@@ -402,7 +402,7 @@ export class Machine{
   if(n.kind==='serial'){const result=h.serial(n.method,args,n.args.map(a=>a.t),this,n.port);const value=result&&typeof result.next==='function'?yield* result:result;return n.t.kind==='void'?undefined:conv(value,n.t);}
   if(n.kind==='string')return this.stringMethod(n,f,args);
   const b=n.b;
-  if(b.wait){h.clock+=b.wait(args);if(h.clock>=h.deadline)yield;return;}
+  if(b.wait){const until=h.clock+b.wait(args);while(h.clock<until){h.clock=Math.min(until,h.deadline);if(h.clock>=h.deadline)yield;if(!this.inIsr&&h.pendingIsr?.length)yield* this.drainIsr();}return;}
   const r=b.run(h,args,this);return r===undefined?undefined:(n.t.kind==='void'?undefined:conv(r,n.t));}
  *callFn(fn){return yield* this.callUser(fn,[]);}
  stringMethod(n,f,a){const obj=n.f.obj;const s=String(obj.k==='index'?'':this.evs(obj,f));

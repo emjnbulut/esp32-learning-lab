@@ -399,3 +399,50 @@ test('real-board guide shows current connections in both languages and returns f
   assert.deepEqual(page.errors,[]);await page.context().close();
  }
 });
+
+
+const SENSOR_IDS=['ldr','nightlight','melody','alarm','temp','oled','station','motion','visitors','irq','relay','relaybtn','wifi','web','webtemp','webled','room','climate','dashboard'];
+const ALL_CHECKPOINTS=Array.from({length:11},(_,i)=>'check'+(i+1));
+const sensorPage=(id,opts={})=>open('#/lesson/'+id,{completed:ALL_CHECKPOINTS,...opts});
+async function solution(page){await lab(page);await page.click('#show-solution');await lab(page);}
+async function slider(page,selector,value){await page.$eval(selector,(el,v)=>{el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}));},value);}
+test('all 19 sensor missions and six checkpoints are reachable in the internal curriculum in both languages',async()=>{
+ const page=await sensorPage('ldr');
+ for(const id of SENSOR_IDS){await page.goto(BASE+'#/lesson/'+id);await lab(page);assert.ok((await page.locator('.goal').count())>=2,id);}
+ await page.click('[data-lang="tr"]');await lab(page);
+ for(const id of SENSOR_IDS){await page.goto(BASE+'#/lesson/'+id);await lab(page);assert.notEqual(await page.locator('h1').innerText(),MISSIONS[id].title,id);}
+ for(let u=6;u<=11;u++){await page.goto(BASE+'#/lesson/check'+u);await page.waitForSelector('.checkpoint');assert.equal(await page.locator('.cp-q').count(),5);}
+ assert.deepEqual(page.errors,[]);await page.close();
+});
+test('LDR controls complete real goals and the multimeter follows the supply',async()=>{
+ const page=await sensorPage('ldr');await solution(page);await page.click('#lab-run');
+ for(const v of [0,100]){await slider(page,'[data-ldrin="ldr1"]',v);await page.waitForTimeout(400);}
+ await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length===3);
+ await page.click('#lab-meter-btn');await page.waitForFunction(()=>document.querySelector('#meter-v')?.textContent==='3.30 V');
+ await page.click('#meter-close');assert.deepEqual(page.errors,[]);await page.close();
+});
+test('weather station paints temperature and humidity on the wired OLED',async()=>{
+ const page=await sensorPage('station');await solution(page);await page.click('#lab-run');
+ await page.waitForFunction(()=>document.querySelector('#oled-oled1')?.textContent.includes('24.0'));
+ await slider(page,'[data-dhttemp="dht1"]',30);await slider(page,'[data-dhthum="dht1"]',70);
+ await page.waitForFunction(()=>{const el=document.querySelector('#oled-oled1');return el?.textContent.includes('30.0')&&el.textContent.includes('70');},null,{timeout:6000});
+ await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length===3);fs.mkdirSync('artifacts',{recursive:true});await page.locator('.lab').screenshot({path:'artifacts/sensors-desktop.png'});await page.click('#lab-hardware');await page.waitForSelector('#hardware-guide[open]');assert.match(await page.locator('#hardware-guide').innerText(),/DHT sensor library/);assert.match(await page.locator('#hardware-guide').innerText(),/Adafruit SSD1306/);await page.click('#hardware-close');assert.deepEqual(page.errors,[]);await page.close();
+});
+test('PIR controls toggle a wired motion light',async()=>{
+ const page=await sensorPage('motion');await solution(page);await page.click('#lab-run');await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length===1);await page.click('[data-pirtoggle="pir1"]');
+ await page.waitForFunction(()=>document.querySelector('#lab-root').__lab.sim.leds.led1>0.15);await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length===2);await page.click('[data-pirtoggle="pir1"]');await page.waitForFunction(()=>document.querySelector('#lab-root').__lab.sim.leds.led1===0);
+ assert.equal(await goalsOk(page),2);assert.deepEqual(page.errors,[]);await page.close();
+});
+test('web page links control the LED without navigating away from the lab',async()=>{
+ const page=await sensorPage('webled');await solution(page);await page.click('#lab-run');await page.waitForSelector('.web-page a[href="/on"]');
+ const url=page.url();await page.click('.web-page a[href="/on"]');await page.waitForFunction(()=>document.querySelector('.web-page')?.textContent==='LED is on');
+ await page.click('[data-webpath="/off"]');await page.waitForFunction(()=>document.querySelector('.web-page')?.textContent==='LED is off');
+ await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length===2);assert.equal(page.url(),url);assert.deepEqual(page.errors,[]);await page.close();
+});
+test('phone: Turkish sensor controls and multimeter fit and the new parts survive reload',async()=>{
+ const page=await sensorPage('station',{width:390,height:844,lang:'tr'});await solution(page);await page.click('[data-labtab="circuit"]');await page.click('#lab-run');
+ await page.click('#lab-meter-btn');await page.waitForSelector('#meter-a');assert.match(await page.locator('#lab-meter').innerText(),/Multimetre/);fs.mkdirSync('artifacts',{recursive:true});await page.locator('.lab').screenshot({path:'artifacts/sensors-phone.png'});
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ await page.click('#meter-close');await page.click('#lab-run');await page.reload();await lab(page);
+ assert.equal(await page.locator('[data-part="dht1"]').count(),1);assert.equal(await page.locator('[data-part="oled1"]').count(),1);assert.deepEqual(page.errors,[]);await page.close();
+});

@@ -18,17 +18,18 @@ npm run e2e     # Playwright regression suite (Chromium)
 
 `dist/` is the complete static website and works under a hosting subdirectory.
 
-## What is inside (1.3)
+## What is inside (1.4)
 
 - **Simulator** (`dist/sim/`): an Arduino C/C++ subset interpreter with compiler-style errors and virtual time
   (`arduino.mjs`); parts, nets and a DC solver with diodes (`circuit.mjs`); the runtime that connects sketch and
   circuit — pin modes, PWM/`analogWrite`, `tone`, contact bounce, potentiometer, Serial, warnings for missing
   resistors and short circuits (`runtime.mjs`); SVG part drawings (`parts-view.mjs`).
 - **Lab** (`dist/lab.mjs`, `lab.css`): code editor, drag-and-drop circuit editor (ESP32 DevKit V1, breadboard, LED,
-  resistor, push button, potentiometer, RGB LED, buzzer; drag wires from pin to pin, rotate with R, delete with Del),
+  resistor, push button, potentiometer, RGB LED, buzzer, LDR, DHT11, OLED, PIR and relay; drag wires from pin to pin, rotate with R, delete with Del),
   Run/Stop/Restart, Serial Monitor with baud check and buffered input, interactive buttons and knobs, sound.
-- **Missions** (`dist/missions.mjs`): 15 projects in units 1–5 with starter code and circuit, steps, hints, a solution and
-  live goal checks. Every solution is run headless in `tests/missions.test.mjs`.
+- **Missions** (`dist/missions.mjs`, `dist/missions-sensors.mjs`): 44 projects across 11 internally prepared units, with starter code/circuits, steps, hints, solutions and live checks. Public units remain 1 and 2. Every solution and starter runs in `tests/missions.test.mjs`.
+- **Sensor curriculum** (`dist/sensor-curriculum.mjs`, `dist/sensors-i18n.mjs`): 19 sensor/IoT projects and six five-question EN/TR checkpoints for units 6–11.
+- **Inspection**: multimeter, live global variables, simulation speed and a local HTML preview for simulated HTTP routes.
 - **Quizzes and unit checkpoints** stay as secondary steps; a passed checkpoint lets experienced learners skip ahead.
 - **Workshop**: free projects saved in the browser, examples from the missions, JSON export/import, `.ino` download.
 
@@ -36,8 +37,8 @@ npm run e2e     # Playwright regression suite (Chromium)
 
 The interpreter supports the Arduino subset used by the course: types (int, long, unsigned long, byte, bool, char,
 float, String), arrays, functions, control flow, `#define`, `Serial` (output plus buffered byte, text and number reads), digital and analog I/O,
-`millis`/`delay`, `map`/`constrain`, `tone`. It is not a full C++ compiler: pointers, structs, classes, libraries and
-interrupts are reported as unsupported. The circuit solver is DC with piecewise-linear diodes (LED forward voltages,
+`millis`/`delay`, `map`/`constrain`, `tone`. It is not a full C++ compiler: pointers, structs, general classes and
+most other libraries are reported as unsupported. GPIO edge interrupts and simplified DHT, SSD1306, WiFi and WebServer APIs are modeled. The circuit solver is DC with piecewise-linear diodes (LED forward voltages,
 ~10 Ω GPIO output resistance, 45 kΩ pull-ups); PWM brightness is averaged by duty cycle.
 
 ## Releasing units
@@ -85,3 +86,11 @@ Use **Use a real ESP32** above the code editor for current pin and component lis
 ## Publishing
 
 A push to main triggers Pages validation. The publication workflow calls the unit and Playwright jobs in check.yml and only runs deploy after both succeed. PRs and other branch pushes run the same checks separately.
+
+## Sensor examples and limits
+
+For internal QA, run the preview with RELEASE_ALL=1; this test-only setting exposes prepared units 3–11. Public builds keep the list in releases.mjs at [1,2]. Public Workshop retains the component palette but only lists released lesson examples.
+
+The new models are educational shims, not bundled Arduino libraries or firmware execution. They model one DHT object named dht, one OLED named display (SDA 21, SCL 22), and one WebServer named server. Wi-Fi is a deterministic local simulation; HTTP requests remain inside the lab and do not open a network server. DHT values are controlled by sliders. PIR pulses are controlled manually. Relay contacts illustrate state and do not simulate an external switched load. Multimeter resistance is the direct equivalent resistance between the selected nets, rather than a general instrument model.
+
+The real-board guide lists the external libraries needed by the current sketch, with links to the official Adafruit repositories. Unit tests exercise disconnected sensors, buffered OLED updates, short interrupts during delay, interrupt masking/detach, relay startup glitches, measurements and HTTP-controlled hardware.

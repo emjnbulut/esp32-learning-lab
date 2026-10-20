@@ -2,6 +2,11 @@
 
 ## Implemented in this revision
 
+- Completed the sensor expansion begun in 7e4b172: all five new part types have behavior, 19 integrated missions, EN/TR content, six checkpoints and headless/browser coverage.
+- Fixed OLED mission checks, relay startup false positives, HTTP action timing, short GPIO interrupts during delay and wire-tool canvas movement.
+- The hardware guide now includes external library installation for the current sensor sketch.
+
+
 - Lesson episode/source links removed at the owner's request: videos have not been recorded. No replacement video URLs or release-list changes.
 - Main-branch publication now depends on both unit and browser tests through a reusable validation workflow.
 - USB Serial input with a bounded UTF-8 queue, all four line endings, timed byte/string/number reads and a ready-to-run echo example.
@@ -28,7 +33,6 @@ These priorities are based on the current repository and UI, without adding exte
 
 | Priority | Improvement | Why it helps | Reviewable acceptance criterion |
 |---|---|---|---|
-| 2 | Expand components with actual behavior | LDR, DHT11 and OLED are planned in the curriculum but absent from the current part palette. | Add one component together with its simulated behavior, introductory activity and headless/browser tests; avoid decorative parts without behavior. |
 | 3 | Better discoverability and link previews | The entry HTML has basic metadata; lessons are client-side hash routes. | Provide useful public lesson descriptions before JavaScript runs and correct sharing metadata for the confirmed public URL. |
 | 3 | Offline learning | The site is static but currently has no offline cache. | Previously opened released activities work offline; updates do not mix simulator versions or accidentally unlock unpublished units. |
 | 3 | Optional synchronization/sharing | Backups now move work manually; cross-device sync remains absent. | Keep learning account-free; add optional sync/share only with clear privacy, cost and data deletion behavior. |

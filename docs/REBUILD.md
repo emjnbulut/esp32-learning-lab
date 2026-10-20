@@ -1,3 +1,5 @@
+Current status (2026-10-21): version 1.4 integrates 44 missions across 11 internal units, including the sensor expansion. Public units remain [1,2]. The rebuild history below describes earlier work.
+
 # Rebuild: Wokwi-style simulator (started 2026-10-19)
 
 Owner feedback on 0.5: "not good at all". The site must work like Wokwi: learners write real Arduino code,

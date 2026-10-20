@@ -149,3 +149,7 @@
 .web-routes{display:flex;gap:4px;flex-wrap:wrap}
 .web-body{background:#fff;border:1px solid var(--line);border-radius:5px;padding:6px 8px;font:12px/1.4 var(--sans)}
 .is-running .part-pir{cursor:pointer}
+
+/* Wire colours float over the canvas, so choosing a tool cannot resize/refit it. */
+.lab-diagram>.lab-head{position:relative;flex-wrap:wrap}
+.lab-diagram .wire-colors{position:absolute;left:10px;top:calc(100% + 6px);z-index:5;padding:6px;background:var(--white);border:1px solid var(--line);border-radius:6px;box-shadow:0 3px 10px #0002}

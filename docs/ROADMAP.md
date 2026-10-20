@@ -1,5 +1,8 @@
 # Roadmap
 
+## 1.4 - Complete the sensor curriculum (2026-10-21)
+Nineteen LDR, DHT11, OLED, PIR, relay, Wi-Fi, web server and smart-room missions are integrated with lesson ordering, EN/TR text and six checkpoints. Runtime and browser regressions cover real controls and wiring. Interrupts work during waits, relay goals reject startup glitches, and wire-tool colors no longer shift the canvas. Public units stay [1,2]. The following milestones are historical; the older next-step notes are superseded by this entry.
+
 ## 1.3 - Serial input and hardware handoff (2026-10-20)
 Buffered USB Serial input and an echo example, bilingual current-project hardware references and upload guidance, mandatory browser/unit checks before publication, and removal of lesson episode links while videos are unrecorded. Public unit gates stay unchanged.
 

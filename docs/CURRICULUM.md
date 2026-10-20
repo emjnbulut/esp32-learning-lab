@@ -9,7 +9,12 @@ Source: https://github.com/emjnbulut/esp32-from-zero/blob/70764db1e1ba76c6169427
 | 3 | Blink an LED | blink on GPIO 23, five blinks a second, challenge: two LEDs take turns | polarity |
 | 4 | Buttons and millis | read a button, toggle with debounce, blink + button with millis, challenge: two LEDs two speeds | pullup, millis |
 | 5 | PWM and potentiometer (planned) | fade, RGB colors, dimmer knob with map, challenge: speed knob | pwm, rgb, adc |
-| 6–11 | | planned | |
+| 6 | Light and sound (draft) | light meter, night light, melody, box alarm | checkpoint 6 |
+| 7 | Sense the room (draft) | thermometer, OLED hello, weather station | checkpoint 7 |
+| 8 | Motion and interrupts (draft) | motion light, visitor counter, short-pulse interrupt | checkpoint 8 |
+| 9 | Relay and Wi-Fi (draft) | relay cycle, relay toggle, Wi-Fi connection | checkpoint 9 |
+| 10 | Web server (draft) | first page, live temperature page, remote LED switch | checkpoint 10 |
+| 11 | Smart room (draft) | timed lamp, hysteresis fan, room dashboard | checkpoint 11 |
 
 Each unit ends with a checkpoint (5 questions, 4 to pass) that lets experienced learners skip ahead.
 
@@ -18,3 +23,5 @@ Every available unit ends with a checkpoint (5 questions, 4 to pass) that experi
 Unit 5 is written before source episode 5 exists. Pins (LED 23, RGB 25/26/27, potentiometer 34) and `analogWrite()` (ESP32 core 3.x) are assumptions; align them when the episode is recorded and set `source` on unit 5 in `model.mjs`.
 
 Principles: a short explanation, a concrete action, feedback, and independent transfer. No paywall or lives system. There are no points or XP: progress is just the list of finished tasks. Future task validation must accept equivalent correct circuits instead of checking one exact layout.
+
+Units 6-11 are internally prepared drafts with no video links. The public release list remains [1,2]. Align unreleased topics and pins with the recorded course before release. Each new checkpoint has five questions and requires four correct answers.

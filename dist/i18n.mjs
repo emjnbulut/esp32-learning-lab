@@ -1,4 +1,6 @@
 // Turkish content. English is the source language (model.mjs, app.mjs); TR maps each English UI string to Turkish.
+import {TR_SENSOR_CHECKPOINTS} from './sensor-curriculum.mjs';
+import {TR_SENSOR_MISSIONS,TR_SENSOR_COMMENTS} from './sensors-i18n.mjs';
 export const TR_UNITS={
  1:{"title": "Kartla tanış","subtitle": "Bir bilgisayar, avucunun içinde."},
  2:{"title": "Bağlantıları keşfet","subtitle": "Deliklerin altında bir düzen var."},
@@ -1124,3 +1126,10 @@ Object.assign(TR,{
  "Relay module":"Röle modülü",
  "data":"veri","output":"çıkış","input":"giriş"
 });
+
+Object.assign(TR_LESSONS,TR_SENSOR_CHECKPOINTS);
+Object.assign(TR_MISSIONS,TR_SENSOR_MISSIONS);
+Object.assign(TR,TR_SENSOR_COMMENTS);
+TR_UNITS[8].subtitle='PIR, kenar algılama ve kesmeler';
+
+TR['In Arduino Library Manager, install the libraries used by this sketch and accept their dependencies:']='Arduino Kütüphane Yöneticisi içinde bu programın kullandığı kütüphaneleri ve önerilen bağımlılıklarını kur:';

@@ -1,4 +1,20 @@
-# Development handoff - 2026-10-20 (1.3)
+# Development handoff - 2026-10-21 (1.4)
+
+## Sensor work completed - 2026-10-21 (1.4)
+
+The sensor implementation in commit 7e4b172 was not connected to the lesson registry. This revision connects all 19 missions from missions-sensors.mjs, adds six bilingual checkpoints, and marks units 6-11 internally available. There are now 44 missions and 64 activities total. PUBLIC_RELEASED remains [1,2]; do not unlock future units or add video links without owner direction. GitHub Pages remains the publication target; preserve .openai/hosting.json.
+
+- sensor-curriculum.mjs owns future lesson ordering and bilingual checkpoint rows; sensors-i18n.mjs owns Turkish mission text and sketch comments.
+- Fixed split OLED text checks, premature HTTP test actions, and relay goals falsely completed by setup transients.
+- GPIO interrupts now run during delay waits. interrupts/noInterrupts and detachInterrupt affect delivery; an unwired pin no longer triggers the obsolete unsupported-API error.
+- Wire colors float over the canvas. Toggling the wire tool no longer resizes the canvas and asynchronously refits it under the pointer.
+- The real-board guide receives the current code and lists DHT/OLED libraries and dependencies when included.
+- tests/sensors.test.mjs covers wiring, power, controls, OLED buffering, interrupts, relay false positives, multimeter readings and local HTTP behavior. Browser coverage includes all future routes in EN/TR and actual sensor/HTTP interactions.
+- Simulator limits: single canonical dht/display/server objects; OLED pins 21/22; Wi-Fi/HTTP remain local models. README documents these boundaries. No firmware execution, database, account sync or offline cache was added.
+- Verification passed: npm run check (167 tests), npm run e2e (42 browser tests), git diff --check. Desktop and phone screenshots were visually reviewed. Browser screenshots: artifacts/sensors-desktop.png and artifacts/sensors-phone.png (ignored).
+
+Earlier handoff entries below record previous versions.
+
 
 ## Serial input and hardware handoff - 2026-10-20 (1.3)
 

@@ -30,7 +30,6 @@ test('runtime errors explain array bounds, division by zero and simulator limits
  ['void setup(){ int z=0;\n Serial.println(5/z);\n}\nvoid loop(){}',2,/Sıfıra bölme/],
  ['void setup(){ int z=0;\n Serial.println(5%z);\n}\nvoid loop(){}',2,/Sıfıra göre kalan/],
  ['void setup(){\n int a[10001];\n}\nvoid loop(){}',2,/1 ile 10000.*10001/],
- ['void handler(){}\nvoid setup(){ attachInterrupt(22,handler,CHANGE); }\nvoid loop(){}',0,/attachInterrupt\(\).*loop\(\)/]
  ];
  for(const [code,line,re] of cases){const sim=new Simulator(MISSIONS.hello.starter.diagram,code);assert.equal(sim.start(),null,code);sim.runFor(20);
   assert.equal(sim.status,'error',code);assert.match(explainError(sim.error.message,tr).text,re,sim.error.message);

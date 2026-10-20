@@ -10,7 +10,7 @@ function hash(a,b){let h=(a*374761393+b*668265263)|0;h=Math.imul(h^(h>>>13),1274
 export class Simulator{
  constructor(diagram,code){this.diagram=diagram;this.code=code;this.baud=115200;this.reset();}
  reset(){this.clock=0;this.deadline=0;this.now=0;this.pins={};this.out='';this.serialLog=[];this.ledLog=[];this.buzzerLog=[];this.relayLog=[];this.writes=[];this.events=[];this.warnings=[];this.warned=new Set();
-  this.leds={};this.ledI={};this.logged={};this.buzzers={};this.relays={};this.irqs={};this.pendingIsr=[];this.status='idle';this.error=null;this.begun=false;this.codeBaud=null;this.rx=new SerialInput(this);this.dirty=true;this.contactSig='';this.seed=1;this.rand=null;
+  this.leds={};this.ledI={};this.logged={};this.buzzers={};this.relays={};this.irqs={};this.pendingIsr=[];this.interruptsEnabled=true;this.status='idle';this.error=null;this.begun=false;this.codeBaud=null;this.rx=new SerialInput(this);this.dirty=true;this.contactSig='';this.seed=1;this.rand=null;
   this.dhtState={pin:null,begun:false};this.oledState={begun:false,size:1,color:1,cx:0,cy:0,buf:[],screen:[],draws:0,invert:false};
   this.wifiState={status:6,ssid:'',ip:'192.168.1.42',rssi:-52};this.webState={begun:false,port:80,routes:new Map(),queue:[],uri:'/',lastCode:0,lastType:'',lastHtml:'',requests:0};
   this.inputs={};for(const p of this.diagram.parts){
@@ -63,12 +63,12 @@ export class Simulator{
  ledcWrite(p,v){this.analogWrite(p,v);return 1;}
  tone(p,f,ms){if(!this.gpioOk(p,'tone'))return;const s=this.pin(p);s.mode='OUTPUT';s.tone={f:Number(f),until:ms?this.clock+ms*1000:Infinity};s.duty=0.5;this.dirty=true;this.refresh();}
  noTone(p){const s=this.pin(p);s.tone=null;s.duty=null;s.out=0;this.dirty=true;this.refresh();}
- attachInterrupt(p,fn,mode){p=Number(p);if(!this.pins[p]?.mode&&!this.diagram.wires.length)throw new CodeError('attachInterrupt() is not supported in the simulator yet. Read the pin in loop() instead.');
+ attachInterrupt(p,fn,mode){p=Number(p);
   if(!this.gpioOk(p,'attachInterrupt'))return;this.irqs[p]={fn,mode:Number(mode)||3,last:this.digitalRead(p)};}
  detachInterrupt(p){delete this.irqs[Number(p)];}
  checkIrqs(){if(!this.nets||!Object.keys(this.irqs).length)return;
   for(const [p,irq] of Object.entries(this.irqs)){const n=this.nodeOf(Number(p)),cur=n&&this.sol?.driven(n)?(this.sol.v(n)>V33/2?1:0):irq.last;
-   if(cur!==irq.last){const prev=irq.last;irq.last=cur;if((irq.mode===1&&prev===0&&cur===1)||(irq.mode===2&&prev===1&&cur===0)||irq.mode===3){if(this.pendingIsr.length<32)this.pendingIsr.push(irq.fn);}}}}
+   if(cur!==irq.last){const prev=irq.last;irq.last=cur;if((irq.mode===1&&prev===0&&cur===1)||(irq.mode===2&&prev===1&&cur===0)||irq.mode===3){if(this.interruptsEnabled&&this.pendingIsr.length<32)this.pendingIsr.push(irq.fn);}}}}
  digitalRead(p){if(!this.gpioOk(p,'digitalRead'))return 0;const s=this.pin(p);if(s.mode==='OUTPUT')return s.duty!==null?(s.duty>=0.5?1:0):s.out;
   if(!s.mode)this.warn('nomodeR'+p,'digitalRead({pin}) before pinMode({pin}, INPUT…).',{pin:p});this.ensure();const n=this.nodeOf(p);
   if(!n||!this.sol.driven(n))return this.random()<0.5?0:1;return this.sol.v(n)>V33/2?1:0;}

@@ -16,3 +16,13 @@ test('guide follows current wiring and escapes imported component IDs',()=>{
  d.parts.push(part);d.wires=[{a:'esp:D23',b:id+':1'}];
  const safe=hardwareGuide(d,s=>s);assert.doesNotMatch(safe,/<img/);assert.match(safe,/&lt;img/);assert.match(safe,/330/);
 });
+
+test('real-board guide lists the external libraries actually included by the current sketch',()=>{
+ const d=MISSIONS.station.solution;
+ for(const translate of [s=>s,s=>TR[s]||s]){
+  const html=hardwareGuide(d.diagram,translate,d.code);
+  for(const name of ['DHT sensor library','Adafruit Unified Sensor','Adafruit SSD1306','Adafruit GFX Library'])assert.ok(html.includes(name),name);
+  assert.match(html,/https:\/\/github.com\/adafruit\/DHT-sensor-library/);
+ }
+ assert.doesNotMatch(hardwareGuide(d.diagram,s=>s,MISSIONS.hello.solution.code),/Adafruit SSD1306|DHT sensor library/);
+});

@@ -12,7 +12,7 @@ import {resolveDiagram} from './sim/circuit.mjs';
 const lessons=allLessons.filter(isReleased);
 const $=s=>document.querySelector(s);const app=$('#app');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const VERSION='1.3',LANG_KEY='pin-by-pin-lang',WORK_KEY='pin-by-pin-work-v1',PROJ_KEY='pin-by-pin-projects-v1';
+const VERSION='1.4',LANG_KEY='pin-by-pin-lang',WORK_KEY='pin-by-pin-work-v1',PROJ_KEY='pin-by-pin-projects-v1';
 const drafts=new DraftStore(()=>localStorage);
 let storageOK=true,p,lang='en';
 p=sanitizeProgress(drafts.read(STORAGE_KEY,{}));storageOK=drafts.saved;
