@@ -124,8 +124,10 @@ test('the public site: only released units are open, the rest wait for their vid
   // Import progress from a version where later units were available.
   await page.goto('http://127.0.0.1:'+P2+'/#/notebook');await page.waitForSelector('#progress-file');
   const notebook=completed=>({name:'notebook.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({version:1,completed,dates:['2026-10-19']}))});
+  // File reads are asynchronous; deliberately delay this one to exercise the waiting condition.
+  await page.evaluate(()=>{const read=File.prototype.text;File.prototype.text=async function(){await new Promise(resolve=>setTimeout(resolve,150));return read.call(this);};});
   await page.setInputFiles('#progress-file',notebook(['blink']));
-  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('pin-by-pin-progress-v1')).completed.includes('blink'));
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('pin-by-pin-progress-v1'))?.completed.includes('blink'));
   assert.match(await page.locator('.stat-tasks').innerText(),/^0 \/ 12 tasks$/);assert.equal(await page.locator('.empty-note').count(),1);
   await page.goto('http://127.0.0.1:'+P2+'/');await page.waitForSelector('.hero-actions');
   assert.match(await page.locator('.hero-actions .primary').innerText(),/Start the first project/);
@@ -133,7 +135,7 @@ test('the public site: only released units are open, the rest wait for their vid
   await page.goto('http://127.0.0.1:'+P2+'/#/notebook');await page.waitForSelector('#progress-file');
   const {lessons:allLessons}=await import('../dist/model.mjs');const all=allLessons.map(l=>l.id);
   await page.setInputFiles('#progress-file',notebook(all));
-  await page.waitForFunction(total=>JSON.parse(localStorage.getItem('pin-by-pin-progress-v1')).completed.length===total,all.length);
+  await page.waitForFunction(total=>JSON.parse(localStorage.getItem('pin-by-pin-progress-v1'))?.completed.length===total,all.length);
   assert.match(await page.locator('.stat-tasks').innerText(),/^12 \/ 12 tasks$/);
   assert.equal(await page.locator('.record').count(),12);assert.match(await page.locator('.notebook > p').innerText(),/^12 tasks/);
   const [backup]=await Promise.all([page.waitForEvent('download'),page.click('#export-progress')]);
