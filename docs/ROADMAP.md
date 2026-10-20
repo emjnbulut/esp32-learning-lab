@@ -1,5 +1,8 @@
 # Roadmap
 
+## 1.1 — Reliable saving and portable backups (2026-10-20)
+Immediate save/recovery status, failed writes retained in tab memory with retry/download, full backup/restore, validated project imports, current workshop snapshots and invalidated mission goals after edits/restarts. Follow-up priorities with acceptance criteria: [IMPROVEMENTS.md](IMPROVEMENTS.md).
+
 ## 1.0 — Hands-on rebuild (done 2026-10-19)
 Own browser simulator (Arduino C interpreter + circuit solver), Wokwi-style lab, 15 missions from episodes 1–4 (+ planned 5) with live goal checks, workshop projects. Next: unit 6 (LDR module, active/passive buzzer with `tone`) with an LDR part; Serial input in the monitor; `attachInterrupt` for unit 8; OLED/DHT parts for unit 7; a breadboard layout where the board straddles the board like in the videos.
 

@@ -44,6 +44,14 @@ interrupts are reported as unsupported. The circuit solver is DC with piecewise-
 
 Only the units listed in `dist/releases.mjs` (`PUBLIC_RELEASED`) are open on the public site; the other units show as "waiting for the video" and cannot be opened, not even by URL. Add a unit number to the list on the day its video is published. Tests open everything with `RELEASE_ALL=1` (`npm run check` and `npm run e2e` do this; `tests/release.test.mjs` checks the public list).
 
+## Back up your lab
+
+Open **My notebook → Download full backup** to save progress, lesson code/circuits and workshop projects together. On another browser use **Restore a backup**. Restore merges progress, keeps existing lesson drafts and adds different workshop projects without overwriting them. Repeating the same restore does not duplicate unchanged projects. Backups stay on your device; nothing is uploaded. Imports are validated before saving (maximum 10 MB). Notebook-only and single-project exports still work.
+
+See [the improvement review](docs/IMPROVEMENTS.md) for prioritized next steps.
+
+If browser storage fills up or becomes unavailable, the lab shows **Not saved** and keeps edits in the current tab through project/language/navigation changes. Use **Retry saving**, **Download a copy**, or a full backup before closing or reloading. Pending drafts are not durable until saved or downloaded.
+
 ## Data and access
 
 Progress lives in localStorage under `pin-by-pin-progress-v1`, mission work under `pin-by-pin-work-v1`, workshop

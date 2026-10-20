@@ -80,3 +80,10 @@
 .strip-hover{fill:#f28c1c22;stroke:#f28c1c88;stroke-width:1;pointer-events:none}
 .wire-end{fill:#fff;stroke:#f28c1c;stroke-width:1.6;cursor:grab}
 @media(max-width:600px){.lab-toolsel button{padding:6px 8px}}
+
+/* Saving and recovery */
+.lab-save{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 12px;min-height:30px;border-bottom:1px solid var(--line);font:10px/1.6 var(--mono);color:#426645;background:#f2f6ee;flex-wrap:wrap}
+.lab-save[data-saved=false]{background:#fff0df;color:#803f20}
+.lab-save-actions{display:flex;gap:6px;flex-wrap:wrap}.lab-save-actions[hidden]{display:none}
+.lab-save-actions button{min-height:36px}
+@media(max-width:600px){.lab-save{font-size:10px}.lab-save[data-saved=false]{align-items:flex-start}.lab-save-actions{width:100%}.lab-save-actions button{flex:1;min-height:42px}}

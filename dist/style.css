@@ -127,3 +127,13 @@
 @media(max-width:600px){.ws-head h1{font-size:30px}.mission-panel{padding:20px 16px}.mission-lab{padding:6px}.steps-path{padding:6px 8px 12px}}
 .lesson-node.mission.yourturn .node-icon{width:36px;height:36px;border-radius:10px;margin:0 4px}
 .lesson-node.yourturn .node-kind{color:#b06a12}
+
+/* Portable learner data */
+.backup-card{margin-top:36px;padding:26px;border:1px solid var(--line);border-radius:10px;background:var(--white)}
+.backup-card h2{font-size:26px;letter-spacing:-1px;margin:12px 0}
+.backup-card p{font-size:13px;line-height:1.8;color:var(--muted);max-width:640px}
+.backup-actions{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 14px}
+.backup-card .backup-note{font-size:11px}
+@media(max-width:600px){.backup-card{padding:20px}.backup-actions{flex-direction:column}.backup-actions button{width:100%}}
+
+.storage-warning:not([hidden]){display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px;border:1px solid #efcbaa;border-radius:6px;line-height:1.7}.storage-warning>span{flex:1;min-width:180px}.storage-warning button{font-size:11px}

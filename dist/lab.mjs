@@ -24,7 +24,7 @@ export function highlight(code){return code.split('\n').map(line=>{let out='',re
 const WIRE_COLORS=['#2f9a3c','#2f6fd0','#f28c1c','#c9a400','#8a3fc8','#16a3a3'];
 const ADDABLE=['esp32','breadboard','led','resistor','button','pot','rgb','buzzer'];
 export class Lab{
- constructor(o){this.t=o.t||(s=>s);this.code=o.code||'';this.diagram=repairIds(clone(o.diagram||{parts:[],wires:[]}));this.past=[];this.future=[];this.tool='select';this.wcolor=null;this.onChange=o.onChange||(()=>{});this.onTick=o.onTick||(()=>{});this.onRun=o.onRun||(()=>{});
+ constructor(o){this.persistence=o.persistence||null;this.t=o.t||(s=>s);this.code=o.code||'';this.diagram=repairIds(clone(o.diagram||{parts:[],wires:[]}));this.past=[];this.future=[];this.tool='select';this.wcolor=null;this.onChange=o.onChange||(()=>{});this.onTick=o.onTick||(()=>{});this.onRun=o.onRun||(()=>{});
   this.readOnlyParts=new Set(o.lockedParts||[]);this.view=null;this.sel=null;this.sim=null;this.wiring=null;this.drag=null;this.tab='code';this.sound=true;this.baud=115200;this.lastOut='';this.raf=0;this.lastTick=0;}
  get running(){return this.sim?.status==='running';}
  mount(root){this.root=root;root.__lab=this;const t=this.t;
@@ -33,6 +33,7 @@ export class Lab{
    <span class="lab-time" id="lab-time">00:00.000</span><span class="lab-status" id="lab-status" role="status"></span>
    <div class="lab-tabs" role="tablist">${['code','circuit','serial'].map(k=>`<button role="tab" data-labtab="${k}" aria-selected="${this.tab===k}">${t({code:'Code',circuit:'Circuit',serial:'Serial'}[k])}</button>`).join('')}</div>
    <span class="lab-spacer"></span><button class="lab-icon" id="lab-sound" aria-pressed="${this.sound}" title="${t('Sound')}" aria-label="${t('Sound')}">${this.sound?'🔊':'🔇'}</button></div>
+  ${this.persistence?`<div class="lab-save" data-saved="${this.persistence.saved}"><span id="lab-save-state" role="status">${this.persistence.saved?t('Saved in this browser'):t('Not saved. Your changes are kept in this tab.')}</span><div class="lab-save-actions" ${this.persistence.saved?'hidden':''}><button class="lab-link" id="lab-save-retry">${t('Retry saving')}</button><button class="lab-link" id="lab-save-download">${t('Download a copy')}</button></div></div>`:''}
   <div class="lab-body">
    <section class="lab-code"><div class="lab-head"><span>sketch.ino</span><button class="lab-link" id="lab-ino">${t('Download .ino')}</button></div>
     <div class="editor"><pre class="ed-gutter" id="ed-gutter" aria-hidden="true"></pre><div class="ed-wrap"><pre class="ed-hl" id="ed-hl" aria-hidden="true"></pre><textarea id="ed-text" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="${t('Arduino code')}"></textarea></div></div>
@@ -51,6 +52,12 @@ export class Lab{
   const loop=ts=>{this.frame(ts);this.raf=requestAnimationFrame(loop);};this.raf=requestAnimationFrame(loop);}
  destroy(){cancelAnimationFrame(this.raf);this.stopAudio();this.sim?.stop();this.root=null;}
  changed(){this.onChange({code:this.code,diagram:this.diagram});this.undoState();}
+
+ setSaveStatus(saved){if(!this.persistence)return;this.persistence.saved=saved;const row=this.$?.('.lab-save');if(!row)return;
+  row.dataset.saved=String(saved);const text=saved?this.t('Saved in this browser'):this.t('Not saved. Your changes are kept in this tab.');
+  const state=this.$('#lab-save-state');if(state.textContent!==text)state.textContent=text;row.querySelector('.lab-save-actions').hidden=saved;
+ }
+
  // circuit history: snap() before every change, undo()/redo() swap whole diagrams
  snap(){this.past.push(clone(this.diagram));if(this.past.length>60)this.past.shift();this.future=[];}
  undo(){if(!this.past.length)return;if(this.running)this.stop();this.future.push(clone(this.diagram));this.diagram=this.past.pop();this.wiring=null;this.sel=null;this.closeProps();this.render();this.renderInputs();this.changed();}
@@ -75,7 +82,7 @@ export class Lab{
  showError(err){this.errLine=err.line||null;const box=this.$('#lab-error');box.hidden=false;box.innerHTML=`<b>${err.line?this.t('Line {n}',{n:err.line}):this.t('Error')}</b> ${esc(err.message)}`;this.syncEditor();
   if(err.line){const lh=parseFloat(getComputedStyle(this.ta).lineHeight)||18;this.ta.scrollTop=Math.max(0,(err.line-4)*lh);}this.tab='code';this.root.querySelector('.lab').dataset.tab='code';}
  // ---------- toolbar ----------
- bindBar(){this.$('#lab-run').onclick=()=>this.running?this.stop():this.start();this.$('#lab-restart').onclick=()=>this.restart();
+ bindBar(){this.$('#lab-save-retry')?.addEventListener('click',()=>this.persistence.onRetry());this.$('#lab-save-download')?.addEventListener('click',()=>this.persistence.onDownload());this.$('#lab-run').onclick=()=>this.running?this.stop():this.start();this.$('#lab-restart').onclick=()=>this.restart();
   this.$('#lab-sound').onclick=e=>{this.sound=!this.sound;e.currentTarget.textContent=this.sound?'🔊':'🔇';e.currentTarget.setAttribute('aria-pressed',String(this.sound));if(!this.sound)this.stopAudio();};
   this.$('#lab-clear').onclick=()=>{if(this.sim)this.sim.out='';this.lastOut='';this.$('#lab-out').textContent='';};
   this.$('#lab-baud').onchange=e=>{this.baud=Number(e.target.value);this.lastOut=null;};

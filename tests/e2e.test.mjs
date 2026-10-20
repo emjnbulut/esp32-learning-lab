@@ -121,3 +121,106 @@ test('the public site: only released units are open, the rest wait for their vid
   await page.goto(`http://127.0.0.1:${P2}/#/lesson/blink`);await page.waitForSelector('.lesson-node');assert.equal(await page.locator('.mission-panel').count(),0,'closed unit cannot be opened by URL');
   await page.goto(`http://127.0.0.1:${P2}/#/workshop`);await page.waitForSelector('#ws-example');const opts=await page.locator('#ws-example option').allInnerTexts();assert.ok(opts.some(o=>/Hello/.test(o)));assert.ok(!opts.some(o=>/Blink an LED|Read a button/.test(o)),'examples of closed units are hidden: '+opts.join('|'));
   assert.deepEqual(errors,[]);await context.close();}finally{srv.kill();}});
+
+test('workshop retains live edits when exporting, renaming and switching projects',async()=>{
+ const page=await open('#/workshop');await lab(page);
+ const code='void setup() { Serial.begin(115200); Serial.println("latest edit"); }\nvoid loop() {}\n';
+ await page.fill('#ed-text',code);const first=await page.locator('#ws-project').inputValue();
+ const [download]=await Promise.all([page.waitForEvent('download'),page.click('#ws-export')]);
+ assert.equal(JSON.parse(fs.readFileSync(await download.path(),'utf8')).code,code);
+ await page.click('#ws-rename');await lab(page);assert.equal(await page.locator('#ed-text').inputValue(),code);
+ await page.click('#ws-new');await lab(page);await page.selectOption('#ws-project',first);await lab(page);
+ assert.equal(await page.locator('#ed-text').inputValue(),code);assert.deepEqual(page.errors,[]);await page.close();
+});
+test('mission goals reset after edits, failed runs, solution load and starting over',async()=>{
+ const page=await open('#/lesson/hello');await lab(page);
+ await page.fill('#ed-text',MISSIONS.hello.solution.code);await page.click('#lab-run');
+ await page.waitForFunction(()=>!document.querySelector('#mission-done').disabled);
+ await page.fill('#ed-text','void setup() {}\nvoid loop() {}\n');
+ assert.equal(await page.locator('#mission-done').isDisabled(),true);
+ await page.waitForTimeout(400);assert.equal(await goalsOk(page),0);
+ await page.fill('#ed-text',MISSIONS.hello.solution.code);await page.waitForTimeout(400);assert.equal(await goalsOk(page),0,'reverting the code still requires a new run');
+ await page.click('#lab-restart');assert.equal(await page.locator('#mission-done').isDisabled(),true);
+ await page.click('#show-solution');await lab(page);assert.equal(await page.locator('#mission-done').isDisabled(),true);
+ await page.click('#lab-run');await page.waitForFunction(()=>!document.querySelector('#mission-done').disabled);
+ await page.fill('#ed-text','void setup( {');await page.click('#lab-restart');
+ assert.equal(await page.locator('#mission-done').isDisabled(),true);
+ await page.click('#reset-work');await lab(page);assert.equal(await goalsOk(page),0);assert.deepEqual(page.errors,[]);await page.close();
+});
+test('full backup moves mission drafts, workshop edits and progress to a fresh browser',async()=>{
+ const page=await open('#/lesson/hello',{completed:['hello']});await lab(page);
+ const code=MISSIONS.hello.solution.code+'// my saved draft\n';await page.fill('#ed-text',code);
+ await page.goto(BASE+'#/workshop');await lab(page);const projectCode=MISSIONS.blink.solution.code+'// my workshop\n';await page.fill('#ed-text',projectCode);
+ await page.goto(BASE+'#/notebook');await page.waitForSelector('#export-backup');
+ const [download]=await Promise.all([page.waitForEvent('download'),page.click('#export-backup')]);const file=await download.path();
+ const exported=JSON.parse(fs.readFileSync(file,'utf8'));assert.equal(exported.work.hello.code,code);assert.equal(exported.projects.list[0].code,projectCode);
+ const other=await open('#/notebook');await other.waitForSelector('#backup-file');await other.setInputFiles('#backup-file',file);
+ await other.waitForFunction(()=>document.querySelector('.stat-tasks b').textContent==='1');
+ await other.goto(BASE+'#/lesson/hello');await lab(other);assert.equal(await other.locator('#ed-text').inputValue(),code);
+ await other.goto(BASE+'#/workshop');await lab(other);assert.equal(await other.locator('#ed-text').inputValue(),projectCode);
+ await other.goto(BASE+'#/notebook');await other.setInputFiles('#backup-file',file);
+ await other.waitForSelector('.toast');await other.goto(BASE+'#/workshop');await lab(other);assert.equal(await other.locator('#ws-project option').count(),1);
+ assert.deepEqual(page.errors,[]);assert.deepEqual(other.errors,[]);await other.close();await page.close();
+});
+test('malformed project and backup files leave the existing lab intact and can be retried',async()=>{
+ const page=await open('#/workshop');await lab(page);const code=await page.locator('#ed-text').inputValue();
+ const project={format:'pin-by-pin-project',version:1,name:'Broken',code,diagram:{parts:[{id:'esp',type:'unknown',x:0,y:0}],wires:[]}};
+ await page.setInputFiles('#ws-file',{name:'broken.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(project))});
+ await page.waitForSelector('.toast');assert.equal(await page.locator('#ws-project option').count(),1);assert.equal(await page.locator('#ed-text').inputValue(),code);
+ assert.equal(await page.locator('#ws-file').inputValue(),'');await page.goto(BASE+'#/notebook');
+ await page.setInputFiles('#backup-file',{name:'bad.json',mimeType:'application/json',buffer:Buffer.from('{"format":"pin-by-pin-backup","version":1}')});
+ await page.waitForSelector('.toast');assert.match(await page.locator('.toast').innerText(),/not a valid/);assert.equal(await page.locator('#backup-file').inputValue(),'');
+ assert.deepEqual(page.errors,[]);await page.close();
+});
+
+async function simulateStorageFailure(page){
+ await page.evaluate(()=>{
+  const original=Storage.prototype.setItem;window.__storageFailure=true;
+  Storage.prototype.setItem=function(key,value){
+   if(window.__storageFailure&&/^pin-by-pin-(projects|work|progress)-v1$/.test(key))throw new DOMException('Test storage quota','QuotaExceededError');
+   return original.call(this,key,value);
+  };
+ });
+}
+test('failed workshop saves keep code and wiring through project changes and offer recovery and retry',async()=>{
+ const page=await open('#/workshop');await lab(page);
+ const first=await page.locator('#ws-project').inputValue();await simulateStorageFailure(page);
+ const code='void setup() { Serial.begin(115200); Serial.println("unsaved work"); }\nvoid loop() {}\n';
+ await page.fill('#ed-text',code);await page.click('#lab-add');await page.click('[data-addpart="buzzer"]');
+ assert.equal(await page.locator('.lab-save').getAttribute('data-saved'),'false');
+ assert.equal(await page.locator('#lab-save-retry').isVisible(),true);
+ const [download]=await Promise.all([page.waitForEvent('download'),page.click('#lab-save-download')]);
+ const copy=JSON.parse(fs.readFileSync(await download.path(),'utf8'));assert.equal(copy.code,code);assert.ok(copy.diagram.parts.some(p=>p.type==='buzzer'));
+ await page.click('#ws-new');await lab(page);await page.selectOption('#ws-project',first);await lab(page);
+ assert.equal(await page.locator('#ed-text').inputValue(),code);assert.equal(await page.locator('#lab-svg [data-part="buzzer1"]').count(),1);
+ await page.click('#lab-save-retry');assert.equal(await page.locator('.lab-save').getAttribute('data-saved'),'false');
+ assert.equal(await page.evaluate(()=>{const e=new Event('beforeunload',{cancelable:true});window.dispatchEvent(e);return e.defaultPrevented;}),true);
+ await page.evaluate(()=>window.__storageFailure=false);await page.click('#lab-save-retry');
+ assert.equal(await page.locator('.lab-save').getAttribute('data-saved'),'true');
+ assert.equal(await page.evaluate(()=>{const e=new Event('beforeunload',{cancelable:true});window.dispatchEvent(e);return e.defaultPrevented;}),false);
+ await page.reload();await lab(page);assert.equal(await page.locator('#ed-text').inputValue(),code);
+ assert.equal(await page.locator('#ws-project option').count(),2);assert.equal(await page.locator('#lab-svg [data-part="buzzer1"]').count(),1);
+ assert.deepEqual(page.errors,[]);await page.close();
+});
+test('lesson drafts that could not save survive routing and remain in a full backup',async()=>{
+ const page=await open('#/lesson/hello');await lab(page);await simulateStorageFailure(page);
+ const code=MISSIONS.hello.solution.code+'// recovered draft\n';await page.fill('#ed-text',code);
+ assert.equal(await page.locator('.lab-save').getAttribute('data-saved'),'false');
+ await page.click('[data-lang="tr"]');await lab(page);assert.match(await page.locator('#lab-save-state').innerText(),/Kaydedilemedi/);
+ assert.equal(await page.locator('#ed-text').inputValue(),code);
+ await page.goto(BASE+'#/notebook');await page.waitForSelector('#export-backup');
+ const [download]=await Promise.all([page.waitForEvent('download'),page.click('#export-backup')]);
+ const data=JSON.parse(fs.readFileSync(await download.path(),'utf8'));assert.equal(data.work.hello.code,code);
+ await page.goto(BASE+'#/lesson/hello');await lab(page);assert.equal(await page.locator('#ed-text').inputValue(),code);
+ await page.evaluate(()=>window.__storageFailure=false);await page.click('#lab-save-retry');
+ await page.reload();await lab(page);assert.equal(await page.locator('#ed-text').inputValue(),code);assert.deepEqual(page.errors,[]);await page.close();
+});
+test('phone: save failure actions fit without horizontal scrolling',async()=>{
+ const page=await open('#/workshop',{width:390,height:844,lang:'tr'});await lab(page);await simulateStorageFailure(page);
+ await page.fill('#ed-text','void setup() {}\nvoid loop() {}\n');
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);
+ for(const id of ['#lab-save-retry','#lab-save-download']){const box=await page.locator(id).boundingBox();assert.ok(box.width>=100);assert.ok(box.height>=42);assert.ok(box.x>=0&&box.x+box.width<=390);}
+ assert.match(await page.locator('#lab-save-state').innerText(),/Kaydedilemedi/);
+ fs.mkdirSync('artifacts',{recursive:true});await page.locator('.lab-save').scrollIntoViewIfNeeded();await page.screenshot({path:'artifacts/mobile-save-recovery.png'});
+ assert.deepEqual(page.errors,[]);await page.close();
+});

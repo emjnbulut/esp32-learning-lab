@@ -30,6 +30,22 @@ export const TR_LESSONS={
  nowait:{"title": "Aynı anda iki iş","tag": "MEYDAN OKUMA","intro": "LED yanıp sönerken butonu da dinlemek istiyoruz. Her basış yanıp sönmeyi durdurur ya da yeniden başlatır. Önce delay() sürümünde butona birkaç kez kısaca bas. Sonra millis() sürümüne geç ve üst üste üç basışı kaçırmadan yakala.","hint": "delay() beklerken ESP32 butona hiç bakmaz; buton yalnızca beklemelerin arasında okunur. millis() sürümünde loop hiç beklemez."}
 };
 export const TR={
+"Saved in this browser":"Bu tarayıcıya kaydedildi",
+"Not saved. Your changes are kept in this tab.":"Kaydedilemedi. Değişikliklerin bu sekmede tutuluyor.",
+"Retry saving":"Yeniden kaydet",
+"Download a copy":"Bir kopya indir",
+"Some changes are kept only in this tab. Download a full backup from My notebook before closing.":"Bazı değişiklikler yalnızca bu sekmede tutuluyor. Kapatmadan önce Defterim bölümünden tam yedek indir.",
+"TAKE YOUR LAB WITH YOU":"LABORATUVARIN YANINDA OLSUN",
+"A backup of everything.":"Her şeyin bir yedeği.",
+"Save your progress, lesson code, circuits and workshop projects in one file. Keep it before changing browsers or clearing browser data.":"İlerlemeni, ders kodlarını, devrelerini ve atölye projelerini tek dosyada sakla. Tarayıcı değiştirmeden veya tarayıcı verilerini temizlemeden önce yedek al.",
+"Download full backup":"Tam yedeği indir",
+"Restore a backup":"Yedekten geri yükle",
+"Full backup file":"Tam yedek dosyası",
+"Restoring merges progress and adds projects. Existing lesson drafts stay as they are. Nothing is uploaded.":"Geri yükleme ilerlemeyi birleştirir ve projeleri ekler. Mevcut ders çalışmaların korunur. Hiçbir veri sunucuya gönderilmez.",
+"Could not create a full backup. Download your notebook and individual projects instead.":"Tam yedek oluşturulamadı. Defterini ve projelerini ayrı ayrı indir.",
+"Could not save this backup. Your existing data was kept. Download a copy before freeing browser storage.":"Yedek kaydedilemedi. Mevcut verilerin korundu. Tarayıcıda yer açmadan önce bir kopyasını indir.",
+"Backup restored. Your existing work has been kept.":"Yedek geri yüklendi. Mevcut çalışmaların korundu.",
+"This is not a valid Pin by Pin Lab backup (maximum 10 MB).":"Bu dosya geçerli bir Pin by Pin Lab yedeği değil (en fazla 10 MB).",
  'Licenses':'Lisanslar',
  'Pin by Pin Lab — It starts with a pin.':'Pin by Pin Lab — Bir pinle başlar.',
  'Skip to content':'İçeriğe geç',

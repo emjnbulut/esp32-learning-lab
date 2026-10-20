@@ -1,4 +1,24 @@
-# Development handoff — 2026-10-19 (1.0)
+# Development handoff — 2026-10-20 (1.1)
+
+## Save recovery — 2026-10-20
+
+- Failed writes are retained in `dist/draft-store.mjs` for the lifetime of the tab. Clean reads still use current browser storage; pending reads use independent snapshots of the newest draft.
+- Labs show Saved / Not saved immediately. Failure exposes Retry saving and Download a copy, and the notebook full backup includes pending lesson/project edits.
+- Pending writes survive hash routing, project switching and language changes. Retry flushes pending keys. A beforeunload guard warns when there are pending changes; downloaded files remain the recovery path before closing/reloading.
+- A successful full backup restore clears the corresponding pending snapshots.
+- Owner prefers the current single-tab unit flow after discussing phone usability; do not add automatic new browser tabs.
+- New unit tests: `tests/draft-store.test.mjs`; browser regressions cover quota failure, route/project changes, retry, downloads and phone layout.
+
+## Reliability and portable backups — 2026-10-20
+
+- `dist/backup.mjs`: validates imported projects and full backups, merges progress/projects while preserving existing lesson drafts, and rolls storage writes back on failure. New full backups use `format: pin-by-pin-backup`, `version: 1`; old notebook and individual project formats remain supported.
+- Full backup/restore actions are in My notebook / Defterim. No network transfer. Same-backup restore deduplicates project content; conflicting project IDs get new IDs.
+- `bindWorkshop` now reads projects inside each handler so export, rename, switching or creating a project cannot overwrite newer edits.
+- Mission goals are invalidated by edits and run lifecycle changes. `ms.runValid` prevents old simulator ticks from re-enabling completion after changes.
+- New tests: `tests/backup.test.mjs` and four browser regressions in `tests/e2e.test.mjs`.
+- Follow-up priorities and acceptance criteria: [IMPROVEMENTS.md](IMPROVEMENTS.md).
+- Public unit list remains `[1,2]`. Owner requested publication on 2026-10-20 through the existing main-branch GitHub Pages workflow. Validation: 98 unit checks and 26 browser tests passed.
+
 
 
 ## Licensing update — 2026-10-19
