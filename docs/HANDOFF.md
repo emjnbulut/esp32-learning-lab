@@ -1,4 +1,15 @@
-# Development handoff — 2026-10-20 (1.2.1)
+# Development handoff - 2026-10-20 (1.3)
+
+## Serial input and hardware handoff - 2026-10-20 (1.3)
+
+- Owner says the videos have not been recorded. Removed the per-lesson episode/source link entirely; do not add video links until the owner provides published videos. Unit gates remain [1,2].
+- Main-branch Pages publication calls check.yml as a reusable workflow and deploy needs validate. Both unit and browser jobs must succeed before deployment. PRs and other branch pushes retain checks without duplicating main-branch jobs.
+- EN/TR Serial input supports Enter and none/LF/CR/CRLF. The 4096-byte UTF-8 input queue rejects an overfull message atomically, preserves unsent text and resets on restart/end. Sending requires a running sketch that has called Serial.begin().
+- Stream reads yield to virtual time. available/read/peek, readString/readStringUntil, parseInt/parseFloat, setTimeout and end use buffered data. Serial2 reports that it is not the USB monitor instead of silently aliasing its input.
+- A Serial input: echo example opens as a separate workshop project.
+- Use a real ESP32 opens a bilingual native dialog with current connected board pins, component values, shared-net/breadboard references, .ino/IDE/upload steps, simulator limits and official Espressif references. It describes the user's drawing, never repairs or certifies it.
+- Validation: npm run check (119 tests), npm run e2e (36 browser tests). Phone screenshots are in ignored artifacts/.
+
 
 ## Progress and Turkish diagnostics - 2026-10-20 (1.2.1)
 

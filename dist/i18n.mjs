@@ -1046,3 +1046,52 @@ Object.assign(TR,{
  "The simulator could not run this code. Check the highlighted line and the technical details.": "Simülatör bu kodu çalıştıramadı. İşaretli satırı ve teknik ayrıntıları kontrol edin.",
  "Technical details": "Teknik ayrıntılar"
 });
+
+// Serial input and physical-board handoff.
+Object.assign(TR,{
+ "Send to ESP32": "ESP32'ye gönder",
+ "Type a message": "Bir mesaj yazın",
+ "Line ending": "Satır sonu",
+ "Newline (LF)": "Yeni satır (LF)",
+ "No line ending": "Satır sonu yok",
+ "Carriage return (CR)": "Satır başı (CR)",
+ "Both (CRLF)": "İkisi de (CRLF)",
+ "Send": "Gönder",
+ "Run the sketch to send data.": "Veri göndermek için programı çalıştırın.",
+ "Input buffer is full. Wait for the sketch to read it, then send again.": "Giriş tamponu dolu. Programın veriyi okumasını bekleyip tekrar gönderin.",
+ "Sent {n} bytes.": "{n} bayt gönderildi.",
+ "Ready to send.": "Veri göndermeye hazır.",
+ "Run Serial.begin() before sending data.": "Veri göndermeden önce Serial.begin() çalışmalı.",
+ "Use a real ESP32": "Gerçek ESP32 ile dene",
+ "From browser to your ESP32": "Tarayıcıdan gerçek ESP32 kartına",
+ "Close": "Kapat",
+ "For a classic ESP32 DevKit / ESP32-WROOM-32. Match the printed GPIO labels on your own board; pin positions differ between boards. ESP32-C3 and ESP32-S3 need their own pin maps.": "Bu rehber klasik ESP32 DevKit / ESP32-WROOM-32 içindir. Kendi kartınızdaki GPIO etiketlerini esas alın; pinlerin yerleri karttan karta değişebilir. ESP32-C3 ve ESP32-S3 için kendi pin şemalarını kullanın.",
+ "1. Check your connections": "1. Bağlantılarını kontrol et",
+ "Unplug USB before changing wires. GPIO signals are 3.3 V: never connect a GPIO to 5 V. Use a series resistor with each LED. Check its anode (+) and cathode (-).": "Kabloları değiştirmeden önce USB bağlantısını çıkarın. GPIO sinyalleri 3,3 V seviyesindedir; GPIO pinine 5 V bağlamayın. Her LED ile seri bir direnç kullanın. Anot (+) ve katot (-) yönünü kontrol edin.",
+ "This reference describes your current drawing, including any mistakes. Check simulator warnings first. Breadboard rails may be split on a real board; verify continuity.": "Bu tablo, hatalar dahil mevcut çiziminizi gösterir. Önce simülatör uyarılarını kontrol edin. Gerçek breadboard üzerindeki güç rayları bölünmüş olabilir; sürekliliğini kontrol edin.",
+ "Board pins used": "Kullanılan kart pinleri",
+ "No board pins are connected yet.": "Henüz bağlanmış kart pini yok.",
+ "Components in this project": "Bu projedeki bileşenler",
+ "Connection groups in this project": "Bu projedeki bağlantı grupları",
+ "Terminals in the same row are connected. A resistor or LED joins different rows through the component. A = LED anode; C = LED cathode.": "Aynı satırdaki uçlar birbirine bağlıdır. Direnç veya LED, farklı satırlar arasına kendi üzerinden bağlanır. A = LED anodu; C = LED katodu.",
+ "Group": "Grup",
+ "Component terminals": "Bileşen uçları",
+ "Breadboard holes": "Breadboard delikleri",
+ "No connections yet. Build your circuit before moving to hardware.": "Henüz bağlantı yok. Gerçek karta geçmeden önce devrenizi kurun.",
+ "2. Download and upload": "2. Kodu indir ve karta yükle",
+ "Close this guide and use Download .ino to save the code currently in the editor.": "Bu rehberi kapatıp .ino indir düğmesiyle editördeki güncel kodu kaydedin.",
+ "Install Arduino IDE and the esp32 package by Espressif Systems in Boards Manager. Select your exact board and its USB port.": "Arduino IDE uygulamasını kurun. Kart Yöneticisi üzerinden Espressif Systems tarafından sunulan esp32 paketini yükleyin. Kendi kart modelinizi ve USB portunu seçin.",
+ "Open the .ino file and click Verify, then Upload. If the IDE asks, save it in a folder with the same sketch name. If upload stalls, follow your board instructions for the BOOT button.": ".ino dosyasını açıp önce Doğrula, ardından Yükle düğmesine basın. IDE isterse dosyayı programla aynı adlı klasöre kaydedin. Yükleme takılırsa kartınızın BOOT düğmesi yönergelerini izleyin.",
+ "Open Serial Monitor at the baud rate in Serial.begin(). For readStringUntil with a newline delimiter, select Newline (LF).": "Seri Monitör hızını Serial.begin() içindeki değerle eşleştirin. readStringUntil ile yeni satır karakterini bekliyorsanız Yeni satır (LF) seçin.",
+ "3. Know what the simulator supports": "3. Simülatörün kapsamını öğren",
+ "This is an Arduino behavior simulator, not an ESP32 firmware emulator. It supports basic variables, functions, loops, one-dimensional arrays and String; GPIO, timing, PWM, analog input, tone and USB Serial input/output are modeled.": "Bu araç Arduino davranışlarını modeller; ESP32 donanım yazılımını doğrudan çalıştırmaz. Temel değişkenler, fonksiyonlar, döngüler, tek boyutlu diziler ve String desteklenir. GPIO, zamanlama, PWM, analog giriş, tone ve USB Serial giriş/çıkışı modellenir.",
+ "Wi-Fi, Bluetooth, interrupts, external Arduino libraries, DHT11 and OLED devices are not simulated. Serial2 is not connected to this USB monitor. Real timing, ADC readings and component tolerances can differ.": "Wi-Fi, Bluetooth, kesmeler, harici Arduino kütüphaneleri, DHT11 ve OLED simüle edilmez. Serial2 bu USB monitörüne bağlı değildir. Gerçek kartta zamanlama, ADC ölçümleri ve bileşen toleransları farklı olabilir.",
+ "GPIO 34, 35, 36 and 39 are input-only on the classic ESP32. GPIO 1 and 3 serve USB serial. Some pins affect boot; check your board pinout before choosing pins.": "Klasik ESP32 üzerinde GPIO 34, 35, 36 ve 39 yalnızca giriş olarak kullanılabilir. GPIO 1 ve 3, USB seri iletişiminde kullanılır. Bazı pinler açılışı etkiler; pin seçerken kartınızın pin şemasını kontrol edin.",
+ "Official references": "Resmî kaynaklar",
+ "IDE and upload setup": "IDE kurulumu ve yükleme",
+ "ESP32 GPIO reference": "ESP32 GPIO belgesi",
+ "Board and power reference": "Kart ve güç bağlantıları belgesi",
+ "Serial2 is not connected to the USB Serial Monitor. Use Serial instead.": "Serial2, USB Serial Monitor ile bağlı değil. Bu alıştırmada Serial kullanın."
+});
+
+TR['Serial input: echo']='Seri giriş: yankı';

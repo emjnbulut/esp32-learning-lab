@@ -1,6 +1,7 @@
 // Simulator: runs a compiled sketch against a diagram. The UI calls advance() once per frame;
 // tests call runFor() with scripted button/knob actions. All times are virtual microseconds.
 import {compile,Machine,CodeError,fmtValue,printf} from './arduino.mjs';
+import {SerialInput} from './serial-input.mjs';
 import {PARTS,LED_COLORS,ESP_GPIO,GPIO_PIN,INPUT_ONLY,buildNets,solve} from './circuit.mjs';
 const MODE={1:'INPUT',3:'OUTPUT',5:'INPUT_PULLUP',9:'INPUT_PULLDOWN'};
 const V33=3.3,R_OUT=10,R_PULL=45000,LED_FULL=0.010;
@@ -9,7 +10,7 @@ function hash(a,b){let h=(a*374761393+b*668265263)|0;h=Math.imul(h^(h>>>13),1274
 export class Simulator{
  constructor(diagram,code){this.diagram=diagram;this.code=code;this.baud=115200;this.reset();}
  reset(){this.clock=0;this.deadline=0;this.now=0;this.pins={};this.out='';this.serialLog=[];this.ledLog=[];this.writes=[];this.events=[];this.warnings=[];this.warned=new Set();
-  this.leds={};this.ledI={};this.logged={};this.buzzers={};this.status='idle';this.error=null;this.begun=false;this.codeBaud=null;this.dirty=true;this.contactSig='';this.seed=1;this.rand=null;
+  this.leds={};this.ledI={};this.logged={};this.buzzers={};this.status='idle';this.error=null;this.begun=false;this.codeBaud=null;this.rx=new SerialInput(this);this.dirty=true;this.contactSig='';this.seed=1;this.rand=null;
   this.inputs={};for(const p of this.diagram.parts){if(p.type==='button')this.inputs[p.id]={down:false,ev:[]};if(p.type==='pot')this.inputs[p.id]={pos:p.attrs.pos??0.5};}}
  compile(){try{this.program=compile(this.code);return null;}catch(e){if(e instanceof CodeError)return e;throw e;}}
  start(){this.reset();const e=this.compile();if(e){this.error=e;this.status='error';return e;}
@@ -23,7 +24,7 @@ export class Simulator{
   catch(e){this.status='error';this.error=e instanceof CodeError?e:new CodeError('Simulator error: '+e.message);if(!(e instanceof CodeError))console.error(e);}}
  runFor(ms,actions=[]){const end=this.now+ms*1000;const todo=[...actions].sort((a,b)=>a.at-b.at);
   while(this.now<end&&this.status==='running'){const next=todo.length?Math.min(todo[0].at*1000,end):end;const step=Math.min(next-this.now,10000);if(step>0)this.advance(step);
-   while(todo.length&&todo[0].at*1000<=this.now){const a=todo.shift();if(a.press!==undefined)this.press(a.press,true);if(a.release!==undefined)this.press(a.release,false);if(a.pot!==undefined)this.setPot(a.pot,a.pos);}}
+   while(todo.length&&todo[0].at*1000<=this.now){const a=todo.shift();if(a.press!==undefined)this.press(a.press,true);if(a.release!==undefined)this.press(a.release,false);if(a.pot!==undefined)this.setPot(a.pot,a.pos);if(a.serial!==undefined)this.receiveSerial(a.serial);}}
   return this;}
  // warnings keep an English template so the UI can translate them; msg is the filled-in English text
  warn(key,tpl,vars={}){if(this.warned.has(key))return;this.warned.add(key);let msg=tpl;for(const k in vars)msg=msg.split('{'+k+'}').join(vars[k]);this.warnings.push({key,tpl,vars,msg,t:this.clock/1000});}
@@ -34,6 +35,7 @@ export class Simulator{
  setPot(id,pos){const s=this.inputs[id];if(!s)return;s.pos=Math.min(1,Math.max(0,pos));this.events.push({t:this.now/1000,id,pos:s.pos});this.dirty=true;}
  contact(part,t){const s=this.inputs[part.id];const e=s.ev.filter(x=>x.t<=t).pop();if(!e)return false;const dt=t-e.t;
   if(part.attrs.bounce&&dt<e.dur){const slot=Math.floor(dt/500);return hash(slot,Math.round(e.t))<0.5?!e.down:e.down;}return e.down;}
+ receiveSerial(text){return this.status==='running'&&this.begun&&this.rx.enqueue(text);}
  // ---------- host API used by the interpreter ----------
  gpioOk(pin,fn){pin=Number(pin);if(!(pin in GPIO_PIN)){this.warn('pin'+pin,'GPIO {pin} is not on this ESP32 DevKit board ({fn}). Check the pin number.',{pin,fn});return false;}
   if(pin===1||pin===3)this.warn('uart'+pin,'GPIO {pin} is used by the USB serial connection. Pick another pin.',{pin});return true;}
@@ -54,13 +56,19 @@ export class Simulator{
  analogRead(p){if(!this.gpioOk(p,'analogRead'))return 0;if(![32,33,34,35,36,39,4,0,2,15,13,12,14,27,25,26].includes(Number(p)))this.warn('adc'+p,'GPIO {pin} cannot read analog values.',{pin:p});
   this.ensure();const n=this.nodeOf(p);if(!n||!this.sol.driven(n))return Math.floor(this.random()*4096);
   const raw=Math.round(this.sol.v(n)/V33*4095+(this.random()*4-2));return Math.max(0,Math.min(4095,raw));}
- serial(m,args,types){
+ serial(m,args,types,machine,port='Serial'){
+  if(port!=='Serial')throw new CodeError('Serial2 is not connected to the USB Serial Monitor. Use Serial instead.');
   switch(m){
    case 'begin':this.begun=true;this.codeBaud=Number(args[0]);return;
    case 'print':case 'println':case 'printf':case 'write':{let s=m==='printf'?printf(String(args[0]),args.slice(1).map((v,i)=>({v,t:types[i+1]}))):m==='write'?String.fromCharCode(args[0]):(args.length?fmtValue(args[0],types[0],args[1]):'');if(m==='println')s+='\r\n';
     if(!this.begun){this.warn('nobegin','Serial.begin(115200) is missing in setup(): nothing is printed.');return 0;}
     this.out+=s;if(this.out.length>20000)this.out=this.out.slice(-15000);this.serialLog.push({t:this.clock/1000,s});if(this.serialLog.length>4000)this.serialLog.splice(0,1000);this.clock+=s.length*87;return s.length;}
-   case 'available':return 0;case 'read':case 'peek':return -1;case 'readString':case 'readStringUntil':return '';case 'parseInt':case 'parseFloat':return 0;}}
+   case 'available':return this.rx.available;case 'read':return this.rx.read();case 'peek':return this.rx.peek();
+   case 'readString':return this.rx.readString();case 'readStringUntil':return this.rx.readString(Number(args[0])&255);
+   case 'parseInt':return this.rx.parseNumber();case 'parseFloat':return this.rx.parseNumber(true);
+   case 'setTimeout':this.rx.timeout=Math.max(0,Number(args[0])>>>0);return;
+   case 'end':this.begun=false;this.rx.clear();return;
+   case 'flush':return;}}
  // ---------- circuit ----------
  nodeOf(gpio){if(!this.board)return null;const label=GPIO_PIN[gpio];return label?this.node(this.board.id+':'+label):null;}
  node(k){const n=this.nets.find(k);return n===this.gnd?'GND':n;}

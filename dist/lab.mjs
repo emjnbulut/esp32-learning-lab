@@ -2,6 +2,7 @@
 // Used by missions (with goal checks) and by the free workshop (with saved projects).
 import {CircuitHelp,connectionMarkup} from './lab-help.mjs';
 import {sketchDownload} from './sketch-export.mjs';
+import {hardwareGuide} from './hardware-guide.mjs';
 import {explainError} from './error-text.mjs';
 import {Simulator} from './sim/runtime.mjs';
 import {PARTS,PITCH,partPins,pinPos,LED_COLORS,ESP_GPIO} from './sim/circuit.mjs';
@@ -37,7 +38,7 @@ export class Lab{
    <button class="lab-link" id="lab-issues" hidden></button><span class="lab-spacer"></span><button class="lab-icon" id="lab-sound" aria-pressed="${this.sound}" title="${t('Sound')}" aria-label="${t('Sound')}">${this.sound?'🔊':'🔇'}</button></div>
   ${this.persistence?`<div class="lab-save" data-saved="${this.persistence.saved}"><span id="lab-save-state" role="status">${this.persistence.saved?t('Saved in this browser'):t('Not saved. Your changes are kept in this tab.')}</span><div class="lab-save-actions" ${this.persistence.saved?'hidden':''}><button class="lab-link" id="lab-save-retry">${t('Retry saving')}</button><button class="lab-link" id="lab-save-download">${t('Download a copy')}</button></div></div>`:''}
   <div class="lab-body">
-   <section class="lab-code"><div class="lab-head"><span>sketch.ino</span><button class="lab-link" id="lab-ino">${t('Download .ino')}</button></div>
+   <section class="lab-code"><div class="lab-head"><span>sketch.ino</span><button class="lab-link" id="lab-hardware">${t('Use a real ESP32')}</button><button class="lab-link" id="lab-ino">${t('Download .ino')}</button></div>
     <div class="editor"><pre class="ed-gutter" id="ed-gutter" aria-hidden="true"></pre><div class="ed-wrap"><pre class="ed-hl" id="ed-hl" aria-hidden="true"></pre><textarea id="ed-text" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="${t('Arduino code')}"></textarea></div></div>
     <div class="lab-error" id="lab-error" role="alert" hidden></div></section>
    <section class="lab-diagram"><div class="lab-head"><div class="lab-toolsel" role="group" aria-label="${t('Tool')}"><button data-tool="select" aria-pressed="true" title="${t('Move parts, select wires (V)')}">✋ ${t('Move')}</button><button data-tool="wire" aria-pressed="false" title="${t('Draw wires (W)')}">🔌 ${t('Wire')}</button></div><span class="wire-colors" id="lab-wcolors" hidden>${['auto','#2b2b2b','#d64541','#2f9a3c','#2f6fd0','#f28c1c','#c9a400','#8a3fc8'].map(c=>`<button data-newcolor="${c}" aria-pressed="${c==='auto'}" title="${c==='auto'?t('Automatic colour'):c}" style="${c==='auto'?'':'background:'+c}">${c==='auto'?'A':''}</button>`).join('')}</span><span class="lab-spacer"></span><button class="lab-link" id="lab-undo" title="${t('Undo (Ctrl+Z)')}" disabled>↶ ${t('Undo')}</button><button class="lab-link" id="lab-redo" title="${t('Redo (Ctrl+Y)')}" disabled>↷ ${t('Redo')}</button><button class="lab-link" id="lab-add" aria-expanded="false">${t('+ Add part')}</button></div>
@@ -48,7 +49,10 @@ export class Lab{
      <div class="lab-tip" id="lab-tip" hidden></div><button class="lab-cancel" id="lab-cancel" hidden>✕ ${t('Cancel wire')}</button><div class="lab-props" id="lab-props" hidden></div><div class="lab-palette" id="lab-palette" hidden></div></div>
     <div class="lab-inputs" id="lab-inputs"></div></section>
    <section class="lab-serial"><div class="lab-head"><span>Serial Monitor</span><span class="lab-spacer"></span><select id="lab-baud" aria-label="${t('Baud rate')}">${[9600,115200].map(b=>`<option ${b===this.baud?'selected':''}>${b}</option>`).join('')}</select><button class="lab-link" id="lab-clear">${t('Clear')}</button></div>
-    <div class="lab-warn" id="lab-warn"></div><pre class="lab-out" id="lab-out"></pre></section>
+    <div class="lab-warn" id="lab-warn"></div><pre class="lab-out" id="lab-out"></pre>
+    <form class="serial-form" id="serial-form"><label class="sr-only" for="serial-input">${t('Send to ESP32')}</label><input id="serial-input" type="text" maxlength="1024" autocomplete="off" placeholder="${t('Type a message')}" disabled>
+     <label class="sr-only" for="serial-ending">${t('Line ending')}</label><select id="serial-ending" aria-label="${t('Line ending')}"><option value="lf">${t('Newline (LF)')}</option><option value="none">${t('No line ending')}</option><option value="cr">${t('Carriage return (CR)')}</option><option value="crlf">${t('Both (CRLF)')}</option></select><button class="lab-link" id="serial-send" type="submit" disabled>${t('Send')}</button></form>
+    <p class="serial-feedback" id="serial-feedback" role="status">${t('Run the sketch to send data.')}</p></section>
   </div></div>`;
   this.$=s=>root.querySelector(s);this.svg=this.$('#lab-svg');this.world=this.$('#lab-world');this.ta=this.$('#ed-text');this.ta.value=this.code;this.syncEditor();
   this.bindEditor();this.bindDiagram();this.bindBar();this.renderInputs();this.help=new CircuitHelp(this);this.help.mount();
@@ -86,14 +90,22 @@ export class Lab{
  showError(err){this.errLine=err.line||null;const box=this.$('#lab-error');box.hidden=false;const diagnostic=explainError(err.message,this.t);box.innerHTML=`<b>${err.line?this.t('Line {n}',{n:err.line}):this.t('Error')}</b> ${esc(diagnostic.text)}${diagnostic.details?`<details><summary>${this.t('Technical details')}</summary>${esc(diagnostic.details)}</details>`:''}`;this.syncEditor();
   if(err.line){const lh=parseFloat(getComputedStyle(this.ta).lineHeight)||18;this.ta.scrollTop=Math.max(0,(err.line-4)*lh);}this.help?.showTab('code');}
  // ---------- toolbar ----------
- bindBar(){this.$('#lab-save-retry')?.addEventListener('click',()=>this.persistence.onRetry());this.$('#lab-save-download')?.addEventListener('click',()=>this.persistence.onDownload());this.$('#lab-run').onclick=()=>this.running?this.stop():this.start();this.$('#lab-restart').onclick=()=>this.restart();
+ bindBar(){this.$('#lab-hardware').onclick=()=>{this.$('#hardware-guide')?.remove();this.root.querySelector('.lab').insertAdjacentHTML('beforeend',hardwareGuide(this.diagram,this.t));const dialog=this.$('#hardware-guide');this.$('#hardware-close').onclick=()=>dialog.close();dialog.showModal();};this.$('#lab-save-retry')?.addEventListener('click',()=>this.persistence.onRetry());this.$('#lab-save-download')?.addEventListener('click',()=>this.persistence.onDownload());this.$('#lab-run').onclick=()=>this.running?this.stop():this.start();this.$('#lab-restart').onclick=()=>this.restart();
   this.$('#lab-sound').onclick=e=>{this.sound=!this.sound;e.currentTarget.textContent=this.sound?'🔊':'🔇';e.currentTarget.setAttribute('aria-pressed',String(this.sound));if(!this.sound)this.stopAudio();};
+  this.$('#serial-form').addEventListener('submit',e=>{
+   e.preventDefault();const input=this.$('#serial-input'),ending={none:'',lf:'\n',cr:'\r',crlf:'\r\n'}[this.$('#serial-ending').value]??'';
+   if(!this.running||!this.sim.begun)return;
+   const text=input.value+ending;if(!text)return;
+   const feedback=this.$('#serial-feedback');
+   if(!this.sim.receiveSerial(text)){feedback.textContent=this.t('Input buffer is full. Wait for the sketch to read it, then send again.');return;}
+   feedback.textContent=this.t('Sent {n} bytes.',{n:new TextEncoder().encode(text).length});input.value='';input.focus();
+  });
   this.$('#lab-clear').onclick=()=>{if(this.sim)this.sim.out='';this.lastOut='';this.$('#lab-out').textContent='';};
   this.$('#lab-baud').onchange=e=>{this.baud=Number(e.target.value);this.lastOut=null;};
   this.$('#lab-ino').onclick=()=>{const url=URL.createObjectURL(new Blob([sketchDownload(this.code)],{type:'text/plain'}));const a=document.createElement('a');a.href=url;a.download='sketch.ino';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
   this.root.querySelectorAll('[data-labtab]').forEach(b=>b.onclick=()=>this.help.showTab(b.dataset.labtab));
   this.$('#lab-undo').onclick=()=>this.undo();this.$('#lab-redo').onclick=()=>this.redo();this.$('#lab-cancel').onclick=()=>{this.wiring=null;this.render();};
-  this.root.addEventListener('keydown',e=>{if(e.target===this.ta||!(e.ctrlKey||e.metaKey))return;const k=e.key.toLowerCase();if(k==='z'&&!e.shiftKey){e.preventDefault();this.undo();}else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();this.redo();}});
+  this.root.addEventListener('keydown',e=>{if(e.target.closest('input,textarea,select')||!(e.ctrlKey||e.metaKey))return;const k=e.key.toLowerCase();if(k==='z'&&!e.shiftKey){e.preventDefault();this.undo();}else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();this.redo();}});
   this.root.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>this.setTool(b.dataset.tool));
   this.root.querySelectorAll('[data-newcolor]').forEach(b=>b.onclick=()=>{this.wcolor=b.dataset.newcolor==='auto'?null:b.dataset.newcolor;this.root.querySelectorAll('[data-newcolor]').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));});
   this.$('#lab-add').onclick=e=>{const pal=this.$('#lab-palette');const open=pal.hidden;pal.hidden=!open;e.currentTarget.setAttribute('aria-expanded',String(open));
@@ -114,7 +126,12 @@ export class Lab{
   if(s.status!=='error')this.shownErr=false;
   this.paint();
   if(ts-this.lastTick>150){this.lastTick=ts;this.onTick(s);}}
- paint(){const s=this.sim;const run=this.running;const v=run?s.view():{leds:{},buzzers:{},pressed:{},pots:{},builtin:0,time:s?s.now/1000:0};
+ updateSerialControls(){
+  const ready=this.running&&this.sim.begun,key=this.running?(ready?'ready':'begin'):'stopped';
+  this.$('#serial-input').disabled=!ready;this.$('#serial-send').disabled=!ready;
+  if(this.serialState!==key){this.serialState=key;this.$('#serial-feedback').textContent=ready?this.t('Ready to send.'):this.running?this.t('Run Serial.begin() before sending data.'):this.t('Run the sketch to send data.');}
+ }
+ paint(){this.updateSerialControls();const s=this.sim;const run=this.running;const v=run?s.view():{leds:{},buzzers:{},pressed:{},pots:{},builtin:0,time:s?s.now/1000:0};
   const ms=v.time;this.$('#lab-time').textContent=`${String(Math.floor(ms/60000)).padStart(2,'0')}:${String(Math.floor(ms/1000)%60).padStart(2,'0')}.${String(Math.floor(ms%1000)).padStart(3,'0')}`;
   for(const p of this.diagram.parts){
    if(p.type==='led'){const b=v.leds[p.id]||0,el=this.world.querySelector('#led-'+CSS.escape(p.id)),g=this.world.querySelector('#glow-'+CSS.escape(p.id));if(el)el.setAttribute('fill-opacity',(0.45+0.55*Math.sqrt(b)).toFixed(2));if(el)el.style.filter=b>0.05?`brightness(${(1+Math.sqrt(b)*0.6).toFixed(2)})`:'';if(g)g.setAttribute('opacity',(Math.sqrt(b)*0.55).toFixed(2));}

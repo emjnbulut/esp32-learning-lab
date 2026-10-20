@@ -1,5 +1,8 @@
 # Roadmap
 
+## 1.3 - Serial input and hardware handoff (2026-10-20)
+Buffered USB Serial input and an echo example, bilingual current-project hardware references and upload guidance, mandatory browser/unit checks before publication, and removal of lesson episode links while videos are unrecorded. Public unit gates stay unchanged.
+
 ## 1.2 — Accessible circuit building (2026-10-20)
 Pin-based connections for phones/keyboards, actionable circuit warning highlights, and an optional five-step first-circuit guide. Placement remains undoable, each wire is confirmed, and existing simulator goals determine completion.
 

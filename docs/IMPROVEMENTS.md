@@ -2,6 +2,11 @@
 
 ## Implemented in this revision
 
+- Lesson episode/source links removed at the owner's request: videos have not been recorded. No replacement video URLs or release-list changes.
+- Main-branch publication now depends on both unit and browser tests through a reusable validation workflow.
+- USB Serial input with a bounded UTF-8 queue, all four line endings, timed byte/string/number reads and a ready-to-run echo example.
+- A bilingual real-board guide with current GPIO/net references, component values, IDE/upload steps and the simulator's supported subset.
+
 - Released-lesson progress counts consistently across the header, notebook, home page and completion screen; importing future-unit records preserves the backup without inflating visible progress.
 - Turkish compiler/runtime explanations preserve names and source lines, with expandable technical details for unfamiliar errors; English diagnostics stay unchanged.
 
@@ -23,10 +28,7 @@ These priorities are based on the current repository and UI, without adding exte
 
 | Priority | Improvement | Why it helps | Reviewable acceptance criterion |
 |---|---|---|---|
-| 2 | Connect each released lesson to its exact video | The lesson source currently points to the written GitHub lesson. | Each published unit has a direct video link and a written lesson link; unpublished units keep their release gate. Confirm publication before changing release lists. |
-| 2 | Serial Monitor input | The monitor currently displays output and baud selection but has no send field. | Add a bilingual input/send flow and interpreter support with tests for buffer reads and line endings. |
 | 2 | Expand components with actual behavior | LDR, DHT11 and OLED are planned in the curriculum but absent from the current part palette. | Add one component together with its simulated behavior, introductory activity and headless/browser tests; avoid decorative parts without behavior. |
-| 2 | Real-hardware handoff | .ino download exists, but learners need a clear bridge to their physical board. | A released activity offers a pin list, wiring reference, IDE upload steps and an explanation of the simulator's supported Arduino subset. |
 | 3 | Better discoverability and link previews | The entry HTML has basic metadata; lessons are client-side hash routes. | Provide useful public lesson descriptions before JavaScript runs and correct sharing metadata for the confirmed public URL. |
 | 3 | Offline learning | The site is static but currently has no offline cache. | Previously opened released activities work offline; updates do not mix simulator versions or accidentally unlock unpublished units. |
 | 3 | Optional synchronization/sharing | Backups now move work manually; cross-device sync remains absent. | Keep learning account-free; add optional sync/share only with clear privacy, cost and data deletion behavior. |

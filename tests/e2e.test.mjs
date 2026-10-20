@@ -355,3 +355,47 @@ test('Turkish code diagnostics preserve source lines, recover after fixes and fi
  await page.waitForFunction(()=>!document.querySelector('#mission-done').disabled);assert.equal(await page.locator('#lab-error').isHidden(),true);
  assert.deepEqual(page.errors,[]);await page.context().close();
 });
+
+test('phone: Turkish Serial input sends real data with Enter and stops accepting it after Stop',async()=>{
+ const page=await open('#/workshop',{width:390,height:844,lang:'tr'});await lab(page);
+ await page.click('[data-labtab="serial"]');assert.equal(await page.locator('#serial-input').isDisabled(),true);
+ await page.click('[data-labtab="code"]');
+ await page.selectOption('#ws-example','serial-input');await lab(page);
+ await page.click('#lab-run');await page.click('[data-labtab="serial"]');await page.waitForSelector('#serial-input:not([disabled])');
+ await page.fill('#serial-input','Merhaba');await page.press('#serial-input','Enter');
+ await page.waitForFunction(()=>document.querySelector('#lab-out').textContent.includes('Merhaba'));assert.match(await page.locator('#serial-feedback').innerText(),/8 bayt/);
+ await page.selectOption('#serial-ending','none');await page.fill('#serial-input','Çay');await page.click('#serial-send');
+ await page.waitForFunction(()=>document.querySelector('#lab-out').textContent.includes('Çay'));assert.match(await page.locator('#serial-feedback').innerText(),/4 bayt/);
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ fs.mkdirSync('artifacts',{recursive:true});await page.locator('.lab').screenshot({path:'artifacts/phone-serial-input.png'});
+ await page.click('#lab-run');assert.equal(await page.locator('#serial-input').isDisabled(),true);await page.click('#lab-run');await page.waitForSelector('#serial-input:not([disabled])');
+ await page.waitForTimeout(100);assert.equal(await page.locator('#lab-out').innerText(),'','restart clears old input and output');
+ assert.deepEqual(page.errors,[]);await page.context().close();
+});
+test('Serial send keeps unsent text when the input buffer is full and requires Serial.begin',async()=>{
+ const page=await open('#/workshop');await lab(page);
+ await page.fill('#ed-text','void setup(){}\nvoid loop(){}');await page.click('#lab-run');
+ await page.waitForFunction(()=>document.querySelector('#serial-feedback').textContent.includes('Serial.begin'));
+ assert.equal(await page.locator('#serial-send').isDisabled(),true);await page.click('#lab-run');
+ await page.fill('#ed-text','void setup(){Serial.begin(115200);}\nvoid loop(){delay(10000);}');await page.click('#lab-run');await page.waitForSelector('#serial-input:not([disabled])');
+ await page.evaluate(()=>document.querySelector('#lab-root').__lab.sim.receiveSerial('x'.repeat(4096)));
+ await page.fill('#serial-input','keep this');await page.click('#serial-send');assert.match(await page.locator('#serial-feedback').innerText(),/buffer is full/);assert.equal(await page.locator('#serial-input').inputValue(),'keep this');
+ await page.click('#lab-restart');await page.waitForSelector('#serial-send:not([disabled])');await page.click('#serial-send');assert.equal(await page.locator('#serial-input').inputValue(),'');
+ assert.deepEqual(page.errors,[]);await page.context().close();
+});
+test('real-board guide shows current connections in both languages and returns focus without altering work',async()=>{
+ for(const lang of ['en','tr']){
+  const page=await open('#/lesson/circuit',{completed:U1,width:390,height:844,lang});await lab(page);
+  assert.equal(await page.locator('.source').count(),0);assert.equal(await page.locator('a[href*="/esp32-from-zero/tree/main/lessons/"]').count(),0);
+  await page.click('#show-solution');await lab(page);
+  const before=await page.evaluate(()=>{const l=document.querySelector('#lab-root').__lab;return JSON.stringify({code:l.code,diagram:l.diagram});});
+  await page.click('#lab-hardware');const guide=page.locator('#hardware-guide');assert.equal(await guide.isVisible(),true);
+  assert.match(await guide.innerText(),/3V3/);assert.match(await guide.innerText(),/220/);assert.match(await guide.innerText(),/esp:GND/);
+  assert.match(await guide.innerText(),lang==='tr'?/Kart Yöneticisi/:/Boards Manager/);assert.equal(await guide.locator('.hardware-sources a').count(),3);
+  assert.equal(await guide.evaluate(el=>el.scrollWidth<=el.clientWidth),true);
+  if(lang==='tr'){fs.mkdirSync('artifacts',{recursive:true});await guide.screenshot({path:'artifacts/phone-hardware-guide.png'});}
+  await page.keyboard.press('Escape');assert.equal(await guide.isVisible(),false);assert.equal(await page.locator('#lab-hardware').evaluate(el=>el===document.activeElement),true);
+  assert.equal(await page.evaluate(()=>{const l=document.querySelector('#lab-root').__lab;return JSON.stringify({code:l.code,diagram:l.diagram});}),before);
+  assert.deepEqual(page.errors,[]);await page.context().close();
+ }
+});

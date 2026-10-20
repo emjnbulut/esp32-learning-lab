@@ -225,7 +225,7 @@ export function compile(src){
  function checkArgs(n,spec,name){const c=n.args.length;if(c<spec.n[0]||c>spec.n[1])throw new CodeError(`${name}() takes ${spec.n[0]===spec.n[1]?spec.n[0]:spec.n[0]+'–'+spec.n[1]} argument${spec.n[1]===1?'':'s'}, not ${c}`,n.line,n.col);}
  function call(n,sc){
   if(n.f.k==='member'){const obj=n.f.obj;
-   if(obj.k==='id'&&OBJECTS[obj.name]&&!lookup(sc,obj.name)){const spec=OBJECTS[obj.name][n.f.prop];if(!spec)throw new CodeError(`${obj.name}.${n.f.prop}() does not exist`,n.f.line,n.f.col);checkArgs(n,spec,obj.name+'.'+n.f.prop);n.args.forEach(a=>ex(a,sc));n.kind='serial';n.method=n.f.prop;return spec.r;}
+   if(obj.k==='id'&&OBJECTS[obj.name]&&!lookup(sc,obj.name)){const spec=OBJECTS[obj.name][n.f.prop];if(!spec)throw new CodeError(`${obj.name}.${n.f.prop}() does not exist`,n.f.line,n.f.col);checkArgs(n,spec,obj.name+'.'+n.f.prop);n.args.forEach(a=>ex(a,sc));n.kind='serial';n.port=obj.name;n.method=n.f.prop;return spec.r;}
    const t=ex(obj,sc);if(t.kind!=='string')throw new CodeError(`"${n.f.prop}" can only be used on a String`,n.f.line,n.f.col);
    const spec=STRING_METHODS[n.f.prop];if(!spec)throw new CodeError(`String has no function "${n.f.prop}"`,n.f.line,n.f.col);checkArgs(n,spec,n.f.prop);if(spec.mut)lvalue(obj);n.args.forEach(a=>ex(a,sc));n.kind='string';n.method=n.f.prop;return spec.r;}
   const name=n.f.name;const user=funcs.get(name);
@@ -380,7 +380,7 @@ export class Machine{
  *call(n,f){const h=this.h;
   if(n.kind==='user'){const args=[];for(const a of n.args)args.push(a.k==='id'&&a.array?this.get(a,f):yield* this.ev(a,f));return yield* this.callUser(n.fn,args);}
   const args=[];for(const a of n.args)args.push(a.k==='fnref'?a.fn:yield* this.ev(a,f));
-  if(n.kind==='serial')return h.serial(n.method,args,n.args.map(a=>a.t),this);
+  if(n.kind==='serial'){const result=h.serial(n.method,args,n.args.map(a=>a.t),this,n.port);const value=result&&typeof result.next==='function'?yield* result:result;return n.t.kind==='void'?undefined:conv(value,n.t);}
   if(n.kind==='string')return this.stringMethod(n,f,args);
   const b=n.b;
   if(b.wait){h.clock+=b.wait(args);if(h.clock>=h.deadline)yield;return;}

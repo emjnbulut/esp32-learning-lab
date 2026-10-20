@@ -18,7 +18,7 @@ npm run e2e     # Playwright regression suite (Chromium)
 
 `dist/` is the complete static website and works under a hosting subdirectory.
 
-## What is inside (1.0)
+## What is inside (1.3)
 
 - **Simulator** (`dist/sim/`): an Arduino C/C++ subset interpreter with compiler-style errors and virtual time
   (`arduino.mjs`); parts, nets and a DC solver with diodes (`circuit.mjs`); the runtime that connects sketch and
@@ -26,7 +26,7 @@ npm run e2e     # Playwright regression suite (Chromium)
   resistors and short circuits (`runtime.mjs`); SVG part drawings (`parts-view.mjs`).
 - **Lab** (`dist/lab.mjs`, `lab.css`): code editor, drag-and-drop circuit editor (ESP32 DevKit V1, breadboard, LED,
   resistor, push button, potentiometer, RGB LED, buzzer; drag wires from pin to pin, rotate with R, delete with Del),
-  Run/Stop/Restart, Serial Monitor with baud check, interactive buttons and knobs, sound.
+  Run/Stop/Restart, Serial Monitor with baud check and buffered input, interactive buttons and knobs, sound.
 - **Missions** (`dist/missions.mjs`): 15 projects in units 1–5 with starter code and circuit, steps, hints, a solution and
   live goal checks. Every solution is run headless in `tests/missions.test.mjs`.
 - **Quizzes and unit checkpoints** stay as secondary steps; a passed checkpoint lets experienced learners skip ahead.
@@ -35,7 +35,7 @@ npm run e2e     # Playwright regression suite (Chromium)
 ## Simulation scope
 
 The interpreter supports the Arduino subset used by the course: types (int, long, unsigned long, byte, bool, char,
-float, String), arrays, functions, control flow, `#define`, `Serial` (print/println/printf), digital and analog I/O,
+float, String), arrays, functions, control flow, `#define`, `Serial` (output plus buffered byte, text and number reads), digital and analog I/O,
 `millis`/`delay`, `map`/`constrain`, `tone`. It is not a full C++ compiler: pointers, structs, classes, libraries and
 interrupts are reported as unsupported. The circuit solver is DC with piecewise-linear diodes (LED forward voltages,
 ~10 Ω GPIO output resistance, 45 kΩ pull-ups); PWM brightness is averaged by duty cycle.
@@ -75,3 +75,13 @@ Earlier MIT platform rights, third-party licenses and learners' own work remain 
 New restrictions cover new copyrightable contributions, not already-released old code.
 See [LICENSING.md](LICENSING.md), [LICENSE](LICENSE), [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md),
 and the public [license page](dist/licensing.html).
+
+## Serial input and a real board
+
+In Workshop, choose **Serial input: echo** from Examples and press Run. In Serial Monitor, type a message and press Enter or Send. Choose none, LF, CR or CRLF to match the sketch. Text is UTF-8; byte reads return individual bytes. Stream reads wait in simulated time; setTimeout defaults to 1000 ms. Input requires Serial.begin(), is bounded to 4096 bytes, and is cleared on restart. This monitor is USB Serial, not Serial2.
+
+Use **Use a real ESP32** above the code editor for current pin and component lists, connections including breadboard contacts, .ino download/upload steps and simulator limits. The bilingual guide links official Espressif documentation. Lesson episode links have been removed because the videos have not been recorded.
+
+## Publishing
+
+A push to main triggers Pages validation. The publication workflow calls the unit and Playwright jobs in check.yml and only runs deploy after both succeed. PRs and other branch pushes run the same checks separately.

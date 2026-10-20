@@ -1,5 +1,6 @@
 // UI diagnostics: keep compiler messages and line/column data unchanged.
 const EXACT=new Set([
+ "Serial2 is not connected to the USB Serial Monitor. Use Serial instead.",
  "Comment /* is never closed with */",
  "Macros with parameters are not supported; use a function instead",
  "A char literal holds one character: use double quotes for text",
