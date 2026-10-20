@@ -9,6 +9,9 @@
 - Workshop export, rename, new project, examples, imports and project switching read the latest saved work instead of an old captured project list.
 - Mission completion resets when code/circuit changes, a run starts/fails/stops, the solution is loaded or the activity is restarted. Old simulator results cannot complete edited work.
 - Matching English/Turkish UI; mobile backup actions stack vertically.
+- Pin selection on phones and keyboards, with connection previews, undo/redo and feedback for self-links/duplicates.
+- Actionable circuit warnings highlight actual wire routes and LED pins; edited circuits clear outdated diagnostics.
+- A five-step first-circuit guide places components with Undo, walks through each connection, and checks real simulated current/mission goals.
 - Immediate saved/not-saved state, memory retention of failed writes across in-app navigation, retry, recovery project downloads and a close/reload guard. Full backups include pending drafts.
 
 ## Recommended next work
@@ -17,8 +20,6 @@ These priorities are based on the current repository and UI, without adding exte
 
 | Priority | Improvement | Why it helps | Reviewable acceptance criterion |
 |---|---|---|---|
-| 1 | First-circuit onboarding and keyboard wiring | Circuit placement/wiring currently relies on dragging or pin clicks. A beginner needs help finding the correct endpoints. | A new learner can add an LED/resistor and connect two labeled pins using keyboard only, and do the same on a phone. |
-| 1 | Highlight the circuit behind an error | Simulator warnings exist, but a message alone makes the offending connection hard to locate. | Clicking a short-circuit or missing-resistor warning highlights the related wire/pins; the highlight clears when fixed. |
 | 2 | Connect each released lesson to its exact video | The lesson source currently points to the written GitHub lesson. | Each published unit has a direct video link and a written lesson link; unpublished units keep their release gate. Confirm publication before changing release lists. |
 | 2 | Serial Monitor input | The monitor currently displays output and baud selection but has no send field. | Add a bilingual input/send flow and interpreter support with tests for buffer reads and line endings. |
 | 2 | Expand components with actual behavior | LDR, DHT11 and OLED are planned in the curriculum but absent from the current part palette. | Add one component together with its simulated behavior, introductory activity and headless/browser tests; avoid decorative parts without behavior. |

@@ -87,3 +87,30 @@
 .lab-save-actions{display:flex;gap:6px;flex-wrap:wrap}.lab-save-actions[hidden]{display:none}
 .lab-save-actions button{min-height:36px}
 @media(max-width:600px){.lab-save{font-size:10px}.lab-save[data-saved=false]{align-items:flex-start}.lab-save-actions{width:100%}.lab-save-actions button{flex:1;min-height:42px}}
+
+/* Pin-first connections and actionable circuit warnings */
+.lab:has(.pin-connect[open]){min-height:820px}
+.pin-connect{border-bottom:1px solid var(--line);background:#f7f7ef;flex:none;font:11px var(--sans)}
+.pin-connect summary{cursor:pointer;min-height:42px;padding:11px 12px;font-weight:700;color:var(--ink)}
+.pin-connect form{padding:0 12px 12px;max-height:310px;overflow:auto}
+.pin-connect p{font:11px/1.6 var(--sans);margin:0 0 10px;color:var(--muted)}
+.pin-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
+.pin-side{display:grid;gap:5px;min-width:0}.pin-side label{font:10px var(--mono)}
+.pin-side select{width:100%;min-width:0;min-height:42px;background:var(--white);color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:6px;font:11px var(--sans)}
+#pin-connect-submit{min-height:42px;width:100%;font-size:12px;font-weight:700}
+.pin-connect .pin-feedback{margin:8px 0 0;color:var(--ink)}.pin-feedback:empty{display:none}
+.lab-diagram:has(.pin-connect[open]) .lab-canvas{min-height:160px}
+.lab-warning{padding:8px 10px;background:#4a3a16;color:#ffd98a;border-bottom:1px solid #5f4a1c}
+.lab-warning p{padding:0;border:0;background:none;font-size:11px;line-height:1.6;margin:0}
+.lab-warning button{margin-top:6px;min-height:42px;font-size:11px}
+.lab-warn{max-height:65%;overflow:auto;flex-shrink:0}
+#lab-issues{color:#8a361d;background:#fff0df;border-color:#dcad91;min-height:38px}
+#lab-issues[hidden],.diagnostic-note[hidden]{display:none}
+.diagnostic-note{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff0df;color:#8a361d;font:11px/1.6 var(--sans);flex:none}
+.diagnostic-note span{flex:1}.diagnostic-note button{min-height:42px}
+.diagnostic-wire .wire-line{stroke:#d34b20!important;stroke-width:4;stroke-dasharray:6 2}
+.diagnostic-part{filter:drop-shadow(0 0 4px #d34b20)}
+.diagnostic-pin{fill:#f28c1c44;stroke:#b33414;stroke-width:1.8}
+.connector-pin{fill:#348fcf33;stroke:#126da5;stroke-width:1.4;stroke-dasharray:2 1}
+@media(max-width:900px){.lab[data-tab=circuit]:has(.pin-connect[open]){height:auto;min-height:780px}.lab[data-tab=circuit]:has(.pin-connect[open]) .lab-diagram{min-height:620px}.lab[data-tab=circuit]:has(.pin-connect[open]) .lab-canvas{min-height:290px}.lab-diagram .lab-head{flex-wrap:wrap}.lab-bar{gap:7px}}
+@media(prefers-reduced-motion:reduce){.diagnostic-part{filter:none}}

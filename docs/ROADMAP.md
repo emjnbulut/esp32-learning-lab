@@ -1,5 +1,8 @@
 # Roadmap
 
+## 1.2 — Accessible circuit building (2026-10-20)
+Pin-based connections for phones/keyboards, actionable circuit warning highlights, and an optional five-step first-circuit guide. Placement remains undoable, each wire is confirmed, and existing simulator goals determine completion.
+
 ## 1.1 — Reliable saving and portable backups (2026-10-20)
 Immediate save/recovery status, failed writes retained in tab memory with retry/download, full backup/restore, validated project imports, current workshop snapshots and invalidated mission goals after edits/restarts. Follow-up priorities with acceptance criteria: [IMPROVEMENTS.md](IMPROVEMENTS.md).
 

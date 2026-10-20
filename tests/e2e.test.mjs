@@ -224,3 +224,87 @@ test('phone: save failure actions fit without horizontal scrolling',async()=>{
  fs.mkdirSync('artifacts',{recursive:true});await page.locator('.lab-save').scrollIntoViewIfNeeded();await page.screenshot({path:'artifacts/mobile-save-recovery.png'});
  assert.deepEqual(page.errors,[]);await page.close();
 });
+
+async function connectBySelection(page,a,b){
+ await page.locator('#pin-connect').evaluate(el=>{el.open=true;});
+ for(const [side,key] of [['from',a],['to',b]]){
+  await page.selectOption('#pin-'+side+'-part',key.slice(0,key.lastIndexOf(':')));
+  await page.selectOption('#pin-'+side,key);
+ }
+ await page.locator('#pin-connect-submit').press('Enter');
+}
+test('phone: connect selected pins without dragging, reject duplicates, undo, and lock while running',async()=>{
+ const page=await open('#/lesson/circuit',{completed:U1,width:390,height:844});await lab(page);
+ await page.click('[data-labtab="circuit"]');await page.click('#pin-connect summary');
+ await connectBySelection(page,'esp:3V3','bb:bp2');
+ assert.equal(await page.evaluate(()=>document.querySelector('#lab-root').__lab.diagram.wires.length),1);
+ await page.locator('#pin-connect-submit').press('Enter');assert.match(await page.locator('#pin-connect-feedback').innerText(),/already connected/);
+ assert.equal(await page.evaluate(()=>document.querySelector('#lab-root').__lab.diagram.wires.length),1);
+ await page.selectOption('#pin-to-part','esp');await page.selectOption('#pin-to','esp:3V3');await page.click('#pin-connect-submit');
+ assert.match(await page.locator('#pin-connect-feedback').innerText(),/different pins/);
+ await page.click('#lab-undo');assert.equal(await page.evaluate(()=>document.querySelector('#lab-root').__lab.diagram.wires.length),0);
+ await page.click('#lab-redo');assert.equal(await page.evaluate(()=>document.querySelector('#lab-root').__lab.diagram.wires.length),1);
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);
+ for(const id of ['#pin-from-part','#pin-from','#pin-to-part','#pin-to','#pin-connect-submit']){const rect=await page.locator(id).boundingBox();assert.ok(rect.height>=42);assert.ok(rect.x>=0&&rect.x+rect.width<=390);}
+ fs.mkdirSync('artifacts',{recursive:true});await page.locator('#pin-connect').scrollIntoViewIfNeeded();await page.locator('.lab').screenshot({path:'artifacts/mobile-pin-connections.png'});
+ await page.click('#lab-run');assert.equal(await page.locator('#pin-connect-submit').isDisabled(),true);assert.deepEqual(page.errors,[]);await page.close();
+});
+test('first circuit guide completes a real circuit on a phone one connection at a time',async()=>{
+ const page=await open('#/lesson/circuit',{completed:U1,width:390,height:844,lang:'tr'});await lab(page);
+ assert.match(await page.locator('#first-guide').innerText(),/İlk devre rehberi/);
+ await page.click('#guide-action');await page.waitForFunction(()=>document.querySelector('.guide-progress').textContent.includes('2 / 5'));
+ assert.equal(await page.evaluate(()=>document.querySelector('#lab-root').__lab.diagram.wires.length),0,'placing parts never inserts the solution wires');
+ for(let i=0;i<3;i++){
+  await page.click('#guide-action');await page.click('#pin-connect-submit');
+  await page.waitForFunction(n=>document.querySelector('.guide-progress')?.textContent.includes(n+' / 5'),i+3);
+ }
+ await page.click('#guide-action');await page.waitForSelector('.guide-ready');assert.equal(await goalsOk(page),3);
+ assert.equal(await page.locator('#mission-done').isDisabled(),false);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);
+ fs.mkdirSync('artifacts',{recursive:true});await page.locator('#first-guide').scrollIntoViewIfNeeded();await page.screenshot({path:'artifacts/mobile-first-circuit-guide.png'});
+ assert.deepEqual(page.errors,[]);await page.close();
+});
+test('guide placement can be undone without replacing the sketch or adding connections',async()=>{
+ const page=await open('#/lesson/circuit',{completed:U1});await lab(page);const code=await page.locator('#ed-text').inputValue();
+ await page.click('#guide-action');await page.click('#lab-undo');
+ assert.match(await page.locator('.guide-progress').innerText(),/1 \/ 5/);assert.equal(await page.locator('#ed-text').inputValue(),code);
+ assert.equal(await page.evaluate(()=>document.querySelector('#lab-root').__lab.diagram.wires.length),0);assert.deepEqual(page.errors,[]);await page.close();
+});
+async function openDiagnosticProject(page,kind){
+ const parts=[{id:'esp',type:'esp32',x:0,y:0,rot:0,attrs:{}},{id:'bb',type:'breadboard',x:160,y:0,rot:0,attrs:{}}];
+ const wires=kind==='short'?[{a:'esp:3V3',b:'esp:GND.R'}]:[{a:'esp:3V3',b:'led1:A'},{a:'led1:C',b:'esp:GND.R'}];
+ if(kind==='led')parts.push({id:'led1',type:'led',x:250,y:230,rot:0,attrs:{color:'red'}});
+ const data={format:'pin-by-pin-project',version:1,name:'Diagnostic '+kind,code:'void setup(){}\nvoid loop(){}',diagram:{parts,wires}};
+ await page.setInputFiles('#ws-file',{name:'diagnostic.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(data))});
+ await page.waitForFunction(name=>document.querySelector('#ws-project').selectedOptions[0].textContent===name,data.name);await lab(page);
+}
+test('phone: a short-circuit warning opens the circuit, highlights its wire, and clears after repair',async()=>{
+ const page=await open('#/workshop',{width:390,height:844});await lab(page);await openDiagnosticProject(page,'short');
+ await page.click('#lab-run');await page.waitForSelector('#lab-issues:not([hidden])');await page.click('#lab-issues');
+ assert.equal(await page.locator('[data-labtab="serial"]').getAttribute('aria-selected'),'true');
+ await page.locator('.lab-warning').filter({hasText:'Short circuit'}).locator('[data-warning-focus]').click();
+ assert.equal(await page.locator('[data-labtab="circuit"]').getAttribute('aria-selected'),'true');
+ assert.equal(await page.locator('.diagnostic-wire').count(),1);assert.ok(await page.locator('.diagnostic-pin').count()>=2);
+ fs.mkdirSync('artifacts',{recursive:true});await page.locator('#diagnostic-note').scrollIntoViewIfNeeded();await page.locator('.lab').screenshot({path:'artifacts/mobile-circuit-warning.png'});
+ await page.click('#lab-run');
+ await page.evaluate(()=>document.querySelector('#lab-root').__lab.select({wire:0}));await page.locator('#lab-svg').focus();await page.keyboard.press('Delete');
+ assert.equal(await page.locator('.diagnostic-wire').count(),0);assert.equal(await page.locator('#diagnostic-note').isVisible(),false);
+ await page.click('#lab-run');await page.waitForTimeout(300);assert.equal(await page.locator('#lab-issues').isVisible(),false);
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),390);assert.deepEqual(page.errors,[]);await page.close();
+});
+test('a missing-resistor warning highlights its LED and the attached wires',async()=>{
+ const page=await open('#/workshop');await lab(page);await openDiagnosticProject(page,'led');await page.click('#lab-run');await page.waitForSelector('[data-warning-focus]');
+ await page.locator('.lab-warning').filter({hasText:'burns out'}).locator('[data-warning-focus]').click();
+ assert.equal(await page.locator('[data-part="led1"].diagnostic-part').count(),1);assert.equal(await page.locator('.diagnostic-wire').count(),2);
+ await page.click('#lab-restart');assert.equal(await page.locator('.diagnostic-wire').count(),0);await page.waitForSelector('[data-warning-focus]');await page.locator('.lab-warning').filter({hasText:'burns out'}).locator('[data-warning-focus]').click();await page.click('#diagnostic-clear');assert.equal(await page.locator('.diagnostic-pin').count(),0);assert.deepEqual(page.errors,[]);await page.close();
+});
+
+test('laptop: the pin connector leaves room for the circuit and serial monitor',async()=>{
+ const page=await open('#/workshop',{width:1440,height:760});await lab(page);await page.click('#pin-connect summary');
+ await connectBySelection(page,'esp:D22','bb:j22');
+ await page.waitForFunction(()=>{const canvas=document.querySelector('.lab-canvas').getBoundingClientRect(),board=document.querySelector('[data-part="esp"]').getBoundingClientRect();return board.top>=canvas.top&&board.bottom<=canvas.bottom;},null,{timeout:3000});
+ const canvas=await page.locator('.lab-canvas').boundingBox(),serial=await page.locator('.lab-serial').boundingBox();
+ assert.ok(canvas.height>=160);assert.ok(canvas.y+canvas.height<=serial.y+1,'circuit stays above Serial Monitor');
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth),1440);
+ fs.mkdirSync('artifacts',{recursive:true});await page.locator('.lab').screenshot({path:'artifacts/desktop-pin-connections.png'});
+ assert.deepEqual(page.errors,[]);await page.close();
+});

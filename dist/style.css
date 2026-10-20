@@ -137,3 +137,9 @@
 @media(max-width:600px){.backup-card{padding:20px}.backup-actions{flex-direction:column}.backup-actions button{width:100%}}
 
 .storage-warning:not([hidden]){display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px;border:1px solid #efcbaa;border-radius:6px;line-height:1.7}.storage-warning>span{flex:1;min-width:180px}.storage-warning button{font-size:11px}
+
+.first-guide{margin:16px 0;border:1px solid #c9d7b9;border-radius:8px;background:#f4f7e9}
+.first-guide summary{cursor:pointer;font-size:13px;font-weight:800;padding:13px 14px;min-height:44px}
+#first-guide-step{padding:0 14px 14px}#first-guide-step p{font-size:12px;line-height:1.8;margin:10px 0}
+.guide-progress{font:10px var(--mono);color:#426645}.first-guide button{width:100%;min-height:44px;font-size:12px}
+.guide-ready{color:#426645;font-weight:700}

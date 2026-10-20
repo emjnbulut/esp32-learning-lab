@@ -2,6 +2,7 @@ import {lessons as allLessons,units,RELEASED_UNITS,isReleased,STORAGE_KEY,saniti
 import {TR,TR_LESSONS,TR_UNITS,TR_MISSIONS} from './i18n.mjs';
 import {MISSIONS,checkGoals} from './missions.mjs';
 import {Lab} from './lab.mjs';
+import {FIRST_CONNECTIONS,firstCircuitChecks,placeFirstParts} from './circuit-help.mjs';
 import {DraftStore} from './draft-store.mjs';
 import {MAX_FILE_BYTES,validateProject,validateBackup,mergeBackup,persistEntries} from './backup.mjs';
 
@@ -10,7 +11,7 @@ import {resolveDiagram} from './sim/circuit.mjs';
 const lessons=allLessons.filter(isReleased);
 const $=s=>document.querySelector(s);const app=$('#app');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const VERSION='1.1',LANG_KEY='pin-by-pin-lang',WORK_KEY='pin-by-pin-work-v1',PROJ_KEY='pin-by-pin-projects-v1';
+const VERSION='1.2',LANG_KEY='pin-by-pin-lang',WORK_KEY='pin-by-pin-work-v1',PROJ_KEY='pin-by-pin-projects-v1';
 const drafts=new DraftStore(()=>localStorage);
 let storageOK=true,p,lang='en';
 p=sanitizeProgress(drafts.read(STORAGE_KEY,{}));storageOK=drafts.saved;
@@ -69,16 +70,42 @@ function work(id){const all=load(WORK_KEY,{});const w=all[id];const m=MISSIONS[i
 function saveWork(id,state){const all=load(WORK_KEY,{});all[id]={code:state.code,diagram:state.diagram};store(WORK_KEY,all);}
 function missionPage(){const c=M(lesson.id),index=lessons.findIndex(l=>l.id===lesson.id);
  return `<div class="lesson-shell mission-shell">${lessonHeader()}<main id="main" class="mission-layout"><aside class="mission-panel"><div class="eyebrow">${lesson.tag==='CHALLENGE'?t('CHALLENGE'):lesson.tag==='YOUR TURN'?t('YOUR TURN'):t('BUILD')} / ${String(index+1).padStart(2,'0')}</div><h1 class="focus-title" tabindex="-1">${esc(c.title)}</h1><p class="mission-intro">${md(c.intro)}</p>
-  <ol class="mission-steps">${c.steps.map(s=>`<li>${md(s)}</li>`).join('')}</ol>
+  ${firstGuide()}<ol class="mission-steps">${c.steps.map(s=>`<li>${md(s)}</li>`).join('')}</ol>
   <div class="goals"><div class="code-label">${t('GOALS · CHECKED WHILE IT RUNS')}</div>${c.goals.map((g,i)=>`<div class="goal ${ms.passed?.[i]?'ok':''}" data-goal="${i}"><span class="tick" aria-hidden="true">${ms.passed?.[i]?'✓':''}</span><span>${md(g)}</span><span class="sr-only">${ms.passed?.[i]?t('done'):t('not yet')}</span></div>`).join('')}</div>
   <div class="mission-feedback" id="mission-feedback" role="status">${ms.done?t('All goals reached. Well done!'):''}</div>
   <button class="primary mission-done" id="mission-done" ${ms.done?'':'disabled'}>${t('Complete project →')}</button>
   <div class="mission-help"><button class="secondary" id="hint-next" ${ms.hints>=c.hints.length?'disabled':''}>${t('Show a hint ({i} / {n})',{i:Math.min(ms.hints+1,c.hints.length),n:c.hints.length})}</button><div id="hints">${c.hints.slice(0,ms.hints).map(h=>`<p class="hint-text">${md(h)}</p>`).join('')}</div>
    <div class="mission-tools"><button class="lab-link" id="show-solution">${t('Load the solution')}</button><button class="lab-link" id="reset-work">${t('Start over')}</button></div></div>${sourceLink()}</aside>
   <section class="mission-lab" id="lab-root"></section></main></div>`;}
+
+function firstGuide(){return lesson.id==='circuit'?'<details class="first-guide" id="first-guide" open><summary>'+t('First circuit guide')+'</summary><div id="first-guide-step" aria-live="polite"></div></details>':'';}
+function updateFirstGuide(){
+ const box=$('#first-guide-step');if(!box||!lab?.root)return;
+ const checks=firstCircuitChecks(lab.diagram);let step=ms.done?5:checks.findIndex(ok=>!ok);if(step<0)step=4;
+ const key=step+':'+lab.running;if(ms.guideKey===key)return;ms.guideKey=key;
+ if(step===5){box.innerHTML='<p class="guide-ready">'+t('Your first circuit is ready. You can now complete the project.')+'</p>';return;}
+ const messages=[
+  t('Place the 220 ohm resistor from bp8 to i8. Put the LED anode in f8 and its cathode in f9. Holes f8 and i8 share a connection.'),
+  t('Connect ESP32 3V3 to breadboard bp2. This powers the red + rail.'),
+  t('Connect ESP32 GND.R to breadboard bn3. This connects the blue - rail to ground.'),
+  t('Connect breadboard j9 to bn9. The LED cathode now has a path back to ground.'),
+  t('Run the circuit. The LED should light safely through its resistor. No code changes are needed here.')
+ ];
+ const action=step===0?t('Place LED and resistor'):step===4?(lab.running?t('Checking circuit...'):t('Run this circuit')):t('Choose these pins');
+ box.innerHTML='<div class="guide-progress">'+t('Step {i} / {n}',{i:step+1,n:5})+'</div><p>'+messages[step]+'</p><button class="secondary" id="guide-action" '+(lab.running?'disabled':'')+'>'+action+'</button>';
+ $('#guide-action').onclick=()=>{
+  if(lab.running)return;
+  if(step===0){
+   const placed=placeFirstParts(lab.diagram);if(!placed){toast(t('Add a breadboard before placing these parts.'));return;}
+   lab.snap();lab.diagram=placed;lab.sel=null;lab.closeProps();lab.render();lab.renderInputs();lab.fit();lab.changed();lab.help.showTab('circuit');
+  }else if(step===4){lab.help.showTab('circuit');lab.start();}
+  else lab.help.openConnector(...FIRST_CONNECTIONS[step-1]);
+ };
+}
+
 function resetGoals(){ms.runValid=false;ms.passed=null;ms.done=false;updateGoals();}
 function updateGoals(){const c=M(lesson.id);document.querySelectorAll('[data-goal]').forEach(el=>{const i=Number(el.dataset.goal),ok=!!ms.passed?.[i];el.classList.toggle('ok',ok);el.querySelector('.tick').textContent=ok?'✓':'';el.querySelector('.sr-only').textContent=ok?t('done'):t('not yet');});
- const all=ms.passed&&ms.passed.length===c.goals.length&&ms.passed.every(Boolean);const wasDone=ms.done;ms.done=!!all;$('#mission-done').disabled=!ms.done;$('#mission-feedback').textContent=ms.done?t('All goals reached. Well done!'):'';if(ms.done&&!wasDone)announce(t('All goals reached. Well done!'));}
+ const all=ms.passed&&ms.passed.length===c.goals.length&&ms.passed.every(Boolean);const wasDone=ms.done;ms.done=!!all;$('#mission-done').disabled=!ms.done;$('#mission-feedback').textContent=ms.done?t('All goals reached. Well done!'):'';if(ms.done&&!wasDone)announce(t('All goals reached. Well done!'));updateFirstGuide();}
 
 function persistence(name){return {saved:storageOK,onRetry:()=>drafts.retry(),onDownload:()=>{
  if(!lab)return;
@@ -87,7 +114,7 @@ function persistence(name){return {saved:storageOK,onRetry:()=>drafts.retry(),on
 
 function mountMissionLab(){const id=lesson.id,m=MISSIONS[id],w=work(id);lab?.destroy();resetGoals();
  lab=new Lab({t,persistence:persistence(title(lesson)),code:w.code,diagram:w.diagram,onChange:st=>{saveWork(id,st);resetGoals();},onTick:s=>{if(!ms.runValid||s.status!=='running'&&!s.passed||s.code!==lab.code)return;ms.passed=checkGoals(m,s);updateGoals();},onRun:on=>{resetGoals();ms.runValid=on;}});
- lab.mount($('#lab-root'));}
+ lab.mount($('#lab-root'));ms.guideKey=null;updateFirstGuide();}
 // ---------- workshop (free projects) ----------
 const blankProject=()=>({id:'p'+Date.now().toString(36)+Math.floor(Math.random()*1e4),name:t('My project'),code:'void setup() {\n  Serial.begin(115200);\n}\n\nvoid loop() {\n}\n',diagram:resolveDiagram({parts:[{id:'esp',type:'esp32',x:0,y:0},{id:'bb',type:'breadboard',x:160,y:0}],wires:[]})});
 function projects(){let ps=load(PROJ_KEY,null);if(!ps||!ps.list?.length){const first={...blankProject(),name:'Blink',code:MISSIONS.blink.solution.code,diagram:MISSIONS.blink.solution.diagram};ps={current:first.id,list:[first]};store(PROJ_KEY,ps);}return ps;}

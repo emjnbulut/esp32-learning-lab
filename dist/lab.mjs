@@ -1,5 +1,6 @@
 // Wokwi-style lab: code editor + circuit editor + simulator + serial monitor.
 // Used by missions (with goal checks) and by the free workshop (with saved projects).
+import {CircuitHelp,connectionMarkup} from './lab-help.mjs';
 import {sketchDownload} from './sketch-export.mjs';
 import {Simulator} from './sim/runtime.mjs';
 import {PARTS,PITCH,partPins,pinPos,LED_COLORS,ESP_GPIO} from './sim/circuit.mjs';
@@ -32,13 +33,15 @@ export class Lab{
   <div class="lab-bar"><button class="lab-run" id="lab-run">${t('▶ Run')}</button><button class="lab-icon" id="lab-restart" title="${t('Restart')}" aria-label="${t('Restart')}">↺</button>
    <span class="lab-time" id="lab-time">00:00.000</span><span class="lab-status" id="lab-status" role="status"></span>
    <div class="lab-tabs" role="tablist">${['code','circuit','serial'].map(k=>`<button role="tab" data-labtab="${k}" aria-selected="${this.tab===k}">${t({code:'Code',circuit:'Circuit',serial:'Serial'}[k])}</button>`).join('')}</div>
-   <span class="lab-spacer"></span><button class="lab-icon" id="lab-sound" aria-pressed="${this.sound}" title="${t('Sound')}" aria-label="${t('Sound')}">${this.sound?'🔊':'🔇'}</button></div>
+   <button class="lab-link" id="lab-issues" hidden></button><span class="lab-spacer"></span><button class="lab-icon" id="lab-sound" aria-pressed="${this.sound}" title="${t('Sound')}" aria-label="${t('Sound')}">${this.sound?'🔊':'🔇'}</button></div>
   ${this.persistence?`<div class="lab-save" data-saved="${this.persistence.saved}"><span id="lab-save-state" role="status">${this.persistence.saved?t('Saved in this browser'):t('Not saved. Your changes are kept in this tab.')}</span><div class="lab-save-actions" ${this.persistence.saved?'hidden':''}><button class="lab-link" id="lab-save-retry">${t('Retry saving')}</button><button class="lab-link" id="lab-save-download">${t('Download a copy')}</button></div></div>`:''}
   <div class="lab-body">
    <section class="lab-code"><div class="lab-head"><span>sketch.ino</span><button class="lab-link" id="lab-ino">${t('Download .ino')}</button></div>
     <div class="editor"><pre class="ed-gutter" id="ed-gutter" aria-hidden="true"></pre><div class="ed-wrap"><pre class="ed-hl" id="ed-hl" aria-hidden="true"></pre><textarea id="ed-text" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="${t('Arduino code')}"></textarea></div></div>
     <div class="lab-error" id="lab-error" role="alert" hidden></div></section>
    <section class="lab-diagram"><div class="lab-head"><div class="lab-toolsel" role="group" aria-label="${t('Tool')}"><button data-tool="select" aria-pressed="true" title="${t('Move parts, select wires (V)')}">✋ ${t('Move')}</button><button data-tool="wire" aria-pressed="false" title="${t('Draw wires (W)')}">🔌 ${t('Wire')}</button></div><span class="wire-colors" id="lab-wcolors" hidden>${['auto','#2b2b2b','#d64541','#2f9a3c','#2f6fd0','#f28c1c','#c9a400','#8a3fc8'].map(c=>`<button data-newcolor="${c}" aria-pressed="${c==='auto'}" title="${c==='auto'?t('Automatic colour'):c}" style="${c==='auto'?'':'background:'+c}">${c==='auto'?'A':''}</button>`).join('')}</span><span class="lab-spacer"></span><button class="lab-link" id="lab-undo" title="${t('Undo (Ctrl+Z)')}" disabled>↶ ${t('Undo')}</button><button class="lab-link" id="lab-redo" title="${t('Redo (Ctrl+Y)')}" disabled>↷ ${t('Redo')}</button><button class="lab-link" id="lab-add" aria-expanded="false">${t('+ Add part')}</button></div>
+    <div class="diagnostic-note" id="diagnostic-note" hidden><span id="diagnostic-message"></span><button class="lab-link" id="diagnostic-clear">${t('Clear highlight')}</button></div>
+    ${connectionMarkup(t)}
     <div class="lab-canvas"><svg id="lab-svg" tabindex="0" aria-label="${t('Circuit diagram. Drag parts to move them. Drag from one pin to another to connect a wire.')}"><g id="lab-world"></g></svg>
      <div class="lab-zoom"><button data-zoom="-1" aria-label="${t('Zoom out')}">−</button><button data-zoom="0" aria-label="${t('Fit')}">⤢</button><button data-zoom="1" aria-label="${t('Zoom in')}">+</button></div>
      <div class="lab-tip" id="lab-tip" hidden></div><button class="lab-cancel" id="lab-cancel" hidden>✕ ${t('Cancel wire')}</button><div class="lab-props" id="lab-props" hidden></div><div class="lab-palette" id="lab-palette" hidden></div></div>
@@ -47,11 +50,11 @@ export class Lab{
     <div class="lab-warn" id="lab-warn"></div><pre class="lab-out" id="lab-out"></pre></section>
   </div></div>`;
   this.$=s=>root.querySelector(s);this.svg=this.$('#lab-svg');this.world=this.$('#lab-world');this.ta=this.$('#ed-text');this.ta.value=this.code;this.syncEditor();
-  this.bindEditor();this.bindDiagram();this.bindBar();this.renderInputs();
+  this.bindEditor();this.bindDiagram();this.bindBar();this.renderInputs();this.help=new CircuitHelp(this);this.help.mount();
   requestAnimationFrame(()=>{this.fit();this.render();});
   const loop=ts=>{this.frame(ts);this.raf=requestAnimationFrame(loop);};this.raf=requestAnimationFrame(loop);}
- destroy(){cancelAnimationFrame(this.raf);this.stopAudio();this.sim?.stop();this.root=null;}
- changed(){this.onChange({code:this.code,diagram:this.diagram});this.undoState();}
+ destroy(){this.help?.destroy();cancelAnimationFrame(this.raf);this.stopAudio();this.sim?.stop();this.root=null;}
+ changed(){this.help?.changed();this.onChange({code:this.code,diagram:this.diagram});this.undoState();}
 
  setSaveStatus(saved){if(!this.persistence)return;this.persistence.saved=saved;const row=this.$?.('.lab-save');if(!row)return;
   row.dataset.saved=String(saved);const text=saved?this.t('Saved in this browser'):this.t('Not saved. Your changes are kept in this tab.');
@@ -80,14 +83,14 @@ export class Lab{
    if(e.key==='}'&&/^\s+$/.test(v.slice(lineStart,s))&&s-lineStart>=2){e.preventDefault();put('}',s-2,en);return;}
    if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();this.restart();}});}
  showError(err){this.errLine=err.line||null;const box=this.$('#lab-error');box.hidden=false;box.innerHTML=`<b>${err.line?this.t('Line {n}',{n:err.line}):this.t('Error')}</b> ${esc(err.message)}`;this.syncEditor();
-  if(err.line){const lh=parseFloat(getComputedStyle(this.ta).lineHeight)||18;this.ta.scrollTop=Math.max(0,(err.line-4)*lh);}this.tab='code';this.root.querySelector('.lab').dataset.tab='code';}
+  if(err.line){const lh=parseFloat(getComputedStyle(this.ta).lineHeight)||18;this.ta.scrollTop=Math.max(0,(err.line-4)*lh);}this.help?.showTab('code');}
  // ---------- toolbar ----------
  bindBar(){this.$('#lab-save-retry')?.addEventListener('click',()=>this.persistence.onRetry());this.$('#lab-save-download')?.addEventListener('click',()=>this.persistence.onDownload());this.$('#lab-run').onclick=()=>this.running?this.stop():this.start();this.$('#lab-restart').onclick=()=>this.restart();
   this.$('#lab-sound').onclick=e=>{this.sound=!this.sound;e.currentTarget.textContent=this.sound?'🔊':'🔇';e.currentTarget.setAttribute('aria-pressed',String(this.sound));if(!this.sound)this.stopAudio();};
   this.$('#lab-clear').onclick=()=>{if(this.sim)this.sim.out='';this.lastOut='';this.$('#lab-out').textContent='';};
   this.$('#lab-baud').onchange=e=>{this.baud=Number(e.target.value);this.lastOut=null;};
   this.$('#lab-ino').onclick=()=>{const url=URL.createObjectURL(new Blob([sketchDownload(this.code)],{type:'text/plain'}));const a=document.createElement('a');a.href=url;a.download='sketch.ino';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-  this.root.querySelectorAll('[data-labtab]').forEach(b=>b.onclick=()=>{this.tab=b.dataset.labtab;this.root.querySelector('.lab').dataset.tab=this.tab;this.root.querySelectorAll('[data-labtab]').forEach(x=>x.setAttribute('aria-selected',String(x===b)));if(this.tab==='circuit')requestAnimationFrame(()=>{this.fit();this.render();});});
+  this.root.querySelectorAll('[data-labtab]').forEach(b=>b.onclick=()=>this.help.showTab(b.dataset.labtab));
   this.$('#lab-undo').onclick=()=>this.undo();this.$('#lab-redo').onclick=()=>this.redo();this.$('#lab-cancel').onclick=()=>{this.wiring=null;this.render();};
   this.root.addEventListener('keydown',e=>{if(e.target===this.ta||!(e.ctrlKey||e.metaKey))return;const k=e.key.toLowerCase();if(k==='z'&&!e.shiftKey){e.preventDefault();this.undo();}else if(k==='y'||(k==='z'&&e.shiftKey)){e.preventDefault();this.redo();}});
   this.root.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>this.setTool(b.dataset.tool));
@@ -97,11 +100,11 @@ export class Lab{
    pal.querySelectorAll('[data-addpart]').forEach(b=>b.onclick=()=>{pal.hidden=true;this.addPart(b.dataset.addpart);});};}
  status(s){this.$('#lab-status').textContent=s||'';}
  start(){this.stop(true);this.$('#lab-error').hidden=true;this.errLine=null;this.syncEditor();this.closeProps();
-  this.sim=new Simulator(clone(this.diagram),this.code);const err=this.sim.start();
+  this.help?.start();this.sim=new Simulator(clone(this.diagram),this.code);const err=this.sim.start();
   if(err){this.showError(err);this.status(this.t('Fix the error, then run again.'));this.sim=null;this.onRun(false);return false;}
-  this.lastOut=null;this.lastFrame=performance.now();this.$('#lab-run').textContent=this.t('■ Stop');this.$('#lab-run').classList.add('on');this.status(this.t('Running'));this.root.querySelector('.lab').classList.add('is-running');this.renderInputs();this.onRun(true);
+  this.lastOut=null;this.lastFrame=performance.now();this.$('#lab-run').textContent=this.t('■ Stop');this.$('#lab-run').classList.add('on');this.status(this.t('Running'));this.root.querySelector('.lab').classList.add('is-running');this.renderInputs();this.help?.updateControls();this.onRun(true);
   if(this.sound&&!this.audio){try{this.audio=new (window.AudioContext||window.webkitAudioContext)();}catch{}}return true;}
- stop(silent){if(!this.sim)return;this.sim.stop();this.$('#lab-run').textContent=this.t('▶ Run');this.$('#lab-run').classList.remove('on');this.root?.querySelector('.lab').classList.remove('is-running');this.stopAudio();this.paint();if(!silent)this.status(this.t('Stopped'));this.renderInputs();this.onRun(false);}
+ stop(silent){if(!this.sim)return;this.sim.stop();this.$('#lab-run').textContent=this.t('▶ Run');this.$('#lab-run').classList.remove('on');this.root?.querySelector('.lab').classList.remove('is-running');this.stopAudio();this.paint();if(!silent)this.status(this.t('Stopped'));this.renderInputs();this.help?.updateControls();this.onRun(false);}
  restart(){this.start();}
  // ---------- frame ----------
  frame(ts){if(!this.root)return;const s=this.sim;if(!s)return;
@@ -123,8 +126,8 @@ export class Lab{
   this.audioTone(run&&this.sound?Math.max(0,...Object.values(v.buzzers)):0);
   if(s){const out=this.baud===(s.codeBaud||this.baud)?s.out:s.out.replace(/[^\r\n]/g,c=>'�▒¿¡ÿ§'[c.charCodeAt(0)%6]);
    if(out!==this.lastOut){const pre=this.$('#lab-out');const atEnd=pre.scrollTop+pre.clientHeight>=pre.scrollHeight-8;pre.textContent=out.replace(/\r/g,'').slice(-12000);if(atEnd)pre.scrollTop=pre.scrollHeight;this.lastOut=out;}
-   const warns=s.warnings.map(w=>this.t(w.tpl||w.msg,w.vars));if(s.codeBaud&&s.codeBaud!==this.baud)warns.unshift(this.t('Your code uses {b} baud, the monitor is set to {m}. Choose {b} above, otherwise you see garbage.',{b:s.codeBaud,m:this.baud}));
-   const wk=warns.join('|');if(wk!==this.lastWarn){this.lastWarn=wk;this.$('#lab-warn').innerHTML=warns.map(w=>`<p>⚠ ${esc(w)}</p>`).join('');}}}
+   this.help?.paintWarnings(s);}}
+
  audioTone(f){if(!this.audio)return;if(!f){if(this.osc){this.osc.stop();this.osc=null;}return;}
   if(!this.osc){this.osc=this.audio.createOscillator();this.gain=this.audio.createGain();this.gain.gain.value=0.04;this.osc.type='square';this.osc.connect(this.gain).connect(this.audio.destination);this.osc.start();}
   this.osc.frequency.setValueAtTime(f,this.audio.currentTime);}
@@ -152,7 +155,7 @@ export class Lab{
   s+=this.diagram.wires.map((w,i)=>{const d=this.wirePath(this.wend?.i===i?{...w,pts:[],[this.wend.end]:null,_end:this.wend}:w);if(!d)return '';const sel=this.sel?.wire===i;return `<g class="wire${sel?' selected':''}" data-wire="${i}"><path d="${d}" class="wire-hit"/><path d="${d}" class="wire-line" stroke="${w.color||'#2f9a3c'}"/>${[this.pinPosByKey(w.a),this.pinPosByKey(w.b)].map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="1.8" fill="${w.color||'#2f9a3c'}"/>`).join('')}${sel&&!this.wend?[this.pinPosByKey(w.a),this.pinPosByKey(w.b)].map(p=>`<circle class="wire-end" cx="${p[0]}" cy="${p[1]}" r="4"/>`).join(''):''}</g>`;}).join('');
   if(this.wiring){const a=this.pinPosByKey(this.wiring.from);const pts=[a,...this.wiring.pts,this.wiring.cursor||a];s+=`<path class="wire-preview" d="M${pts.map(p=>p.join(' ')).join('L')}"/>`;}
   if(this.hover){s+=this.stripSvg(this.hover);s+=`<circle class="pin-hover" cx="${this.hover.x}" cy="${this.hover.y}" r="4"/>`;}
-  this.world.innerHTML=s;this.applyView();const cb=this.$('#lab-cancel');if(cb)cb.hidden=!this.wiring;if(this.sim)this.paint();}
+  this.world.innerHTML=s;this.applyView();this.help?.paintHighlights();const cb=this.$('#lab-cancel');if(cb)cb.hidden=!this.wiring;if(this.sim)this.paint();}
  // the holes connected to a breadboard hole (its five-hole column or its rail), drawn behind the hover ring
  stripSvg(q){if(q.part.type!=='breadboard')return '';const m=q.name.match(/^([a-j]|tp|tn|bp|bn)(\d+)$/);if(!m)return '';const rows=m[1].length===2?[m[1]]:'abcde'.includes(m[1])?['a','b','c','d','e']:['f','g','h','i','j'];
   const pts=rows.length===1?this.pins().filter(x=>x.part===q.part&&x.name.startsWith(m[1])&&/^\d+$/.test(x.name.slice(2))):rows.map(r=>this.pins().find(x=>x.part===q.part&&x.name===r+m[2])).filter(Boolean);
@@ -233,7 +236,7 @@ export class Lab{
    if(d.moved){this.wiring=null;if(pin&&pin.key!==d.from)this.addWire(d.from,pin.key);else this.render();return;}
    this.wiring={from:d.from,pts:[],cursor:null};this.render();}}
  finishWire(to){const wr=this.wiring;this.wiring=null;this.addWire(wr.from,to,wr.pts);}
- addWire(a,b,pts=[]){if(a===b)return;if(this.diagram.wires.some(w=>(w.a===a&&w.b===b)||(w.a===b&&w.b===a))){this.render();return;}this.snap();this.diagram.wires.push({a,b,color:this.wcolor||this.wireColor(a,b),pts});this.render();this.changed();}
+ addWire(a,b,pts=[]){if(this.running||a===b||!this.pinPosByKey(a)||!this.pinPosByKey(b))return;if(this.diagram.wires.some(w=>(w.a===a&&w.b===b)||(w.a===b&&w.b===a))){this.render();return;}this.snap();this.diagram.wires.push({a,b,color:this.wcolor||this.wireColor(a,b),pts});this.render();this.changed();}
  // screen position of a pin or part anchor (used by the browser tests)
  pinScreen(key){const [x,y]=this.pinPosByKey(key);const r=this.svg.getBoundingClientRect();return [r.left+this.view.x+x*this.view.z,r.top+this.view.y+y*this.view.z];}
  worldToScreen(x,y){const r=this.svg.getBoundingClientRect();return [r.left+this.view.x+x*this.view.z,r.top+this.view.y+y*this.view.z];}

@@ -1,4 +1,14 @@
-# Development handoff — 2026-10-20 (1.1)
+# Development handoff — 2026-10-20 (1.2)
+
+## Accessible circuit building — 2026-10-20 (1.2)
+
+- `dist/circuit-help.mjs`: pure first-circuit placement/checks and warning target resolution. Short-circuit highlighting follows a shortest physical wire route while treating breadboard strips as implicit connections; LED warnings identify the LED and its attached nets.
+- `dist/lab-help.mjs`: native component/pin selectors, duplicate/self-link feedback, keyboard form submission, previews, warning list/badge, and circuit highlights. Editing a sketch/circuit invalidates old diagnostics; restart clears old highlights.
+- Unit 2's `circuit` activity has an optional five-step guide. The placement button changes only LED/resistor geometry (and a 220 ohm resistance), preserves code/wires and supports Undo. Connections are confirmed one by one through the pin form. Completion still depends on the existing real simulator goal checks.
+- Small screens keep the existing Code / Circuit / Serial tabs. An expanded connector grows the lab to keep the circuit visible. The single browser-tab learning flow and public unit list `[1,2]` are unchanged.
+- New tests: `tests/circuit-help.test.mjs` and six browser cases in `tests/e2e.test.mjs`, including phone wiring, guide completion/undo, short-circuit repair, LED warnings and laptop layout.
+- No dependency changes or extra services. Teaching examples, release schedule and licenses are unchanged.
+
 
 ## Save recovery — 2026-10-20
 
