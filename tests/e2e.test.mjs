@@ -57,7 +57,7 @@ test('workshop: run the default project, add a part, new project, export and imp
  await page.reload();await lab(page);assert.equal(await page.locator('#lab-svg [data-part="buzzer1"]').count(),1,'saved');
  const [dl]=await Promise.all([page.waitForEvent('download'),page.click('#ws-export')]);const file=await dl.path();const data=JSON.parse(fs.readFileSync(file,'utf8'));assert.equal(data.format,'pin-by-pin-project');
  await page.click('#ws-new');await lab(page);assert.equal(await page.locator('#ws-project option').count(),2);assert.equal(await page.locator('#lab-svg [data-part="buzzer1"]').count(),0);
- await page.setInputFiles('#ws-file',file);await lab(page);assert.equal(await page.locator('#ws-project option').count(),3);assert.equal(await page.locator('#lab-svg [data-part="buzzer1"]').count(),1);
+ await page.setInputFiles('#ws-file',file);await page.waitForSelector('#lab-svg [data-part="buzzer1"]');await lab(page);assert.equal(await page.locator('#ws-project option').count(),3);assert.equal(await page.locator('#lab-svg [data-part="buzzer1"]').count(),1);
  await page.selectOption('#ws-example','two');await lab(page);assert.equal(await page.locator('#lab-svg [data-part="led2"]').count(),1);assert.deepEqual(page.errors,[]);await page.close();});
 
 test('quiz between projects: wrong then right answer',async()=>{const page=await open('#/lesson/serial',{completed:['hello','hello2']});await page.waitForSelector('.quiz');await page.click('[data-choice="1"]');await page.click('#check-answer');await page.waitForSelector('#feedback.bad');
