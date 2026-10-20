@@ -25,6 +25,11 @@ export function validateWork(value){
   if(own(a,'bounce')){need(typeof a.bounce==='boolean');attrs.bounce=a.bounce;}
   if(own(a,'kind')){need(['active','passive'].includes(a.kind));attrs.kind=a.kind;}
   if(own(a,'common')){need(['anode','cathode'].includes(a.common));attrs.common=a.common;}
+  if(own(a,'light')){need(Number.isFinite(a.light)&&a.light>=0&&a.light<=1);attrs.light=a.light;}
+  if(own(a,'temp')){need(Number.isFinite(a.temp)&&a.temp>=-40&&a.temp<=125);attrs.temp=a.temp;}
+  if(own(a,'hum')){need(Number.isFinite(a.hum)&&a.hum>=0&&a.hum<=100);attrs.hum=a.hum;}
+  if(own(a,'motion')){need(typeof a.motion==='boolean');attrs.motion=a.motion;}
+  if(own(a,'activeLow')){need(typeof a.activeLow==='boolean');attrs.activeLow=a.activeLow;}
   return {id:p.id,type:p.type,x:p.x,y:p.y,rot:p.rot??0,attrs};
  });
  const wires=d.wires.map(w=>{

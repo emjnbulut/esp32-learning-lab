@@ -12,7 +12,7 @@ export const TYPES={
  i64:ty('int',64,true,'long long'),u64:ty('int',64,false,'unsigned long long'),float:ty('float',64,true,'float'),double:ty('float',64,true,'double'),
  string:ty('string',0,true,'String'),cstr:ty('cstr',0,true,'const char*')
 };
-const TYPE_WORDS=new Set(['void','int','long','short','char','float','double','bool','boolean','byte','word','String','uint8_t','int8_t','uint16_t','int16_t','uint32_t','int32_t','uint64_t','int64_t','size_t','unsigned','signed','const','static','volatile']);
+const TYPE_WORDS=new Set(['void','int','long','short','char','float','double','bool','boolean','byte','word','String','uint8_t','int8_t','uint16_t','int16_t','uint32_t','int32_t','uint64_t','int64_t','size_t','unsigned','signed','const','static','volatile','IRAM_ATTR']);
 const PUNCT=['<<=','>>=','...','++','--','+=','-=','*=','/=','%=','&=','|=','^=','<<','>>','<=','>=','==','!=','&&','||','->','::','?',':',';',',','.','(',')','[',']','{','}','+','-','*','/','%','&','|','^','!','~','<','>','='];
 
 // ---------- tokenizer ----------
@@ -61,7 +61,7 @@ export function parse(src){
  const expect=v=>{if(!is(v)){const prev=toks[p-1]||peek();if(v===';')throw new CodeError(`Expected ";" at the end of this line`,prev.line,prev.col+String(prev.value).length);throw err(`Expected "${v}" before "${peek().value}"`);}return next();};
  const isTypeStart=(o=0)=>{const t=peek(o);return t.type==='id'&&TYPE_WORDS.has(t.value);};
  function parseType(){const words=[];let isConst=false;
-  while(peek().type==='id'&&TYPE_WORDS.has(peek().value)){const w=next().value;if(w==='const')isConst=true;else if(w!=='static'&&w!=='volatile')words.push(w);}
+  while(peek().type==='id'&&TYPE_WORDS.has(peek().value)){const w=next().value;if(w==='const')isConst=true;else if(w!=='static'&&w!=='volatile'&&w!=='IRAM_ATTR')words.push(w);}
   if(is('*')){const t=next();if(words.includes('char')){return {...TYPES.cstr,isConst};}throw new CodeError('Pointers are not supported in this simulator',t.line,t.col);}
   const s=words.join(' ');
   const map={'':null,int:TYPES.i32,'signed int':TYPES.i32,signed:TYPES.i32,long:TYPES.i32,'long int':TYPES.i32,'signed long':TYPES.i32,'unsigned':TYPES.u32,'unsigned int':TYPES.u32,'unsigned long':TYPES.u32,'unsigned long int':TYPES.u32,
@@ -132,10 +132,16 @@ export function parse(src){
   }
   const e=expr();expect(';');return {k:'expr',e,line:t.line,col:t.col};}
  function block(){const t=expect('{');const body=[];while(!is('}')){if(peek().type==='eof')throw new CodeError('A "{" is never closed: add a "}"',t.line,t.col);body.push(statement());}next();return {k:'block',body,line:t.line,col:t.col};}
- const globals=[],funcs=new Map();
+ const globals=[],funcs=new Map(),devices=[];
+ const DEVICE_CLASSES=new Set(['DHT','Adafruit_SSD1306','WebServer']);
  while(peek().type!=='eof'){
   if(is(';')){next();continue;}
   if(peek().value==='struct'||peek().value==='class')throw err('struct and class are not supported yet');
+  if(peek().type==='id'&&DEVICE_CLASSES.has(peek().value)){
+   const cls=next().value,name=next();if(name.type!=='id')throw err('Expected a name',name);
+   const args=[];if(is('(')){next();if(!is(')')){do{if(is('&')&&peek(1).value==='Wire'){const t=next();next();args.push({k:'wire',line:t.line,col:t.col});}else args.push(assign());}while(is(',')&&next());}expect(')');}
+   expect(';');devices.push({k:'device',cls,name:name.value,args,line:name.line,col:name.col});continue;
+  }
   if(!isTypeStart())throw err(`Expected a declaration or a function here, not "${peek().value}"`);
   const type=parseType();const name=next();if(name.type!=='id')throw err('Expected a name',name);
   if(is('(')){next();const params=[];
@@ -146,13 +152,14 @@ export function parse(src){
    funcs.set(name.value,{name:name.value,type,params,body:block(),line:name.line,col:name.col});}
   else globals.push(declRest(type,name));
  }
- return {globals,funcs};
+ return {globals,funcs,devices};
 }
 
 // ---------- builtins (signatures for the resolve pass; implementations call the host) ----------
 const I=TYPES.i32,U=TYPES.u32,F=TYPES.float,V=TYPES.void,B=TYPES.bool,S=TYPES.string;
 export const CONSTANTS={HIGH:[1,I],LOW:[0,I],INPUT:[1,I],OUTPUT:[3,I],INPUT_PULLUP:[5,I],INPUT_PULLDOWN:[9,I],LED_BUILTIN:[2,I],PI:[Math.PI,F],HALF_PI:[Math.PI/2,F],TWO_PI:[Math.PI*2,F],DEG_TO_RAD:[Math.PI/180,F],RAD_TO_DEG:[180/Math.PI,F],
- DEC:[10,I],HEX:[16,I],OCT:[8,I],BIN:[2,I],CHANGE:[3,I],RISING:[1,I],FALLING:[2,I],A0:[36,I],A3:[39,I],A4:[32,I],A5:[33,I],A6:[34,I],A7:[35,I],A10:[4,I],A13:[15,I],A14:[13,I],A15:[12,I],A16:[14,I],A17:[27,I],A18:[25,I],A19:[26,I]};
+ DEC:[10,I],HEX:[16,I],OCT:[8,I],BIN:[2,I],CHANGE:[3,I],RISING:[1,I],FALLING:[2,I],A0:[36,I],A3:[39,I],A4:[32,I],A5:[33,I],A6:[34,I],A7:[35,I],A10:[4,I],A13:[15,I],A14:[13,I],A15:[12,I],A16:[14,I],A17:[27,I],A18:[25,I],A19:[26,I],
+ DHT11:[11,I],DHT22:[22,I],SSD1306_SWITCHCAPVCC:[2,I],WHITE:[1,I],BLACK:[0,I],SSD1306_WHITE:[1,I],SSD1306_BLACK:[0,I],WL_CONNECTED:[3,I],WL_IDLE_STATUS:[0,I],WL_DISCONNECTED:[6,I],WIFI_STA:[1,I],NAN:[NaN,F]};
 const num=x=>Number(x);
 const arith=(a,b)=>a.kind==='float'||b.kind==='float'?F:a.bits===64||b.bits===64?(a.signed&&b.signed?TYPES.i64:TYPES.u64):(a.bits===32&&!a.signed)||(b.bits===32&&!b.signed)?U:I;
 export const BUILTINS={
@@ -167,6 +174,7 @@ export const BUILTINS={
  random:{n:[1,2],r:I,run:(h,a)=>{const lo=a.length>1?Math.trunc(a[0]):0,hi=Math.trunc(a.length>1?a[1]:a[0]);return hi<=lo?lo:lo+Math.floor(h.random()*(hi-lo));}},randomSeed:{n:[1,1],r:V,run:(h,a)=>h.randomSeed?.(a[0])},
  sqrt:{n:[1,1],r:F,run:(h,a)=>Math.sqrt(a[0])},pow:{n:[2,2],r:F,run:(h,a)=>Math.pow(a[0],a[1])},sin:{n:[1,1],r:F,run:(h,a)=>Math.sin(a[0])},cos:{n:[1,1],r:F,run:(h,a)=>Math.cos(a[0])},tan:{n:[1,1],r:F,run:(h,a)=>Math.tan(a[0])},
  round:{n:[1,1],r:F,run:(h,a)=>Math.round(a[0])},floor:{n:[1,1],r:F,run:(h,a)=>Math.floor(a[0])},ceil:{n:[1,1],r:F,run:(h,a)=>Math.ceil(a[0])},fabs:{n:[1,1],r:F,run:(h,a)=>Math.abs(a[0])},sq:{n:[1,1],r:'arith',run:(h,a)=>a[0]*a[0]},
+ isnan:{n:[1,1],r:B,run:(h,a)=>Number.isNaN(Number(a[0]))?1:0},
  isDigit:{n:[1,1],r:B,run:(h,a)=>/\d/.test(String.fromCharCode(a[0]))?1:0},isAlpha:{n:[1,1],r:B,run:(h,a)=>/[A-Za-z]/.test(String.fromCharCode(a[0]))?1:0},
  bitRead:{n:[2,2],r:I,run:(h,a)=>(a[0]>>a[1])&1},bit:{n:[1,1],r:U,run:(h,a)=>(1<<a[0])>>>0},
  attachInterrupt:{n:[3,3],r:V,fnArg:1,run:(h,a)=>h.attachInterrupt(a[0],a[1],a[2])},detachInterrupt:{n:[1,1],r:V,run:(h,a)=>h.detachInterrupt(a[0])},digitalPinToInterrupt:{n:[1,1],r:I,run:(h,a)=>a[0]},
@@ -174,9 +182,15 @@ export const BUILTINS={
 };
 const SERIAL_METHODS={begin:{n:[1,4],r:V},print:{n:[1,2],r:I},println:{n:[0,2],r:I},printf:{n:[1,20],r:I},write:{n:[1,1],r:I},available:{n:[0,0],r:I},read:{n:[0,0],r:I},peek:{n:[0,0],r:I},flush:{n:[0,0],r:V},
  readString:{n:[0,0],r:S},readStringUntil:{n:[1,1],r:S},parseInt:{n:[0,0],r:I},parseFloat:{n:[0,0],r:F},setTimeout:{n:[1,1],r:V},end:{n:[0,0],r:V}};
+const DHT_METHODS={begin:{n:[0,0],r:V},readTemperature:{n:[0,1],r:F},readHumidity:{n:[0,0],r:F}};
+const WIRE_METHODS={begin:{n:[0,2],r:B}};
+const DISPLAY_METHODS={begin:{n:[0,2],r:B},clearDisplay:{n:[0,0],r:V},display:{n:[0,0],r:V},setTextSize:{n:[1,2],r:V},setTextColor:{n:[1,2],r:V},setCursor:{n:[2,2],r:V},
+ print:{n:[1,2],r:I},println:{n:[0,2],r:I},printf:{n:[1,20],r:I},drawPixel:{n:[3,3],r:V},drawLine:{n:[5,5],r:V},drawRect:{n:[5,5],r:V},fillRect:{n:[5,5],r:V},invertDisplay:{n:[1,1],r:V}};
+const WIFI_METHODS={mode:{n:[1,1],r:B},begin:{n:[1,2],r:I},status:{n:[0,0],r:I},localIP:{n:[0,0],r:S},RSSI:{n:[0,1],r:I},scanNetworks:{n:[0,0],r:I},SSID:{n:[0,1],r:S},disconnect:{n:[0,1],r:B}};
+const SERVER_METHODS={on:{n:[2,2],r:V,fnArg:1},begin:{n:[0,1],r:V},handleClient:{n:[0,0],r:V},send:{n:[3,3],r:V},uri:{n:[0,0],r:S}};
 const STRING_METHODS={length:{n:[0,0],r:U},toInt:{n:[0,0],r:I},toFloat:{n:[0,0],r:F},indexOf:{n:[1,2],r:I},lastIndexOf:{n:[1,1],r:I},substring:{n:[1,2],r:S},charAt:{n:[1,1],r:TYPES.char},equals:{n:[1,1],r:B},equalsIgnoreCase:{n:[1,1],r:B},
  startsWith:{n:[1,1],r:B},endsWith:{n:[1,1],r:B},concat:{n:[1,1],r:B},trim:{n:[0,0],r:V,mut:true},toUpperCase:{n:[0,0],r:V,mut:true},toLowerCase:{n:[0,0],r:V,mut:true},replace:{n:[2,2],r:V,mut:true},isEmpty:{n:[0,0],r:B},c_str:{n:[0,0],r:TYPES.cstr}};
-const OBJECTS={Serial:SERIAL_METHODS,Serial2:SERIAL_METHODS};
+const OBJECTS={Serial:SERIAL_METHODS,Serial2:SERIAL_METHODS,dht:DHT_METHODS,Wire:WIRE_METHODS,display:DISPLAY_METHODS,WiFi:WIFI_METHODS,server:SERVER_METHODS};
 
 // ---------- resolve: scopes, slots, static types, compiler-style errors ----------
 const zero=t=>t.kind==='string'||t.kind==='cstr'?'':0;
@@ -225,7 +239,9 @@ export function compile(src){
  function checkArgs(n,spec,name){const c=n.args.length;if(c<spec.n[0]||c>spec.n[1])throw new CodeError(`${name}() takes ${spec.n[0]===spec.n[1]?spec.n[0]:spec.n[0]+'–'+spec.n[1]} argument${spec.n[1]===1?'':'s'}, not ${c}`,n.line,n.col);}
  function call(n,sc){
   if(n.f.k==='member'){const obj=n.f.obj;
-   if(obj.k==='id'&&OBJECTS[obj.name]&&!lookup(sc,obj.name)){const spec=OBJECTS[obj.name][n.f.prop];if(!spec)throw new CodeError(`${obj.name}.${n.f.prop}() does not exist`,n.f.line,n.f.col);checkArgs(n,spec,obj.name+'.'+n.f.prop);n.args.forEach(a=>ex(a,sc));n.kind='serial';n.port=obj.name;n.method=n.f.prop;return spec.r;}
+   if(obj.k==='id'&&OBJECTS[obj.name]&&!lookup(sc,obj.name)){const spec=OBJECTS[obj.name][n.f.prop];if(!spec)throw new CodeError(`${obj.name}.${n.f.prop}() does not exist`,n.f.line,n.f.col);checkArgs(n,spec,obj.name+'.'+n.f.prop);
+    n.args.forEach((a,i)=>{if(spec.fnArg===i){if(a.k!=='id'||!funcs.has(a.name))throw new CodeError('Pass the name of one of your functions here',a.line,a.col);a.k='fnref';a.fn=funcs.get(a.name);a.t=V;}else ex(a,sc);});
+    n.kind='serial';n.port=obj.name;n.method=n.f.prop;return spec.r;}
    const t=ex(obj,sc);if(t.kind!=='string')throw new CodeError(`"${n.f.prop}" can only be used on a String`,n.f.line,n.f.col);
    const spec=STRING_METHODS[n.f.prop];if(!spec)throw new CodeError(`String has no function "${n.f.prop}"`,n.f.line,n.f.col);checkArgs(n,spec,n.f.prop);if(spec.mut)lvalue(obj);n.args.forEach(a=>ex(a,sc));n.kind='string';n.method=n.f.prop;return spec.r;}
   const name=n.f.name;const user=funcs.get(name);
@@ -252,11 +268,12 @@ export function compile(src){
   }}
  ctx={nSlots:0};
  for(const g of prog.globals)for(const d of g.items){if(d.size)ex(d.size,[]);if(d.init)ex(d.init,[]);const v=declare(globalScope,d,'g');d.v=v;d.slot=v.slot;if(funcs.has(d.name))throw new CodeError(`"${d.name}" is used for a variable and a function`,d.line,d.col);}
+ for(const d of prog.devices||[])for(const a of d.args)if(a.k!=='wire')ex(a,[]);
  for(const fn of funcs.values()){ctx={nSlots:0};const scope=new Map();for(const prm of fn.params){const v=declare(scope,{...prm,size:prm.array?null:undefined},'l');prm.slot=v.slot;}
   st(fn.body,[scope],false,fn);fn.nSlots=ctx.nSlots;}
  if(!funcs.has('setup'))throw new CodeError('Every sketch needs a "void setup() { }" function',1,1);
  if(!funcs.has('loop'))throw new CodeError('Every sketch needs a "void loop() { }" function',1,1);
- return {globals:prog.globals,funcs,nGlobals:gslots.length};
+ return {globals:prog.globals,devices:prog.devices||[],funcs,nGlobals:gslots.length,globalVars:gslots.map(v=>({name:v.name,slot:v.slot,type:v.t.name,array:v.array,isConst:v.isConst}))};
 }
 
 // ---------- formatting helpers (Arduino Print semantics) ----------
@@ -292,15 +309,17 @@ export class Machine{
  err(n,m){return new CodeError(m,n.line,n.col);}
  *run(){
   for(const g of this.p.globals)yield* this.exec(g,this.g);
+  for(const d of this.p.devices||[]){const args=[];for(const a of d.args)args.push(a.k==='wire'?0:yield* this.ev(a,this.g));this.h.initDevice?.(d.cls,d.name,args);}
   yield* this.callUser(this.p.funcs.get('setup'),[]);
-  for(;;){yield* this.callUser(this.p.funcs.get('loop'),[]);if((this.h.clock+=STMT_US)>=this.h.deadline)yield;}
+  for(;;){if(this.h.pendingIsr?.length)yield* this.drainIsr();yield* this.callUser(this.p.funcs.get('loop'),[]);if((this.h.clock+=STMT_US)>=this.h.deadline)yield;}
  }
+ *drainIsr(){if(this.inIsr)return;this.inIsr=true;try{while(this.h.pendingIsr?.length)yield* this.callFn(this.h.pendingIsr.shift());}finally{this.inIsr=false;}}
  *callUser(fn,args){if(++this.depth>200)throw this.err(fn,`Too many nested calls of ${fn.name}() (endless recursion?)`);
   const f=new Array(fn.nSlots).fill(0);fn.params.forEach((prm,i)=>{f[prm.slot]=prm.array?args[i]:conv(args[i],prm.type);});
   const r=yield* this.exec(fn.body,f);this.depth--;
   if(r&&r.sig==='ret')return fn.type.kind==='void'?undefined:conv(r.v,fn.type);
   return zero(fn.type);}
- *exec(s,f){const h=this.h;
+ *exec(s,f){const h=this.h;if(!this.inIsr&&h.pendingIsr?.length)yield* this.drainIsr();
   switch(s.k){
    case 'block':for(const x of s.body){const r=yield* this.exec(x,f);if(r)return r;}return;
    case 'decl':for(const d of s.items){const store=d.v.where==='g'?this.g:f;

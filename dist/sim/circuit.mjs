@@ -21,7 +21,12 @@ export const PARTS={
  button:{label:'Push button',pins:[['L1',0,0],['R1',2*PITCH,0],['L2',0,3*PITCH],['R2',2*PITCH,3*PITCH]],box:[-5,-3,25,33],attrs:{bounce:true}},
  pot:{label:'Potentiometer',pins:[['GND',0,0],['SIG',PITCH,0],['VCC',2*PITCH,0]],box:[-12,-42,32,4],attrs:{ohms:10000,pos:0.5}},
  rgb:{label:'RGB LED',pins:[['R',0,0],['COM',PITCH,0],['G',2*PITCH,0],['B',3*PITCH,0]],box:[-4,-40,34,4],attrs:{common:'cathode'}},
- buzzer:{label:'Buzzer',pins:[['-',0,0],['+',2*PITCH,0]],box:[-12,-34,32,4],attrs:{}}
+ buzzer:{label:'Buzzer',pins:[['-',0,0],['+',2*PITCH,0]],box:[-12,-34,32,4],attrs:{}},
+ ldr:{label:'LDR light sensor',pins:[['GND',0,0],['SIG',PITCH,0],['VCC',2*PITCH,0]],box:[-10,-42,30,4],attrs:{light:0.5}},
+ dht11:{label:'DHT11 sensor',pins:[['VCC',0,0],['DATA',PITCH,0],['GND',2*PITCH,0]],box:[-8,-44,28,4],attrs:{temp:24,hum:50}},
+ oled:{label:'OLED display',pins:[['GND',0,0],['VCC',PITCH,0],['SCL',2*PITCH,0],['SDA',3*PITCH,0]],box:[-16,-54,46,4],attrs:{}},
+ pir:{label:'PIR motion sensor',pins:[['VCC',0,0],['OUT',PITCH,0],['GND',2*PITCH,0]],box:[-10,-44,30,4],attrs:{motion:false}},
+ relay:{label:'Relay module',pins:[['VCC',0,0],['GND',PITCH,0],['IN',2*PITCH,0]],box:[-10,-46,30,4],attrs:{activeLow:true}}
 };
 export function rotatePt(x,y,rot){switch(((rot||0)%360+360)%360){case 90:return [-y,x];case 180:return [-x,-y];case 270:return [y,-x];default:return [x,y];}}
 export function pinPos(part,name){const def=PARTS[part.type];const p=def.pins.find(q=>q[0]===name);if(!p)return null;const [x,y]=rotatePt(p[1],p[2],part.rot);return [part.x+x,part.y+y];}

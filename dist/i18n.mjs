@@ -1095,3 +1095,32 @@ Object.assign(TR,{
 });
 
 TR['Serial input: echo']='Seri giriş: yankı';
+
+// Sensors, multimeter, Wi-Fi and web server (units 6-11).
+Object.assign(TR,{
+ "Wi-Fi (station mode), a small web server, GPIO interrupts, and the DHT11, SSD1306 OLED, PIR, LDR and relay parts are simulated in simplified form. Bluetooth, other Arduino libraries and real radio behavior are not. Serial2 is not connected to this USB monitor. Real timing, ADC readings and component tolerances can differ.":"Wi-Fi (istasyon modu), küçük bir web sunucusu, GPIO kesmeleri ile DHT11, SSD1306 OLED, PIR, LDR ve röle parçaları basitleştirilmiş biçimde simüle edilir. Bluetooth, diğer Arduino kütüphaneleri ve gerçek radyo davranışı simüle edilmez. Serial2 bu USB monitörüne bağlı değildir. Gerçek kartta zamanlama, ADC ölçümleri ve bileşen toleransları farklı olabilir.",
+ "Simulation speed":"Simülasyon hızı",
+ "Multimeter":"Multimetre",
+ "Probe + (red)":"Prob + (kırmızı)",
+ "Probe − (black)":"Prob − (siyah)",
+ "DC Voltage":"DC gerilim",
+ "PWM Duty":"PWM görev oranı",
+ "Continuity":"Süreklilik",
+ "Live Variables":"Canlı değişkenler",
+ "Run the sketch to inspect variables.":"Değişkenleri görmek için programı çalıştır.",
+ "Connected":"Bağlı",
+ "Open":"Açık",
+ "No global variables":"Global değişken yok",
+ "Click a route above to send an HTTP GET request.":"HTTP GET isteği göndermek için yukarıdan bir yol seç.",
+ "Active LOW trigger":"LOW ile tetiklenir (active-low)",
+ "Light {id}":"Işık {id}",
+ "Temperature {id}":"Sıcaklık {id}",
+ "Humidity {id}":"Nem {id}",
+ "Motion {id}":"Hareket {id}",
+ "LDR light sensor":"LDR ışık sensörü",
+ "DHT11 sensor":"DHT11 sensörü",
+ "OLED display":"OLED ekran",
+ "PIR motion sensor":"PIR hareket sensörü",
+ "Relay module":"Röle modülü",
+ "data":"veri","output":"çıkış","input":"giriş"
+});
