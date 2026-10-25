@@ -49,7 +49,7 @@ export const units=[
  {id:2,title:'Explore the connections',subtitle:'There’s an order under the holes.',source:'02-board-and-breadboard',available:true},
  {id:3,title:'Light your first LED',subtitle:'Build the circuit. Change the code. See the result.',source:'03-blink-an-led',available:true},
  {id:4,title:'Buttons and time',subtitle:'digitalRead, debounce and millis()',source:'04-buttons-and-millis',available:true},
- {id:5,title:'Light at your command',subtitle:'PWM, RGB and a potentiometer',available:true},
+ {id:5,title:'Light at your command',subtitle:'PWM, RGB and a potentiometer',source:'05-pwm-and-rgb',available:true},
  {id:6,title:'Light and sound',subtitle:'LDR, buzzer and melodies',available:true},
  {id:7,title:'Sense the room',subtitle:'DHT11, I²C and an OLED screen',available:true},
  {id:8,title:'Catch the motion',subtitle:'PIR, edge detection and interrupts',available:true},

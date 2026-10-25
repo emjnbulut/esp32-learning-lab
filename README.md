@@ -27,7 +27,7 @@ npm run e2e     # Playwright regression suite (Chromium)
 - **Lab** (`dist/lab.mjs`, `lab.css`): code editor, drag-and-drop circuit editor (ESP32 DevKit V1, breadboard, LED,
   resistor, push button, potentiometer, RGB LED, buzzer, LDR, DHT11, OLED, PIR and relay; drag wires from pin to pin, rotate with R, delete with Del),
   Run/Stop/Restart, Serial Monitor with baud check and buffered input, interactive buttons and knobs, sound.
-- **Missions** (`dist/missions.mjs`, `dist/missions-sensors.mjs`): 44 projects across 11 internally prepared units, with starter code/circuits, steps, hints, solutions and live checks. Public units remain 1 and 2. Every solution and starter runs in `tests/missions.test.mjs`.
+- **Missions** (`dist/missions.mjs`, `dist/missions-sensors.mjs`): 44 projects across 11 internally prepared units, with starter code/circuits, steps, hints, solutions and live checks. Public units are 1 through 5. Every solution and starter runs in `tests/missions.test.mjs`.
 - **Sensor curriculum** (`dist/sensor-curriculum.mjs`, `dist/sensors-i18n.mjs`): 19 sensor/IoT projects and six five-question EN/TR checkpoints for units 6–11.
 - **Inspection**: multimeter, live global variables, simulation speed and a local HTML preview for simulated HTTP routes.
 - **Quizzes and unit checkpoints** stay as secondary steps; a passed checkpoint lets experienced learners skip ahead.
@@ -89,7 +89,7 @@ A push to main triggers Pages validation. The publication workflow calls the uni
 
 ## Sensor examples and limits
 
-For internal QA, run the preview with RELEASE_ALL=1; this test-only setting exposes prepared units 3–11. Public builds keep the list in releases.mjs at [1,2]. Public Workshop retains the component palette but only lists released lesson examples.
+For internal QA, run the preview with RELEASE_ALL=1; this test-only setting exposes prepared units 6–11. Public builds keep the list in releases.mjs at [1,2,3,4,5]. Public Workshop retains the component palette but only lists released lesson examples.
 
 The new models are educational shims, not bundled Arduino libraries or firmware execution. They model one DHT object named dht, one OLED named display (SDA 21, SCL 22), and one WebServer named server. Wi-Fi is a deterministic local simulation; HTTP requests remain inside the lab and do not open a network server. DHT values are controlled by sliders. PIR pulses are controlled manually. Relay contacts illustrate state and do not simulate an external switched load. Multimeter resistance is the direct equivalent resistance between the selected nets, rather than a general instrument model.
 

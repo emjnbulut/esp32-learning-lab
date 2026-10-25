@@ -1,4 +1,8 @@
-# Development handoff - 2026-10-21 (1.4)
+# Development handoff - 2026-10-25 (1.4)
+
+## Units 1-5 released - 2026-10-25
+
+Owner requested unlocking the website through Unit 5. `PUBLIC_RELEASED` in `dist/releases.mjs` (and `tools/serve.mjs`) is now `[1,2,3,4,5]`, and Unit 5's `source` in `dist/model.mjs` is set to `'05-pwm-and-rgb'`. Units 6-11 remain gated waiting for their videos.
 
 ## Sensor work completed - 2026-10-21 (1.4)
 

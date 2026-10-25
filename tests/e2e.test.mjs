@@ -116,19 +116,19 @@ test('a second breadboard can be added, moved on its own, and old duplicate ids 
 
 test('the public site: only released units are open, the rest wait for their video',async()=>{const P2=PORT+700;const srv=spawn(process.execPath,['tools/serve.mjs'],{env:{...process.env,PORT:String(P2),RELEASE_ALL:''},stdio:['ignore','pipe','inherit']});await new Promise(r=>srv.stdout.once('data',r));
  try{const context=await browser.newContext({viewport:{width:1440,height:900}});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(`http://127.0.0.1:${P2}/`);await page.waitForSelector('.lesson-node');
-  assert.equal(await page.locator('.unit').count(),2);assert.equal(await page.locator('.upcoming').count(),9);assert.match(await page.locator('.upcoming').first().innerText(),/WAITING FOR THE VIDEO/);assert.equal(await page.locator('[data-lesson="blink"]').count(),0);
-  assert.match(await page.locator('.stat-tasks').innerText(),/\/ 1[0-9] tasks/);
-  await page.goto(`http://127.0.0.1:${P2}/#/lesson/blink`);await page.waitForSelector('.lesson-node');assert.equal(await page.locator('.mission-panel').count(),0,'closed unit cannot be opened by URL');
-  await page.goto(`http://127.0.0.1:${P2}/#/workshop`);await page.waitForSelector('#ws-example');const opts=await page.locator('#ws-example option').allInnerTexts();assert.ok(opts.some(o=>/Hello/.test(o)));assert.ok(!opts.some(o=>/Blink an LED|Read a button/.test(o)),'examples of closed units are hidden: '+opts.join('|'));
+  assert.equal(await page.locator('.unit').count(),5);assert.equal(await page.locator('.upcoming').count(),6);assert.match(await page.locator('.upcoming').first().innerText(),/WAITING FOR THE VIDEO/);assert.equal(await page.locator('[data-lesson="ldr"]').count(),0);
+  assert.match(await page.locator('.stat-tasks').innerText(),/\/ 39 tasks/);
+  await page.goto(`http://127.0.0.1:${P2}/#/lesson/ldr`);await page.waitForSelector('.lesson-node');assert.equal(await page.locator('.mission-panel').count(),0,'closed unit cannot be opened by URL');
+  await page.goto(`http://127.0.0.1:${P2}/#/workshop`);await page.waitForSelector('#ws-example');const opts=await page.locator('#ws-example option').allInnerTexts();assert.ok(opts.some(o=>/Hello/.test(o)));assert.ok(opts.some(o=>/Blink an LED|Read a button/.test(o)));assert.ok(!opts.some(o=>/Light meter|Weather station/.test(o)),'examples of closed units are hidden: '+opts.join('|'));
 
   // Import progress from a version where later units were available.
   await page.goto('http://127.0.0.1:'+P2+'/#/notebook');await page.waitForSelector('#progress-file');
   const notebook=completed=>({name:'notebook.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({version:1,completed,dates:['2026-10-19']}))});
   // File reads are asynchronous; deliberately delay this one to exercise the waiting condition.
   await page.evaluate(()=>{const read=File.prototype.text;File.prototype.text=async function(){await new Promise(resolve=>setTimeout(resolve,150));return read.call(this);};});
-  await page.setInputFiles('#progress-file',notebook(['blink']));
-  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('pin-by-pin-progress-v1'))?.completed.includes('blink'));
-  assert.match(await page.locator('.stat-tasks').innerText(),/^0 \/ 12 tasks$/);assert.equal(await page.locator('.empty-note').count(),1);
+  await page.setInputFiles('#progress-file',notebook(['ldr']));
+  await page.waitForFunction(()=>JSON.parse(localStorage.getItem('pin-by-pin-progress-v1'))?.completed.includes('ldr'));
+  assert.match(await page.locator('.stat-tasks').innerText(),/^0 \/ 39 tasks$/);assert.equal(await page.locator('.empty-note').count(),1);
   await page.goto('http://127.0.0.1:'+P2+'/');await page.waitForSelector('.hero-actions');
   assert.match(await page.locator('.hero-actions .primary').innerText(),/Start the first project/);
   assert.equal(await page.locator('.tiny-progress > div').evaluate(el=>el.style.width),'0%');
@@ -136,8 +136,8 @@ test('the public site: only released units are open, the rest wait for their vid
   const {lessons:allLessons}=await import('../dist/model.mjs');const all=allLessons.map(l=>l.id);
   await page.setInputFiles('#progress-file',notebook(all));
   await page.waitForFunction(total=>JSON.parse(localStorage.getItem('pin-by-pin-progress-v1'))?.completed.length===total,all.length);
-  assert.match(await page.locator('.stat-tasks').innerText(),/^12 \/ 12 tasks$/);
-  assert.equal(await page.locator('.record').count(),12);assert.match(await page.locator('.notebook > p').innerText(),/^12 tasks/);
+  assert.match(await page.locator('.stat-tasks').innerText(),/^39 \/ 39 tasks$/);
+  assert.equal(await page.locator('.record').count(),39);assert.match(await page.locator('.notebook > p').innerText(),/^39 tasks/);
   const [backup]=await Promise.all([page.waitForEvent('download'),page.click('#export-progress')]);
   assert.deepEqual(new Set(JSON.parse(fs.readFileSync(await backup.path(),'utf8')).completed),new Set(all),'future records survive export');
   await page.goto('http://127.0.0.1:'+P2+'/');await page.waitForSelector('.tiny-progress');
