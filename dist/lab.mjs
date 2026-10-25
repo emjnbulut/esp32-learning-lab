@@ -188,8 +188,8 @@ export class Lab{
   if(this.lastHtml===sig)return;this.lastHtml=sig;
   box.innerHTML=`<div class="web-bar"><span>\u{1F310} http://${esc(ip)}${esc(w.uri||'/')}</span><span class="web-routes">${routes.map(r=>`<button class="lab-link" data-webpath="${esc(r)}">${esc(r)}</button>`).join('')}</span></div><div class="web-body">${w.requests?`<small>HTTP ${w.lastCode} \u00b7 ${esc(w.lastType)}</small><div class="web-page"></div>`:`<em>${this.t('Click a route above to send an HTTP GET request.')}</em>`}</div>`;
   const page=box.querySelector('.web-page');if(page){const doc=new DOMParser().parseFromString(w.lastHtml,'text/html');doc.querySelectorAll('script,style,iframe,object,embed,link,meta,form').forEach(n=>n.remove());doc.querySelectorAll('*').forEach(n=>{for(const at of [...n.attributes])if(!/^(href|class)$/.test(at.name)||(at.name==='href'&&!/^\//.test(at.value)))n.removeAttribute(at.name);});page.innerHTML=doc.body.innerHTML;
-   page.querySelectorAll('a[href]').forEach(a=>a.onclick=e=>{e.preventDefault();this.sim?.requestHttp(a.getAttribute('href'));});}
-  box.querySelectorAll('[data-webpath]').forEach(b=>b.onclick=()=>this.sim?.requestHttp(b.dataset.webpath));}
+   page.querySelectorAll('a[href]').forEach(a=>a.onclick=e=>{e.preventDefault();if(this.sim){this.onTick(this.sim);this.sim.requestHttp(a.getAttribute('href'));}});}
+  box.querySelectorAll('[data-webpath]').forEach(b=>b.onclick=()=>{if(this.sim){this.onTick(this.sim);this.sim.requestHttp(b.dataset.webpath);}});if(this.sim)this.onTick(this.sim);}
 
  audioTone(f){if(!this.audio)return;if(!f){if(this.osc){this.osc.stop();this.osc=null;}return;}
   if(!this.osc){this.osc=this.audio.createOscillator();this.gain=this.audio.createGain();this.gain.gain.value=0.04;this.osc.type='square';this.osc.connect(this.gain).connect(this.audio.destination);this.osc.start();}

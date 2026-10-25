@@ -435,7 +435,7 @@ test('PIR controls toggle a wired motion light',async()=>{
 });
 test('web page links control the LED without navigating away from the lab',async()=>{
  const page=await sensorPage('webled');await solution(page);await page.click('#lab-run');await page.waitForSelector('.web-page a[href="/on"]');
- const url=page.url();await page.click('.web-page a[href="/on"]');await page.waitForFunction(()=>document.querySelector('.web-page')?.textContent==='LED is on');
+ const url=page.url();await page.click('.web-page a[href="/on"]');await page.waitForFunction(()=>document.querySelector('.web-page')?.textContent==='LED is on'&&document.querySelectorAll('.goal.ok').length===1);
  await page.click('[data-webpath="/off"]');await page.waitForFunction(()=>document.querySelector('.web-page')?.textContent==='LED is off');
  await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length===2);assert.equal(page.url(),url);assert.deepEqual(page.errors,[]);await page.close();
 });
