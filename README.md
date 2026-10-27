@@ -5,6 +5,8 @@ Learners write real Arduino code, wire a circuit on a breadboard and press Run â
 course: every unit is a series of projects from the episodes, with goals that are checked live while the circuit runs.
 English by default, Turkish with the EN/TR switch.
 
+**Live site:** https://emjnbulut.github.io/esp32-learning-lab/ (units 1â€“5 are open; later units open as their videos are published)
+
 ## Run
 
 Requires Node.js 20+. The site itself has no dependencies or build step; Playwright is a dev dependency used only by the browser tests.
