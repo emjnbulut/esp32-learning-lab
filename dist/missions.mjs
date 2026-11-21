@@ -1,6 +1,7 @@
 // Hands-on missions. Each one has a starter (what the learner opens), a solution, steps, hints and
 // goals checked live against the running simulation. `script` drives tests/missions.test.mjs.
 import {sensorMissions} from './missions-sensors.mjs';
+import {episodeMissions} from './missions-episodes.mjs';
 import {resolveDiagram} from './sim/circuit.mjs';
 const ESP={id:'esp',type:'esp32',x:0,y:0},BB={id:'bb',type:'breadboard',x:160,y:0};
 const tray=(id,type,i,extra={})=>({id,type,x:190+i*60,y:250,...extra});
@@ -494,7 +495,7 @@ void loop() {
   Serial.println(raw);
   delay(20);
 }
-`},title:'A dimmer knob',intro:'The potentiometer gives 0–3.3 V on its middle leg; analogRead() turns it into 0–4095. Use it to set the LED brightness.',
+`},title:'The dimmer with map()',intro:'Episode 8: last time we divided by 16. map() does the same job in one readable line: it turns the knob’s range 0–4095 into the LED’s range 0–255, and anyone can see both ranges.',
   steps:['Run the starter and turn the knob (drag it, or use the Controls bar). Watch the numbers.','Convert: `int level = map(raw, 0, 4095, 0, 255);`','Write it to the LED: `analogWrite(LED_PIN, level);` Restart and turn the knob from one end to the other.'],
   hints:['The ESP32 ADC has 12 bits: 0 to 4095. Old Arduino tutorials use 1023 because the Uno has 10 bits.','analogWrite() takes 0 to 255.'],
   goals:[{text:'Knob at one end: LED dark',check:s=>(s.mem.lo=s.mem.lo||(potAt(s)<0.03&&ledKeys(s).every(k=>(s.leds[k]||0)<0.03)))},{text:'Knob at the other end: LED fully bright',check:s=>(s.mem.hi=s.mem.hi||(potAt(s)>0.97&&ledKeys(s).some(k=>(s.leds[k]||0)>0.45)))},{text:'Knob in the middle: LED half bright',check:s=>(s.mem.mid=s.mem.mid||(Math.abs(potAt(s)-0.5)<0.1&&ledKeys(s).some(k=>s.leds[k]>0.12&&s.leds[k]<0.4)))}],
@@ -513,7 +514,7 @@ void loop() {
   digitalWrite(LED_PIN, LOW);
   delay(wait);
 }
-`},title:'Challenge: a speed knob',intro:'Now the knob sets the blinking speed: fast at one end, slow at the other.',
+`},title:'A speed knob',intro:'map() can turn the knob into any range, not only brightness. Map it to a wait time: fast blinking at one end, slow at the other.',
   steps:['Read the knob and map it to a wait time, for example 50 to 1000 ms.','Blink with that wait time.','Turn the knob to both ends while it runs.'],
   hints:['`int wait = map(analogRead(POT_PIN), 0, 4095, 50, 1000);`'],
   goals:[{text:'At one end it blinks fast (under 200 ms)',check:s=>(s.mem.fast=s.mem.fast||ledKeys(s).some(k=>{const d=durations(s,k);return d.on.length>=2&&d.on.slice(-2).every(x=>x<200);}))},{text:'At the other end it blinks slowly (over 700 ms)',check:s=>(s.mem.slow=s.mem.slow||ledKeys(s).some(k=>{const d=durations(s,k);return d.on.length>=2&&d.on.slice(-2).every(x=>x>700);}))}],
@@ -654,7 +655,8 @@ MISSIONS.colors2.solution=tweak('colors2','  color(255, 0, 255); // purple\n  de
 MISSIONS.dimmer2.solution=tweak('dimmer2','map(raw, 0, 4095, 0, 255)','map(raw, 0, 4095, 255, 0)');
 for(const m of Object.values(MISSIONS))if(m.parent)m.starter={code:MISSIONS[m.parent].solution.code,diagram:MISSIONS[m.parent].solution.diagram};
 Object.assign(MISSIONS,sensorMissions({D,BLINK_PARTS,BLINK_WIRES,W_GND,W_3V3,lines,ledKeys,lit,changes}));
+Object.assign(MISSIONS,episodeMissions({D,BLINK_PARTS,BLINK_WIRES,BUTTON_PART,BUTTON_WIRES,POT_PART,POT_WIRES,RGB_PARTS,RGB_WIRES,W_GND,W_3V3,lines,ledKeys,lit,changes,durations,blinkKey,pressed,presses,potAt,rgbIs,levels}));
 // missions whose starter keeps the previous mission's code take it from there
-const PREV={fast:'blink',pair:'blink',two:'nowait',speed:'dimmer'};
+const PREV={fast:'blink',pair:'blink',two:'nowait',speed:'dimmer',knobblink:'zones',slowwalker:'crossing'};
 for(const [id,m] of Object.entries(MISSIONS)){m.id=id;if(m.starter.code===null)m.starter.code=MISSIONS[PREV[id]].solution.code;}
 export function checkGoals(m,s){if(!s.mem)s.mem={};if(!s.passed)s.passed=new Set();m.goals.forEach((g,i)=>{try{if(!s.passed.has(i)&&g.check(s))s.passed.add(i);}catch{}});return m.goals.map((g,i)=>s.passed.has(i));}

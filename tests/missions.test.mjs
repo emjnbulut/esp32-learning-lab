@@ -1,8 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {MISSIONS,checkGoals} from '../dist/missions.mjs';import {Simulator} from '../dist/sim/runtime.mjs';import {compile} from '../dist/sim/arduino.mjs';
 // Run a mission's code + diagram with its scripted inputs, checking goals at the scripted moments and at the end.
-function play(m,{code,diagram}){const s=new Simulator(JSON.parse(JSON.stringify(diagram)),code);const err=s.start();assert.equal(err,null,err&&`${err.line}: ${err.message}`);
- const sc=m.script||{ms:1000};const marks=[...(sc.ticks||[]),sc.ms].sort((a,b)=>a-b);let at=0;
+// script.nvs presets the board's Preferences flash, as if an earlier run had saved values (then Restart)
+function play(m,{code,diagram}){const sc=m.script||{ms:1000};const s=new Simulator(JSON.parse(JSON.stringify(diagram)),code,{nvs:{...(sc.nvs||{})}});const err=s.start();assert.equal(err,null,err&&`${err.line}: ${err.message}`);const marks=[...(sc.ticks||[]),sc.ms].sort((a,b)=>a-b);let at=0;
  for(const t of marks){s.runFor(t-at,(sc.actions||[]).filter(a=>a.at>=at&&a.at<t).map(a=>({...a,at:a.at})));at=t;checkGoals(m,s);}
  return {s,res:checkGoals(m,s)};}
 for(const [id,m] of Object.entries(MISSIONS)){

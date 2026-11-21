@@ -47,7 +47,7 @@ test('mission press: hold the button with the Controls bar',async()=>{const page
  await page.waitForTimeout(300);await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();await page.waitForTimeout(500);await page.mouse.up();
  await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length===4,null,{timeout:8000});await page.close();});
 
-test('mission dimmer: the knob slider changes the brightness',async()=>{const page=await open('#/lesson/dimmer',{completed:[...U1,...U2,...U3,...U4,'fade','fade2','pwm','colors','colors2','rgb']});await lab(page);await page.click('#show-solution');await lab(page);
+test('mission dimmer: the knob slider changes the brightness',async()=>{const page=await open('#/lesson/dimmer',{completed:[...U1,...U2,...U3,...U4,'check7']});await lab(page);await page.click('#show-solution');await lab(page);
  await page.click('#lab-run');await page.waitForSelector('[data-potin="pot1"]:not([disabled])');
  for(const v of [0,1000,500]){await page.$eval('[data-potin="pot1"]',(el,x)=>{el.value=String(x);el.dispatchEvent(new Event('input',{bubbles:true}));},v);await page.waitForTimeout(400);}
  await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length===3,null,{timeout:6000});await page.close();});
@@ -116,8 +116,9 @@ test('a second breadboard can be added, moved on its own, and old duplicate ids 
 
 test('the public site: only released units are open, the rest wait for their video',async()=>{const P2=PORT+700;const srv=spawn(process.execPath,['tools/serve.mjs'],{env:{...process.env,PORT:String(P2),RELEASE_ALL:''},stdio:['ignore','pipe','inherit']});await new Promise(r=>srv.stdout.once('data',r));
  try{const context=await browser.newContext({viewport:{width:1440,height:900}});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(`http://127.0.0.1:${P2}/`);await page.waitForSelector('.lesson-node');
-  assert.equal(await page.locator('.unit').count(),5);assert.equal(await page.locator('.upcoming').count(),6);assert.match(await page.locator('.upcoming').first().innerText(),/WAITING FOR THE VIDEO/);assert.equal(await page.locator('[data-lesson="ldr"]').count(),0);
-  assert.match(await page.locator('.stat-tasks').innerText(),/\/ 39 tasks/);
+  assert.equal(await page.locator('.unit').count(),9);assert.equal(await page.locator('.upcoming').count(),9);assert.match(await page.locator('.upcoming').first().innerText(),/Reflex game 2\.0/);
+  const links=await page.locator('.unit .episode-link').evaluateAll(as=>as.map(a=>a.getAttribute('href')));assert.equal(links.length,10,'nine episodes and recap 1');assert.ok(links.every(h=>/^https:\/\/youtu\.be\/[\w-]{11}$/.test(h)),links.join(' '));assert.ok(links.includes('https://youtu.be/9B71hQRCbsM'));assert.match(await page.locator('.upcoming').first().innerText(),/WAITING FOR THE VIDEO/);assert.equal(await page.locator('[data-lesson="ldr"]').count(),0);
+  assert.match(await page.locator('.stat-tasks').innerText(),/\/ 58 tasks/);
   await page.goto(`http://127.0.0.1:${P2}/#/lesson/ldr`);await page.waitForSelector('.lesson-node');assert.equal(await page.locator('.mission-panel').count(),0,'closed unit cannot be opened by URL');
   await page.goto(`http://127.0.0.1:${P2}/#/workshop`);await page.waitForSelector('#ws-example');const opts=await page.locator('#ws-example option').allInnerTexts();assert.ok(opts.some(o=>/Hello/.test(o)));assert.ok(opts.some(o=>/Blink an LED|Read a button/.test(o)));assert.ok(!opts.some(o=>/Light meter|Weather station/.test(o)),'examples of closed units are hidden: '+opts.join('|'));
 
@@ -128,7 +129,7 @@ test('the public site: only released units are open, the rest wait for their vid
   await page.evaluate(()=>{const read=File.prototype.text;File.prototype.text=async function(){await new Promise(resolve=>setTimeout(resolve,150));return read.call(this);};});
   await page.setInputFiles('#progress-file',notebook(['ldr']));
   await page.waitForFunction(()=>JSON.parse(localStorage.getItem('pin-by-pin-progress-v1'))?.completed.includes('ldr'));
-  assert.match(await page.locator('.stat-tasks').innerText(),/^0 \/ 39 tasks$/);assert.equal(await page.locator('.empty-note').count(),1);
+  assert.match(await page.locator('.stat-tasks').innerText(),/^0 \/ 58 tasks$/);assert.equal(await page.locator('.empty-note').count(),1);
   await page.goto('http://127.0.0.1:'+P2+'/');await page.waitForSelector('.hero-actions');
   assert.match(await page.locator('.hero-actions .primary').innerText(),/Start the first project/);
   assert.equal(await page.locator('.tiny-progress > div').evaluate(el=>el.style.width),'0%');
@@ -136,8 +137,8 @@ test('the public site: only released units are open, the rest wait for their vid
   const {lessons:allLessons}=await import('../dist/model.mjs');const all=allLessons.map(l=>l.id);
   await page.setInputFiles('#progress-file',notebook(all));
   await page.waitForFunction(total=>JSON.parse(localStorage.getItem('pin-by-pin-progress-v1'))?.completed.length===total,all.length);
-  assert.match(await page.locator('.stat-tasks').innerText(),/^39 \/ 39 tasks$/);
-  assert.equal(await page.locator('.record').count(),39);assert.match(await page.locator('.notebook > p').innerText(),/^39 tasks/);
+  assert.match(await page.locator('.stat-tasks').innerText(),/^58 \/ 58 tasks$/);
+  assert.equal(await page.locator('.record').count(),58);assert.match(await page.locator('.notebook > p').innerText(),/^58 tasks/);
   const [backup]=await Promise.all([page.waitForEvent('download'),page.click('#export-progress')]);
   assert.deepEqual(new Set(JSON.parse(fs.readFileSync(await backup.path(),'utf8')).completed),new Set(all),'future records survive export');
   await page.goto('http://127.0.0.1:'+P2+'/');await page.waitForSelector('.tiny-progress');
@@ -401,17 +402,17 @@ test('real-board guide shows current connections in both languages and returns f
 });
 
 
-const SENSOR_IDS=['ldr','nightlight','melody','alarm','temp','oled','station','motion','visitors','irq','relay','relaybtn','wifi','web','webtemp','webled','room','climate','dashboard'];
-const ALL_CHECKPOINTS=Array.from({length:11},(_,i)=>'check'+(i+1));
+const SENSOR_IDS=['oled','beep','reflex','motion','visitors','wifi','web','webled','temp','station','webtemp','melody','ldr','nightlight','alarm','irq','relay','relaybtn','climate','room','dashboard'];
+const ALL_CHECKPOINTS=Array.from({length:18},(_,i)=>'check'+(i+1));
 const sensorPage=(id,opts={})=>open('#/lesson/'+id,{completed:ALL_CHECKPOINTS,...opts});
 async function solution(page){await lab(page);await page.click('#show-solution');await lab(page);}
 async function slider(page,selector,value){await page.$eval(selector,(el,v)=>{el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}));},value);}
-test('all 19 sensor missions and six checkpoints are reachable in the internal curriculum in both languages',async()=>{
+test('all 21 future missions and nine checkpoints of units 10-18 are reachable in the internal curriculum in both languages',async()=>{
  const page=await sensorPage('ldr');
  for(const id of SENSOR_IDS){await page.goto(BASE+'#/lesson/'+id);await lab(page);assert.ok((await page.locator('.goal').count())>=2,id);}
  await page.click('[data-lang="tr"]');await lab(page);
  for(const id of SENSOR_IDS){await page.goto(BASE+'#/lesson/'+id);await lab(page);assert.notEqual(await page.locator('h1').innerText(),MISSIONS[id].title,id);}
- for(let u=6;u<=11;u++){await page.goto(BASE+'#/lesson/check'+u);await page.waitForSelector('.checkpoint');assert.equal(await page.locator('.cp-q').count(),5);}
+ for(let u=10;u<=18;u++){await page.goto(BASE+'#/lesson/check'+u);await page.waitForSelector('.checkpoint');assert.equal(await page.locator('.cp-q').count(),5);}
  assert.deepEqual(page.errors,[]);await page.close();
 });
 test('LDR controls complete real goals and the multimeter follows the supply',async()=>{
@@ -445,4 +446,24 @@ test('phone: Turkish sensor controls and multimeter fit and the new parts surviv
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
  await page.click('#meter-close');await page.click('#lab-run');await page.reload();await lab(page);
  assert.equal(await page.locator('[data-part="dht1"]').count(),1);assert.equal(await page.locator('[data-part="oled1"]').count(),1);assert.deepEqual(page.errors,[]);await page.close();
+});
+
+test('published units link their episode, and the episode 7-9 missions run with real controls',async()=>{
+ const page=await open('#/lesson/knob',{completed:[...U1,...U2,...U3,...U4,'check6','check7','check8']});await lab(page);
+ assert.equal(await page.locator('.mission-panel .episode-link').getAttribute('href'),'https://youtu.be/g-fnxcOIyBI');assert.equal(await page.locator('.mission-panel .episode-link').getAttribute('target'),'_blank');
+ await page.click('#show-solution');await lab(page);await page.click('#lab-run');await page.waitForSelector('[data-potin="pot1"]:not([disabled])');
+ for(const v of [0,1000,500]){await page.$eval('[data-potin="pot1"]',(el,x)=>{el.value=String(x);el.dispatchEvent(new Event('input',{bubbles:true}));},v);await page.waitForTimeout(500);}
+ await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length===4,null,{timeout:6000});
+ await page.goto(BASE+'#/lesson/levelbar');await lab(page);assert.equal(await page.locator('.mission-panel .episode-link').getAttribute('href'),'https://youtu.be/1GYzg84mmAM');
+ await page.goto(BASE+'#/lesson/check4');await page.waitForSelector('.checkpoint');assert.deepEqual(await page.locator('.lesson-copy .episode-link').evaluateAll(as=>as.map(a=>a.getAttribute('href'))),['https://youtu.be/CR6nKg5I9g8','https://youtu.be/rjlXIKGOOks']);
+ await page.click('[data-lang="tr"]');await page.waitForSelector('.lesson-copy .episode-link');assert.match(await page.locator('.lesson-copy .episode-link').first().innerText(),/4\. bölümü izle/);
+ assert.deepEqual(page.errors,[]);await page.close();
+});
+test('phone: the pedestrian crossing fits and its button works from the Controls bar',async()=>{
+ const page=await open('#/lesson/crossing',{completed:[...U1,...U2,...U3,...U4,'check8'],width:390,height:844});await lab(page);await page.click('#show-solution');await lab(page);
+ await page.click('[data-labtab="circuit"]');await page.click('#lab-run');await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length===1);
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ fs.mkdirSync('artifacts',{recursive:true});await page.screenshot({path:'artifacts/crossing-phone.png'});
+ await page.waitForSelector('[data-press="btn1"]:not([disabled])');await page.locator('[data-press="btn1"]').scrollIntoViewIfNeeded();const b=await page.locator('[data-press="btn1"]').boundingBox();await page.mouse.move(b.x+b.width/2,b.y+b.height/2);await page.mouse.down();await page.waitForTimeout(300);await page.mouse.up();
+ await page.waitForFunction(()=>document.querySelectorAll('.goal.ok').length>=2,null,{timeout:12000});assert.deepEqual(page.errors,[]);await page.close();
 });

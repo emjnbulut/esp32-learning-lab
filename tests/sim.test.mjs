@@ -51,3 +51,29 @@ test('RGB LED mixes PWM channels',()=>{const d=resolveDiagram({parts:[...base,{i
  const s=new Simulator(d,`void setup(){}
 void loop(){analogWrite(25,255);analogWrite(26,0);analogWrite(27,128);delay(100);}`);assert.equal(s.start(),null);s.runFor(50);
  assert.ok(s.leds['rgb:R']>0.3,JSON.stringify(s.leds));assert.ok(!(s.leds['rgb:G']>0.02));assert.ok(s.leds['rgb:B']>0.02&&s.leds['rgb:B']<s.leds['rgb:R'],JSON.stringify(s.leds));assert.deepEqual(s.warnings,[]);});
+
+test('Preferences keep values in the board flash across a restart',()=>{const d=resolveDiagram({parts:base,wires:[]});const code=`#include <Preferences.h>
+Preferences prefs;
+unsigned long best = 9999;
+void setup() { Serial.begin(115200); prefs.begin("reflex", false); best = prefs.getULong("best", 9999); Serial.println(best); prefs.putULong("best", 180); }
+void loop() {}`;
+ const nvs={};let s=new Simulator(d,code,{nvs});assert.equal(s.start(),null);s.runFor(50);assert.match(s.out,/^9999/);assert.deepEqual(nvs,{'reflex/best':180});assert.equal(s.prefsLog.length,1);
+ s=new Simulator(d,code,{nvs});s.start();s.runFor(50);assert.match(s.out,/^180/);
+ const closed=new Simulator(d,'#include <Preferences.h>\nPreferences prefs;\nvoid setup() { prefs.putULong("best", 1); }\nvoid loop() {}');closed.start();closed.runFor(20);assert.equal(Object.keys(closed.nvs).length,0);assert.ok(closed.warnings.some(w=>/prefs.begin/.test(w.msg)));});
+
+test('a held button still reads LOW after its bounce when the sketch rewrites the same outputs every loop',()=>{
+ const d=resolveDiagram({parts:[...base,{id:'btn1',type:'button',at:'bb:e14'},{id:'r1',type:'resistor',at:'bb:a4'},{id:'led1',type:'led',at:'bb:e7'}],wires:[{a:'esp:D22',b:'bb:j14'},{a:'bb:j16',b:'esp:GND.R'},{a:'esp:D23',b:'bb:c4'},{a:'bb:c8',b:'esp:GND.R'}]});
+ const code=`int presses = 0; int last = HIGH; unsigned long lastChange = 0;
+void setup() { pinMode(22, INPUT_PULLUP); pinMode(23, OUTPUT); Serial.begin(115200); }
+void loop() { unsigned long now = millis(); int b = digitalRead(22);
+  if (b != last && now - lastChange >= 50) { lastChange = now; last = b; if (b == LOW) { presses = presses + 1; Serial.println(presses); } }
+  digitalWrite(23, HIGH); analogWrite(25, 0); }`;
+ const s=new Simulator(d,code);s.start();const acts=[];for(let i=0;i<6;i++)acts.push({at:100+i*300,press:'btn1'},{at:220+i*300,release:'btn1'});s.runFor(2000,acts);
+ assert.equal(s.out.trim().split(/\s+/).pop(),'6',s.out);});
+
+// The real lesson sketches of the published episodes run in the simulator against the lab circuits.
+for(const [id,path] of [['breathe','05-pwm/code/fade_millis/fade_millis.ino'],['modes','06-rgb/code/color_modes/color_modes.ino'],['zones','07-analog-input/code/pot_zones/pot_zones.ino'],['knobblink','07-analog-input/code/challenge_knob_blink/challenge_knob_blink.ino'],['levelbar','08-map-and-level-bar/code/level_bar/level_bar.ino'],['safelock','08-map-and-level-bar/code/challenge_safe_lock/challenge_safe_lock.ino'],['crossing','09-mini-project-1/code/crossing/crossing.ino'],['presstime','09-mini-project-1/code/press_time/press_time.ino'],['slowwalker','09-mini-project-1/code/slow_walker/slow_walker.ino']])
+ test(`the real episode sketch ${path.split('/').pop()} passes the ${id} mission goals`,{skip:!sketch(path)},async()=>{const {MISSIONS,checkGoals}=await import('../dist/missions.mjs');const m=MISSIONS[id];
+  const s=new Simulator(JSON.parse(JSON.stringify(m.solution.diagram)),sketch(path));assert.equal(s.start(),null);const sc=m.script;const marks=[...(sc.ticks||[]),sc.ms].sort((a,b)=>a-b);let at=0;
+  for(const t of marks){s.runFor(t-at,(sc.actions||[]).filter(a=>a.at>=at&&a.at<t));at=t;checkGoals(m,s);}
+  const res=checkGoals(m,s);assert.deepEqual(res.map((ok,i)=>ok?true:m.goals[i].text),res.map(()=>true),s.out.slice(-200));});

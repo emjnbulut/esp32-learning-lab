@@ -205,3 +205,11 @@ body{font-size:15px}
   .upcoming span:last-child{font-size:11px}
   .unit-check{margin:0 10px 12px}
 }
+/* "Watch the episode" links of published units */
+.episode-links{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px}
+.episode-link{display:inline-flex;align-items:center;gap:6px;font:11px var(--mono);font-weight:500;color:var(--orange);text-decoration:none;min-height:24px}
+.episode-link span{font-size:9px}
+.episode-link:hover{text-decoration:underline}
+.mission-panel .episode-links,.lesson-copy .episode-links{margin:10px 0 4px}
+.unit.current .episode-link{color:var(--ink)}
+.toast{pointer-events:none} /* a notice must not block the Controls bar under it on phones */

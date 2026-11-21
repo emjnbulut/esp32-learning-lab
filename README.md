@@ -5,7 +5,7 @@ Learners write real Arduino code, wire a circuit on a breadboard and press Run �
 course: every unit is a series of projects from the episodes, with goals that are checked live while the circuit runs.
 English by default, Turkish with the EN/TR switch.
 
-**Live site:** https://emjnbulut.github.io/esp32-learning-lab/ (units 1–5 are open; later units open as their videos are published)
+**Live site:** https://emjnbulut.github.io/esp32-learning-lab/ (units 1–9 are open, one per published episode, each with a link to its video; later units open as their videos are published)
 
 ## Run
 
@@ -20,7 +20,7 @@ npm run e2e     # Playwright regression suite (Chromium)
 
 `dist/` is the complete static website and works under a hosting subdirectory.
 
-## What is inside (1.4)
+## What is inside (1.5)
 
 - **Simulator** (`dist/sim/`): an Arduino C/C++ subset interpreter with compiler-style errors and virtual time
   (`arduino.mjs`); parts, nets and a DC solver with diodes (`circuit.mjs`); the runtime that connects sketch and
@@ -29,8 +29,8 @@ npm run e2e     # Playwright regression suite (Chromium)
 - **Lab** (`dist/lab.mjs`, `lab.css`): code editor, drag-and-drop circuit editor (ESP32 DevKit V1, breadboard, LED,
   resistor, push button, potentiometer, RGB LED, buzzer, LDR, DHT11, OLED, PIR and relay; drag wires from pin to pin, rotate with R, delete with Del),
   Run/Stop/Restart, Serial Monitor with baud check and buffered input, interactive buttons and knobs, sound.
-- **Missions** (`dist/missions.mjs`, `dist/missions-sensors.mjs`): 44 projects across 11 internally prepared units, with starter code/circuits, steps, hints, solutions and live checks. Public units are 1 through 5. Every solution and starter runs in `tests/missions.test.mjs`.
-- **Sensor curriculum** (`dist/sensor-curriculum.mjs`, `dist/sensors-i18n.mjs`): 19 sensor/IoT projects and six five-question EN/TR checkpoints for units 6–11.
+- **Missions** (`dist/missions.mjs`, `dist/missions-episodes.mjs`, `dist/missions-sensors.mjs`): 57 projects across 18 units (unit N = episode N), with starter code/circuits, steps, hints, solutions and live checks. Public units are 1 through 9 (episodes 1–9). Every solution and starter runs in `tests/missions.test.mjs`; when the course repository sits next to this one, `tests/sim.test.mjs` also runs the real episode 5–9 lesson sketches against the mission goals.
+- **Future units** (`dist/sensor-curriculum.mjs`, `dist/sensors-i18n.mjs`, `dist/episodes-i18n.mjs`): units 10–18 follow the draft curriculum v7 (reflex game with OLED and buzzer, PIR alarm, phone control, DHT11 station, melody, LDR drawer alarm, interrupts, relay, smart room), each with a five-question EN/TR checkpoint. They stay closed until their videos are published.
 - **Inspection**: multimeter, live global variables, simulation speed and a local HTML preview for simulated HTTP routes.
 - **Quizzes and unit checkpoints** stay as secondary steps; a passed checkpoint lets experienced learners skip ahead.
 - **Workshop**: free projects saved in the browser, examples from the missions, JSON export/import, `.ino` download.
@@ -39,7 +39,7 @@ npm run e2e     # Playwright regression suite (Chromium)
 
 The interpreter supports the Arduino subset used by the course: types (int, long, unsigned long, byte, bool, char,
 float, String), arrays, functions, control flow, `#define`, `Serial` (output plus buffered byte, text and number reads), digital and analog I/O,
-`millis`/`delay`, `map`/`constrain`, `tone`. It is not a full C++ compiler: pointers, structs, general classes and
+`millis`/`delay`, `map`/`constrain`, `tone`, `Preferences` (values survive Restart in the lab, like flash on a real board). It is not a full C++ compiler: pointers, structs, general classes and
 most other libraries are reported as unsupported. GPIO edge interrupts and simplified DHT, SSD1306, WiFi and WebServer APIs are modeled. The circuit solver is DC with piecewise-linear diodes (LED forward voltages,
 ~10 Ω GPIO output resistance, 45 kΩ pull-ups); PWM brightness is averaged by duty cycle.
 
@@ -83,7 +83,7 @@ and the public [license page](dist/licensing.html).
 
 In Workshop, choose **Serial input: echo** from Examples and press Run. In Serial Monitor, type a message and press Enter or Send. Choose none, LF, CR or CRLF to match the sketch. Text is UTF-8; byte reads return individual bytes. Stream reads wait in simulated time; setTimeout defaults to 1000 ms. Input requires Serial.begin(), is bounded to 4096 bytes, and is cleared on restart. This monitor is USB Serial, not Serial2.
 
-Use **Use a real ESP32** above the code editor for current pin and component lists, connections including breadboard contacts, .ino download/upload steps and simulator limits. The bilingual guide links official Espressif documentation. Lesson episode links have been removed because the videos have not been recorded.
+Use **Use a real ESP32** above the code editor for current pin and component lists, connections including breadboard contacts, .ino download/upload steps and simulator limits. The bilingual guide links official Espressif documentation. Each published unit links its YouTube episode (`videos` in `dist/model.mjs`); unit 4 also links Recap 1.
 
 ## Publishing
 
@@ -91,7 +91,7 @@ A push to main triggers Pages validation. The publication workflow calls the uni
 
 ## Sensor examples and limits
 
-For internal QA, run the preview with RELEASE_ALL=1; this test-only setting exposes prepared units 6–11. Public builds keep the list in releases.mjs at [1,2,3,4,5]. Public Workshop retains the component palette but only lists released lesson examples.
+For internal QA, run the preview with RELEASE_ALL=1; this test-only setting exposes prepared units 10–18. Public builds keep the list in releases.mjs at [1,2,3,4,5,6,7,8,9]; tools/serve.mjs reads the same file. Public Workshop retains the component palette but only lists released lesson examples.
 
 The new models are educational shims, not bundled Arduino libraries or firmware execution. They model one DHT object named dht, one OLED named display (SDA 21, SCL 22), and one WebServer named server. Wi-Fi is a deterministic local simulation; HTTP requests remain inside the lab and do not open a network server. DHT values are controlled by sliders. PIR pulses are controlled manually. Relay contacts illustrate state and do not simulate an external switched load. Multimeter resistance is the direct equivalent resistance between the selected nets, rather than a general instrument model.
 

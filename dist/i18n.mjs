@@ -1,18 +1,26 @@
 // Turkish content. English is the source language (model.mjs, app.mjs); TR maps each English UI string to Turkish.
 import {TR_SENSOR_CHECKPOINTS} from './sensor-curriculum.mjs';
 import {TR_SENSOR_MISSIONS,TR_SENSOR_COMMENTS} from './sensors-i18n.mjs';
+import {TR_EPISODE_MISSIONS,TR_EPISODE_LESSONS,TR_EPISODE_COMMENTS} from './episodes-i18n.mjs';
 export const TR_UNITS={
  1:{"title": "Kartla tanış","subtitle": "Bir bilgisayar, avucunun içinde."},
  2:{"title": "Bağlantıları keşfet","subtitle": "Deliklerin altında bir düzen var."},
  3:{"title": "İlk ışığını yak","subtitle": "Devreni kur. Kodunu değiştir. Sonucunu gör."},
  4:{"title": "Butonlar ve zaman","subtitle": "digitalRead, debounce ve millis()"},
- 5:{"title": "Işığın ayarı sende","subtitle": "PWM, RGB ve potansiyometre"},
- 6:{"title": "Işık ve ses","subtitle": "LDR, buzzer ve melodiler"},
- 7:{"title": "Ortamı hisset","subtitle": "DHT11, I²C ve OLED ekran"},
- 8:{"title": "Hareketi yakala","subtitle": "PIR, engel sensörü ve kesmeler"},
- 9:{"title": "Dünyaya bağlan","subtitle": "Röleler ve Wi-Fi"},
- 10:{"title": "Sensörün bir web sayfası olsun","subtitle": "Web sunucusu ve canlı veriler"},
- 11:{"title": "Kendi akıllı odan","subtitle": "Öğrendiklerini bir projede birleştir"}
+ 5:{"title": "LED nefes alsın","subtitle": "PWM, analogWrite() ve hiç beklemeyen bir fade"},
+ 6:{"title": "İstediğin rengi karıştır","subtitle": "Bir RGB LED ve dört modlu tek buton"},
+ 7:{"title": "Düğmeyi oku","subtitle": "analogRead(), pin kuralları ve Serial ile hata ayıklama"},
+ 8:{"title": "map() ve seviye çubuğu","subtitle": "Her aralığı ölçekle, 3 LED’li göstergeyi doldur"},
+ 9:{"title": "Mini proje: akıllı yaya geçidi","subtitle": "millis() ile durum makinesi ve butona ne kadar basıldığı"},
+ 10:{"title": "Refleks oyunu 2.0","subtitle": "OLED ekran, pasif buzzer ve elektrik kesilince kaybolmayan rekor"},
+ 11:{"title": "Hareket alarmı","subtitle": "Gizlice girmeye çalışanı PIR sensörü yakalar"},
+ 12:{"title": "Telefondan kontrol et","subtitle": "Wi-Fi ve kartın üzerindeki küçük bir web sayfası"},
+ 13:{"title": "Hava istasyonu","subtitle": "DHT11 sıcaklık ve nem, ekranda ve telefonda"},
+ 14:{"title": "Meyve piyano","subtitle": "tone() ile notalar ve melodiler"},
+ 15:{"title": "Çekmece alarmı","subtitle": "LDR ışık sensörü, bir sınır ve bir buzzer"},
+ 16:{"title": "Her atışı say","subtitle": "Kısa darbeler ve kesmeler"},
+ 17:{"title": "Gerçek bir fanı aç","subtitle": "Kodla ve sıcaklıkla kontrol edilen bir röle"},
+ 18:{"title": "Kendi akıllı odan","subtitle": "Kitteki her parça tek bir projede"}
 };
 export const TR_LESSONS={
  board:{"title": "Küçük kart, büyük işler","tag": "TANI","intro": "ESP32, yazdığın programı çalıştırır; pinleriyle dış dünyayla konuşur.","question": "Bir LED’i programla açıp kapatmak için hangi bağlantıyı kullanırsın?","choices": ["GPIO: programla kontrol edilen pin","GND: ortak toprak","3V3: sabit besleme"],"explanation": "GPIO bir giriş veya çıkış olabilir. Çıkış olarak ayarladığında programın LED’i açıp kapatabilir. GND ortak referans, 3V3 ise beslemedir.","hint": "Programın değiştirebildiği bir çıkış arıyoruz."},
@@ -314,13 +322,7 @@ Object.assign(TR_LESSONS,{
  rgb:{title:'Bir LED’de üç LED',tag:'ANLA',intro:'RGB LED’in içinde kırmızı, yeşil ve mavi üç LED var. Ortak katotlu RGB LED’de uzun bacak GND’ye gider; her renk kendi PWM pinini ve kendi 220 Ω direncini alır.',question:'Hangi rengi görürsün?',choices:['Sarı','Mor','Beyaz'],explanation:'Kırmızı ve yeşil ışık birlikte sarı görünür. Kırmızı + mavi mor, üçü birden beyaz verir. Ortak anotlu LED’de mantık terstir: 0 tam parlaklık demektir.',hint:'Boya değil ışık karıştırıyoruz: kırmızı + yeşil = ?'},
  mixer:{title:'Renkleri karıştır',tag:'KARIŞTIR',intro:'Üç sürgü, üç analogWrite() çağrısı. Her hedef rengi RGB LED’de karıştır. Yakın olması yeter: her kanal biraz sapabilir.',hint:'Turuncu bol kırmızı ve yarım yeşildir. Camgöbeği yeşil ve mavidir. Mor çoğunlukla mavi, biraz kırmızıdır.'},
  adc:{title:'Düğmeyi oku',tag:'ÖLÇ',intro:'Potansiyometre bir gerilim bölücüdür: düğmeyi çevirmek orta bacağı 0 V ile 3,3 V arasında gezdirir. analogRead() bu gerilimi ölçer. ESP32’de sonuç 12 bittir: 0 ile 4095 arası. WiFi açıkken de çalışan bir ADC1 pini olan GPIO 34’ü kullanıyoruz.',question:'Düğme tam ortada. Yaklaşık ne yazdırır?',choices:['Yaklaşık 2048','Yaklaşık 512','Yaklaşık 128'],explanation:'4095 / 2 ≈ 2048. Arduino Uno kartları 10 bit okur (0–1023); eski anlatımlarda 512 görmen bu yüzden. ESP32’nin ADC’si uçlara yakın tam doğrusal değildir, küçük sapmalar normaldir.',hint:'4095’in yarısı.'},
- knob:{title:'Işık ayar düğmesi',tag:'MEYDAN OKUMA',intro:'Düğmeyi LED’e bağla: potansiyometreyi oku ve okumayı map() ile parlaklığa çevir. Eksik iki sayıyı doldur, sonra düğmeyi bir uçtan diğer uca çevir.',hint:'map(değer, eskiAlt, eskiÜst, yeniAlt, yeniÜst). ADC en fazla 4095 okur; analogWrite() en fazla 255 alır.'},
- check5:{title:'Ünite 5 sınavı',tag:'ÜNİTE SINAVI',intro:'PWM, RGB karıştırma ve analogRead() sana tanıdık mı? Üniteyi bitirmek için bu sınavı geç.',hint:'Sorularda ipucu yok. Kontrol ettikten sonra her sorunun açıklaması görünür.',questions:[
-  {q:'8 bit PWM: %50 doluluk oranı için analogWrite() değeri kaç?',explain:'255 / 2 ≈ 127,5; yani 127 ya da 128.'},
-  {q:'Potansiyometre 3072 okuyor. map(raw, 0, 4095, 0, 255) ne döndürür?',explain:'3072 × 255 / 4095 ≈ 191,3; map() tam sayı kullanır, yani 191.'},
-  {q:'Ortak katotlu RGB LED: kırmızı 255, yeşil 0, mavi 255. Hangi renk?',choices:['Mor (macenta)','Sarı','Camgöbeği'],explain:'Kırmızı + mavi ışık = mor/macenta.'},
-  {q:'PWM ile sürülen LED neden titremek yerine sönük görünür?',choices:['Açılıp kapanma gözünden hızlı; ortalamayı görürsün','PWM gerilimi sabit bir değere düşürür','Direnç ışığı yumuşatır'],explain:'LED gerçekten tamamen açılıp kapanır, saniyede yüzlerce ya da binlerce kez. Gözün bunun ortalamasını alır.'},
-  {q:'3,3 V pin, %25 doluluk oranı. Ortalama gerilim kaç V?',explain:'0,25 × 3,3 V = ortalama 0,825 V.'}]}
+ knob:{title:'Işık ayar düğmesi',tag:'MEYDAN OKUMA',intro:'Düğmeyi LED’e bağla: potansiyometreyi oku ve okumayı map() ile parlaklığa çevir. Eksik iki sayıyı doldur, sonra düğmeyi bir uçtan diğer uca çevir.',hint:'map(değer, eskiAlt, eskiÜst, yeniAlt, yeniÜst). ADC en fazla 4095 okur; analogWrite() en fazla 255 alır.'}
 });
 Object.assign(TR,{
  'PASSED':'SINAVLA GEÇİLDİ',
@@ -633,8 +635,8 @@ export const TR_MISSIONS={
   ]
  },
  "dimmer": {
-  "title": "Bir parlaklık düğmesi",
-  "intro": "Potansiyometre orta bacağında 0–3,3 V verir; analogRead() bunu 0–4095’e çevirir. LED parlaklığını ayarlamak için kullan.",
+  "title": "map() ile parlaklık düğmesi",
+  "intro": "8. bölüm: geçen sefer 16’ya böldük. map() aynı işi tek ve okunaklı bir satırda yapar: düğmenin 0–4095 aralığını LED’in 0–255 aralığına çevirir ve iki aralık da kodda görünür.",
   "steps": [
    "Başlangıç kodunu çalıştır ve düğmeyi çevir (sürükle ya da Kontroller çubuğunu kullan). Sayıları izle.",
    "Dönüştür: `int level = map(raw, 0, 4095, 0, 255);`",
@@ -651,8 +653,8 @@ export const TR_MISSIONS={
   ]
  },
  "speed": {
-  "title": "Meydan okuma: hız düğmesi",
-  "intro": "Şimdi düğme yanıp sönme hızını ayarlıyor: bir uçta hızlı, öbür uçta yavaş.",
+  "title": "Hız düğmesi",
+  "intro": "map() düğmeyi yalnızca parlaklığa değil, her aralığa çevirebilir. Onu bir bekleme süresine çevir: bir uçta hızlı, öbür uçta yavaş yanıp sönsün.",
   "steps": [
    "Düğmeyi oku ve bir bekleme süresine eşle, örneğin 50 ile 1000 ms arası.",
    "O bekleme süresiyle yanıp söndür.",
@@ -808,7 +810,6 @@ Object.assign(TR_LESSONS.check1.questions[0],{q:'Bu program ilk 3 saniyede ne ya
 Object.assign(TR_LESSONS.check1.questions[3],{q:'Kart açılırken yalnızca bir kez çalışması gereken kodu nereye yazarsın?',choices:['setup() içine','loop() içine','loop()’tan sonra'],explain:'setup() açılışta bir kez çalışır; loop() ondan sonra tekrar tekrar çalışır.'});
 Object.assign(TR_LESSONS.check2.questions[1],{q:'Direnç a4–a7’de, LED’in + bacağı a7’de, − bacağı a8’de. 3V3’ten gelen kablo nereye gitmeli?',explain:'3V3 direncin boştaki ucuna ulaşmalı: a–e grubundaki 4. sütun. 7. sütun direnci atlar; f4 diğer gruptadır.'});
 Object.assign(TR_LESSONS.check2.questions[2],{q:'LED’i dirençsiz olarak doğrudan 3V3 ile GND arasına bağlarsan ne olur?',choices:['Çok akım akar; LED bozulabilir','Hiçbir şey, LED kendi akımını sınırlar','LED daha verimli yanar']});
-Object.assign(TR_LESSONS.check5.questions[4],{q:'analogWrite(LED_PIN, 64): pin zamanın yaklaşık yüzde kaçında açık?',explain:'64 / 255 ≈ 0,25; yani pin zamanın yaklaşık %25’inde açık.'});
 TR_LESSONS.resistor.intro=TR_LESSONS.resistor.intro.replace('GPIO için 3,3 V','3V3 pininden 3,3 V');
 Object.assign(TR,{'YOUR TURN':'SIRA SENDE'});
 Object.assign(TR_MISSIONS,{
@@ -1127,9 +1128,14 @@ Object.assign(TR,{
  "data":"veri","output":"çıkış","input":"giriş"
 });
 
-Object.assign(TR_LESSONS,TR_SENSOR_CHECKPOINTS);
-Object.assign(TR_MISSIONS,TR_SENSOR_MISSIONS);
-Object.assign(TR,TR_SENSOR_COMMENTS);
+Object.assign(TR_LESSONS,TR_SENSOR_CHECKPOINTS,TR_EPISODE_LESSONS);
+Object.assign(TR_MISSIONS,TR_SENSOR_MISSIONS,TR_EPISODE_MISSIONS);
+Object.assign(TR,TR_SENSOR_COMMENTS,TR_EPISODE_COMMENTS,{
+ 'Watch episode {n}':'{n}. bölümü izle',
+ 'Watch recap {n}':'{n}. tekrar videosunu izle',
+ 'Opens YouTube in a new tab':'YouTube yeni sekmede açılır',
+ 'Call prefs.begin("name") before reading or saving values.':'Değer okumadan ya da kaydetmeden önce prefs.begin("name") çağır.'
+});
 TR_UNITS[8].subtitle='PIR, kenar algılama ve kesmeler';
 
 TR['In Arduino Library Manager, install the libraries used by this sketch and accept their dependencies:']='Arduino Kütüphane Yöneticisi içinde bu programın kullandığı kütüphaneleri ve önerilen bağımlılıklarını kur:';

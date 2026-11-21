@@ -1,5 +1,14 @@
 # Roadmap
 
+## 1.5 - Follow the published episodes (2026-11-21)
+Units now map one to one to the ESP32 From Zero episodes. Units 1-9 (episodes 1-9) are public and link their YouTube videos; units 5-9 were rebuilt from the lesson sketches (fade that never waits, RGB modes, analogRead/pin rules/print-first debugging, map() level bar and safe lock, pedestrian crossing state machine, press duration, slow walker). Units 10-18 follow draft curriculum v7 and stay closed. The simulator gained Preferences and skips redundant circuit solves.
+
+Open:
+- Curriculum v7 is a draft: re-check units 10-18 (titles, order, pins) when the creator approves it, and set `videos`/`source` when each episode is out.
+- Pins of the moved sensor missions still follow the old drafts (buzzer 25, PIR 27, relay 26, LDR 34). Align them with PINMAP v7 (buzzer 32, PIR 33, relay 16/17, LDR 35, DHT 4, button 19) before releasing units 11-18.
+- Not simulated yet: touch pins (`touchRead`, unit 14 fruit piano uses a tone melody instead), IR obstacle sensor (unit 16 uses a PIR pulse), Wi-Fi access-point mode (`WiFi.softAP`, unit 12 uses the station-mode model), servo, ultrasonic, WS2812 ring, joystick and MPU6050 for episodes 19-30.
+- Episode 10 lesson folder in esp32-from-zero still holds the older v6 LED version of the reflex game; the lab follows v7 (OLED + buzzer + button 19).
+
 ## 1.4 - Complete the sensor curriculum (2026-10-21)
 Nineteen LDR, DHT11, OLED, PIR, relay, Wi-Fi, web server and smart-room missions are integrated with lesson ordering, EN/TR text and six checkpoints. Runtime and browser regressions cover real controls and wiring. Interrupts work during waits, relay goals reject startup glitches, and wire-tool colors no longer shift the canvas. Public units stay [1,2]. The following milestones are historical; the older next-step notes are superseded by this entry.
 

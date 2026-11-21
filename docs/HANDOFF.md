@@ -1,3 +1,17 @@
+# Development handoff - 2026-11-21 (1.5)
+
+## Site follows the published episodes; units 1-9 released - 2026-11-21
+
+Creator asked to update the website. Units now map one to one to ESP32 From Zero episodes (unit N = episode N) and units 1-9 are public (`PUBLIC_RELEASED=[1..9]`; `tools/serve.mjs` now imports releases.mjs instead of a copied list).
+
+- Before: 11 units on the old curriculum (5 PWM+RGB+knob, 6 light and sound, 7 DHT/OLED, 8 PIR/interrupts, 9 relay/Wi-Fi, 10 web server, 11 smart room); public [1-5].
+- After: 1-4 unchanged; 5 PWM, 6 RGB, 7 analog input, 8 map() + level bar, 9 smart crossing (all public, built from `esp32-from-zero/lessons/05..09`); 10-18 follow `CURRICULUM_v7_DRAFT.md` (10 reflex game OLED+buzzer, 11 PIR, 12 phone, 13 DHT11, 14 melody, 15 LDR, 16 interrupts, 17 relay, 18 smart room) and stay closed. All 19 sensor missions were moved, none deleted.
+- New missions (`dist/missions-episodes.mjs`, TR in `dist/episodes-i18n.mjs`): breathe, modes, knob, knobled, zones, knobblink, levelbar, safelock, crossing, presstime, slowwalker, beep, reflex. New quizzes: pins, debug, mapq, stateq. New/rewritten checkpoints 5-9; checkpoints 10-18 reuse the 30 old sensor questions plus 15 new ones. `dimmer` and `speed` moved to unit 8 (titles adjusted).
+- "Watch episode N" links (youtu.be) on every published unit card and lesson; `units[].videos` in model.mjs. Ep5 = VaqdZeV5tRQ, Ep6 = j0tZ9P7YrU8 (from esp32-from-zero HANDOFF.md). Unit 4 also links Recap 1.
+- Simulator: `Preferences prefs;` (begin/getULong/putULong/getInt/putInt/...; values survive Restart through the lab's per-lesson `nvs`); unchanged digitalWrite/analogWrite no longer re-solve the circuit (sketches that rewrite outputs every loop were slow); fixed a stale button-contact signature after bounce that this exposed. Toasts no longer block clicks (they covered the phone Controls bar).
+- Tests: missions test passes `script.nvs`; sim tests cover Preferences, the bounce regression and run the real episode 5-9 sketches against the mission goals (skipped when the course repo is absent, e.g. CI); e2e covers episode links, units 7-9 controls, the phone crossing and the new public counts (58 public tasks, 88 total).
+- Open items: ROADMAP 1.5 (v7 is a draft, old pins in moved sensor missions, touch/IR/softAP not simulated).
+
 # Development handoff - 2026-10-25 (1.4)
 
 ## Units 1-5 released - 2026-10-25
