@@ -8,10 +8,11 @@ const V33=3.3,R_OUT=10,R_PULL=45000,LED_FULL=0.010;
 const RGB_VF={R:1.9,G:2.4,B:2.6};
 function hash(a,b){let h=(a*374761393+b*668265263)|0;h=Math.imul(h^(h>>>13),1274126177);return ((h^(h>>>16))>>>0)/4294967296;}
 export class Simulator{
- constructor(diagram,code){this.diagram=diagram;this.code=code;this.baud=115200;this.reset();}
+ // opts.nvs: the board's Preferences flash; the lab keeps one per lesson so values survive Restart
+ constructor(diagram,code,opts={}){this.diagram=diagram;this.code=code;this.baud=115200;this.nvs=opts.nvs||{};this.reset();}
  reset(){this.clock=0;this.deadline=0;this.now=0;this.pins={};this.out='';this.serialLog=[];this.ledLog=[];this.buzzerLog=[];this.relayLog=[];this.writes=[];this.events=[];this.warnings=[];this.warned=new Set();
   this.leds={};this.ledI={};this.logged={};this.buzzers={};this.relays={};this.irqs={};this.pendingIsr=[];this.interruptsEnabled=true;this.status='idle';this.error=null;this.begun=false;this.codeBaud=null;this.rx=new SerialInput(this);this.dirty=true;this.contactSig='';this.seed=1;this.rand=null;
-  this.dhtState={pin:null,begun:false};this.oledState={begun:false,size:1,color:1,cx:0,cy:0,buf:[],screen:[],draws:0,invert:false};
+  this.dhtState={pin:null,begun:false};this.prefsState={ns:'',open:false};this.prefsLog=[];this.oledState={begun:false,size:1,color:1,cx:0,cy:0,buf:[],screen:[],draws:0,invert:false};
   this.wifiState={status:6,ssid:'',ip:'192.168.1.42',rssi:-52};this.webState={begun:false,port:80,routes:new Map(),queue:[],uri:'/',lastCode:0,lastType:'',lastHtml:'',requests:0};
   this.inputs={};for(const p of this.diagram.parts){
    if(p.type==='button')this.inputs[p.id]={down:false,ev:[]};
@@ -56,9 +57,11 @@ export class Simulator{
   if(pin===1||pin===3)this.warn('uart'+pin,'GPIO {pin} is used by the USB serial connection. Pick another pin.',{pin});return true;}
  pin(p){return this.pins[p]||(this.pins[p]={mode:null,out:0,duty:null,tone:null});}
  pinMode(p,m){if(!this.gpioOk(p,'pinMode'))return;const s=this.pin(p);s.mode=MODE[m]||'INPUT';if(s.mode==='OUTPUT'&&INPUT_ONLY.has(Number(p)))this.warn('io'+p,'GPIO {pin} is input-only: it cannot drive an LED. Use a pin such as 23 or 25.',{pin:p});this.dirty=true;this.refresh();}
- digitalWrite(p,v){if(!this.gpioOk(p,'digitalWrite'))return;const s=this.pin(p);if(s.mode!=='OUTPUT'){if(s.mode&&s.mode.startsWith('INPUT')){s.mode=v?'INPUT_PULLUP':'INPUT';}else this.warn('nomode'+p,'digitalWrite({pin}) before pinMode({pin}, OUTPUT): the pin is not driven.',{pin:p});}
-  s.out=v?1:0;s.duty=null;this.writes.push({t:this.clock/1000,pin:Number(p),v:s.out});this.dirty=true;this.refresh();}
- analogWrite(p,v){if(!this.gpioOk(p,'analogWrite'))return;const s=this.pin(p);s.mode='OUTPUT';const d=Math.min(255,Math.max(0,Math.round(v)))/255;s.duty=d>0&&d<1?d:null;s.out=d>=1?1:0;if(s.duty!==null)s.out=0;this.writes.push({t:this.clock/1000,pin:Number(p),v:Math.round(d*255),pwm:true});this.dirty=true;this.refresh();}
+ // Writing the value a pin already has changes nothing in the circuit: skip the solver (sketches often rewrite every loop).
+ logWrite(w){this.writes.push(w);if(this.writes.length>6000)this.writes.splice(0,2000);}
+ digitalWrite(p,v){if(!this.gpioOk(p,'digitalWrite'))return;const s=this.pin(p);const same=s.mode==='OUTPUT'&&s.duty===null&&!s.tone&&s.out===(v?1:0);if(s.mode!=='OUTPUT'){if(s.mode&&s.mode.startsWith('INPUT')){s.mode=v?'INPUT_PULLUP':'INPUT';}else this.warn('nomode'+p,'digitalWrite({pin}) before pinMode({pin}, OUTPUT): the pin is not driven.',{pin:p});}
+  s.out=v?1:0;s.duty=null;this.logWrite({t:this.clock/1000,pin:Number(p),v:s.out});if(!same){this.dirty=true;this.refresh();}}
+ analogWrite(p,v){if(!this.gpioOk(p,'analogWrite'))return;const s=this.pin(p);const was=s.mode==='OUTPUT'&&!s.tone?s.out+','+s.duty:null;s.mode='OUTPUT';const d=Math.min(255,Math.max(0,Math.round(v)))/255;s.duty=d>0&&d<1?d:null;s.out=d>=1?1:0;if(s.duty!==null)s.out=0;this.logWrite({t:this.clock/1000,pin:Number(p),v:Math.round(d*255),pwm:true});if(was!==s.out+','+s.duty){this.dirty=true;this.refresh();}}
  ledcAttach(p){this.pin(p).mode='OUTPUT';return 1;}
  ledcWrite(p,v){this.analogWrite(p,v);return 1;}
  tone(p,f,ms){if(!this.gpioOk(p,'tone'))return;const s=this.pin(p);s.mode='OUTPUT';s.tone={f:Number(f),until:ms?this.clock+ms*1000:Infinity};s.duty=0.5;this.dirty=true;this.refresh();}
@@ -91,8 +94,19 @@ export class Simulator{
    case 'flush':return;}}
  oledWired(){return this.diagram.parts.some(p=>p.type==='oled'&&this.node(p.id+':GND')==='GND'&&this.sol?.v(this.node(p.id+':VCC'))>2.5&&this.node(p.id+':SCL')===this.nodeOf(22)&&this.node(p.id+':SDA')===this.nodeOf(21));}
  dhtPart(){return this.diagram.parts.find(p=>p.type==='dht11'&&this.node(p.id+':GND')==='GND'&&this.sol?.v(this.node(p.id+':VCC'))>2.5&&(this.dhtState.pin!==null?this.node(p.id+':DATA')===this.nodeOf(this.dhtState.pin):Object.keys(GPIO_PIN).some(g=>this.node(p.id+':DATA')===this.nodeOf(Number(g)))));}
+ // Preferences: a small key/value store in flash that keeps its values across Restart (this.nvs)
+ prefs(m,args){const st=this.prefsState,key=st.ns+'/'+String(args[0]??'');
+  if(m==='begin'){st.ns=String(args[0]??'');st.open=true;return 1;}
+  if(m==='end'){st.open=false;return;}
+  if(!st.open){this.warn('prefs-closed','Call prefs.begin("name") before reading or saving values.');return m.startsWith('get')?Number(args[1]??0):0;}
+  if(m==='clear'){for(const k of Object.keys(this.nvs))if(k.startsWith(st.ns+'/'))delete this.nvs[k];return 1;}
+  if(m==='remove'){const had=key in this.nvs;delete this.nvs[key];return had?1:0;}
+  if(m==='isKey')return key in this.nvs?1:0;
+  if(m.startsWith('get'))return key in this.nvs?this.nvs[key]:Number(args[1]??0);
+  const v=m==='putInt'?Math.trunc(Number(args[1])):Number(args[1])>>>0;this.nvs[key]=v;this.prefsLog.push({t:this.clock/1000,key:String(args[0]),v});if(this.prefsLog.length>500)this.prefsLog.splice(0,100);return 4;}
  device(port,m,args,types,machine){
   if(port==='Wire')return 1;
+  if(port==='prefs')return this.prefs(m,args);
   if(port==='dht'){
    if(m==='begin'){this.dhtState.begun=true;return;}
    this.ensure();const p=this.dhtState.begun&&this.dhtPart();if(!p)return NaN;
@@ -166,6 +180,8 @@ export class Simulator{
   return els;}
  ensure(){const sig=this.diagram.parts.filter(p=>p.type==='button').map(p=>this.contact(p,this.clock)?1:0).join('');if(sig!==this.contactSig){this.contactSig=sig;this.dirty=true;}if(this.dirty)this.refresh(true);}
  refresh(force){if(!force&&!this.dirty)return;if(!this.nets)return;this.dirty=false;for(const [g,s] of Object.entries(this.pins))if(s.tone&&this.clock>=s.tone.until){s.tone=null;s.duty=null;}
+  // remember which contacts this solution used, so ensure() notices the next bounce/change
+  this.contactSig=this.diagram.parts.filter(p=>p.type==='button').map(p=>this.contact(p,this.clock)?1:0).join('');
   const els=this.elements();this.sol=solve(els);
   const leds={};const add=(e,amp)=>{const key=e.tag.ch?e.tag.led+':'+e.tag.ch:e.tag.led;leds[key]=(leds[key]||0)+amp;};
   for(const e of els)if(e.t==='D')add(e,e.i);

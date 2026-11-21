@@ -115,7 +115,7 @@ export class Lab{
    pal.querySelectorAll('[data-addpart]').forEach(b=>b.onclick=()=>{pal.hidden=true;this.addPart(b.dataset.addpart);});};}
  status(s){this.$('#lab-status').textContent=s||'';}
  start(){this.stop(true);this.$('#lab-error').hidden=true;this.errLine=null;this.syncEditor();this.closeProps();
-  this.help?.start();this.sim=new Simulator(clone(this.diagram),this.code);const err=this.sim.start();
+  this.help?.start();this.sim=new Simulator(clone(this.diagram),this.code,{nvs:this.nvs||(this.nvs={})});const err=this.sim.start();
   if(err){this.showError(err);this.status(this.t('Fix the error, then run again.'));this.sim=null;this.onRun(false);return false;}
   this.lastOut=null;this.lastFrame=performance.now();this.$('#lab-run').textContent=this.t('■ Stop');this.$('#lab-run').classList.add('on');this.status(this.t('Running'));this.root.querySelector('.lab').classList.add('is-running');this.renderInputs();this.help?.updateControls();this.onRun(true);
   if(this.sound&&!this.audio){try{this.audio=new (window.AudioContext||window.webkitAudioContext)();}catch{}}return true;}

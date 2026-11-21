@@ -133,7 +133,7 @@ export function parse(src){
   const e=expr();expect(';');return {k:'expr',e,line:t.line,col:t.col};}
  function block(){const t=expect('{');const body=[];while(!is('}')){if(peek().type==='eof')throw new CodeError('A "{" is never closed: add a "}"',t.line,t.col);body.push(statement());}next();return {k:'block',body,line:t.line,col:t.col};}
  const globals=[],funcs=new Map(),devices=[];
- const DEVICE_CLASSES=new Set(['DHT','Adafruit_SSD1306','WebServer']);
+ const DEVICE_CLASSES=new Set(['DHT','Adafruit_SSD1306','WebServer','Preferences']);
  while(peek().type!=='eof'){
   if(is(';')){next();continue;}
   if(peek().value==='struct'||peek().value==='class')throw err('struct and class are not supported yet');
@@ -190,7 +190,8 @@ const WIFI_METHODS={mode:{n:[1,1],r:B},begin:{n:[1,2],r:I},status:{n:[0,0],r:I},
 const SERVER_METHODS={on:{n:[2,2],r:V,fnArg:1},begin:{n:[0,1],r:V},handleClient:{n:[0,0],r:V},send:{n:[3,3],r:V},uri:{n:[0,0],r:S}};
 const STRING_METHODS={length:{n:[0,0],r:U},toInt:{n:[0,0],r:I},toFloat:{n:[0,0],r:F},indexOf:{n:[1,2],r:I},lastIndexOf:{n:[1,1],r:I},substring:{n:[1,2],r:S},charAt:{n:[1,1],r:TYPES.char},equals:{n:[1,1],r:B},equalsIgnoreCase:{n:[1,1],r:B},
  startsWith:{n:[1,1],r:B},endsWith:{n:[1,1],r:B},concat:{n:[1,1],r:B},trim:{n:[0,0],r:V,mut:true},toUpperCase:{n:[0,0],r:V,mut:true},toLowerCase:{n:[0,0],r:V,mut:true},replace:{n:[2,2],r:V,mut:true},isEmpty:{n:[0,0],r:B},c_str:{n:[0,0],r:TYPES.cstr}};
-const OBJECTS={Serial:SERIAL_METHODS,Serial2:SERIAL_METHODS,dht:DHT_METHODS,Wire:WIRE_METHODS,display:DISPLAY_METHODS,WiFi:WIFI_METHODS,server:SERVER_METHODS};
+const PREFS_METHODS={begin:{n:[1,2],r:B},end:{n:[0,0],r:V},clear:{n:[0,0],r:B},remove:{n:[1,1],r:B},isKey:{n:[1,1],r:B},getULong:{n:[1,2],r:U},putULong:{n:[2,2],r:U},getUInt:{n:[1,2],r:U},putUInt:{n:[2,2],r:U},getInt:{n:[1,2],r:I},putInt:{n:[2,2],r:U}};
+const OBJECTS={prefs:PREFS_METHODS,Serial:SERIAL_METHODS,Serial2:SERIAL_METHODS,dht:DHT_METHODS,Wire:WIRE_METHODS,display:DISPLAY_METHODS,WiFi:WIFI_METHODS,server:SERVER_METHODS};
 
 // ---------- resolve: scopes, slots, static types, compiler-style errors ----------
 const zero=t=>t.kind==='string'||t.kind==='cstr'?'':0;
