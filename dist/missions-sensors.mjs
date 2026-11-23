@@ -20,20 +20,20 @@ export function sensorMissions({D,BLINK_PARTS,BLINK_WIRES,W_GND,W_3V3,lines,ledK
  const html=s=>s.webState.lastHtml||'';
  // circuits
  const LDR=[{id:'ldr1',type:'ldr',at:'bb:j27'}];
- const LDR_WIRES=[w('bb:f27','bb:bn27',BLK),w('bb:f29','bb:bp29',RED),w('bb:f28','esp:D34','#8a3fc8')];
+ const LDR_WIRES=[w('bb:f27','bb:bn27',BLK),w('bb:f29','bb:bp29',RED),w('bb:f28','esp:D35','#8a3fc8')];
  const BUZZER=[{id:'buzzer1',type:'buzzer',at:'bb:j20'}];
- const BUZZER_WIRES=[w('bb:f20','bb:bn20',BLK),w('bb:f22','esp:D25','#2f6fd0')];
+ const BUZZER_WIRES=[w('bb:f20','bb:bn20',BLK),w('bb:f22','esp:D32','#2f6fd0')];
  const DHT=(col,pin='esp:D4')=>({parts:[{id:'dht1',type:'dht11',at:'bb:j'+col}],wires:[w('bb:f'+col,'bb:bp'+col,RED),w('bb:f'+(col+1),pin,'#f28c1c'),w('bb:f'+(col+2),'bb:bn'+(col+2),BLK)]});
  const OLED=col=>({parts:[{id:'oled1',type:'oled',at:'bb:j'+col}],wires:[w('bb:f'+col,'bb:bn'+col,BLK),w('bb:f'+(col+1),'bb:bp'+(col+1),RED),w('bb:f'+(col+2),'esp:D22','#2f9a3c'),w('bb:f'+(col+3),'esp:D21','#2f6fd0')]});
- const PIR=col=>({parts:[{id:'pir1',type:'pir',at:'bb:j'+col}],wires:[w('bb:f'+col,'bb:bp'+col,RED),w('bb:f'+(col+1),'esp:D27','#c9a400'),w('bb:f'+(col+2),'bb:bn'+(col+2),BLK)]});
- const RELAY=col=>({parts:[{id:'relay1',type:'relay',at:'bb:j'+col}],wires:[w('bb:f'+col,'bb:bp'+col,RED),w('bb:f'+(col+1),'bb:bn'+(col+1),BLK),w('bb:f'+(col+2),'esp:D26','#8a3fc8')]});
+ const PIR=col=>({parts:[{id:'pir1',type:'pir',at:'bb:j'+col}],wires:[w('bb:f'+col,'bb:bp'+col,RED),w('bb:f'+(col+1),'esp:D33','#c9a400'),w('bb:f'+(col+2),'bb:bn'+(col+2),BLK)]});
+ const RELAY=col=>({parts:[{id:'relay1',type:'relay',at:'bb:j'+col}],wires:[w('bb:f'+col,'bb:bp'+col,RED),w('bb:f'+(col+1),'bb:bn'+(col+1),BLK),w('bb:f'+(col+2),'esp:RX2','#8a3fc8')]});
  const build=(...sets)=>D(sets.flatMap(x=>x.parts||[]),[...BASE,...sets.flatMap(x=>x.wires||[])]);
  const ldrSet={parts:LDR,wires:LDR_WIRES},buzzerSet={parts:BUZZER,wires:BUZZER_WIRES},ledSet={parts:BLINK_PARTS,wires:BLINK_WIRES.filter(x=>x!==W_GND)};
  const dhtSet=DHT(27),oledSet=OLED(22),pirSet=PIR(27),relaySet=RELAY(27);
- const buttonSet={parts:[{id:'btn1',type:'button',at:'bb:e14'}],wires:[w('esp:D22','bb:j14','#c9a400'),w('bb:j16','bb:bn16',BLK)]};
+ const buttonSet={parts:[{id:'btn1',type:'button',at:'bb:e14'}],wires:[w('esp:D19','bb:j14','#c9a400'),w('bb:j16','bb:bn16',BLK)]};
  const M={};
  // ---------- unit 6: light and sound ----------
- M.ldr={starter:{diagram:build(ldrSet),code:String.raw`const int LDR_PIN = 34;   // ADC1 pin, input only
+ M.ldr={starter:{diagram:build(ldrSet),code:String.raw`const int LDR_PIN = 35;   // ADC1 pin, input only
 
 void setup() {
   Serial.begin(115200);
@@ -45,7 +45,7 @@ void loop() {
   Serial.println(raw);
   delay(100);
 }
-`},solution:{diagram:build(ldrSet),code:String.raw`const int LDR_PIN = 34;   // ADC1 pin, input only
+`},solution:{diagram:build(ldrSet),code:String.raw`const int LDR_PIN = 35;   // ADC1 pin, input only
 
 void setup() {
   Serial.begin(115200);
@@ -64,7 +64,7 @@ void loop() {
   hints:['More light means a bigger number: the LDR resistance drops and the middle of the divider moves towards 3.3 V.','Print the label first, then the number, then the unit: `Serial.print("Light: ");`'],
   goals:[{text:'The monitor shows Light: … %',check:s=>lines(s).some(l=>/^Light: \d+ %$/.test(l.trim()))},{text:'Dark: under 30 %',check:s=>(s.mem.dark=s.mem.dark||(ldrAt(s)<0.1&&percentNow(s)>=0&&percentNow(s)<30))},{text:'Bright: over 70 %',check:s=>(s.mem.bright=s.mem.bright||(ldrAt(s)>0.9&&percentNow(s)>70))}],
   script:{ms:1500,actions:[{at:300,ldr:'ldr1',light:0},{at:900,ldr:'ldr1',light:1}],ticks:[800,1400]}};
- const NIGHT=(body)=>String.raw`const int LDR_PIN = 34;
+ const NIGHT=(body)=>String.raw`const int LDR_PIN = 35;
 const int LED_PIN = 23;
 const int DARK_LIMIT = 1500;   // below this it is dark
 
@@ -83,7 +83,7 @@ ${body}  delay(50);
   hints:['A dark room gives a small reading, so the test is `raw < DARK_LIMIT`.','Use `digitalWrite(LED_PIN, HIGH);` in the `if` part and `LOW` in the `else` part.'],
   goals:[{text:'Bright: the LED is off',check:s=>(s.mem.b=s.mem.b||(ldrAt(s)>0.9&&!anyLit(s)&&s.now>200e3))},{text:'Dark: the LED is on',check:s=>(s.mem.d=s.mem.d||(ldrAt(s)<0.1&&anyLit(s)))}],
   script:{ms:1300,actions:[{at:100,ldr:'ldr1',light:1},{at:700,ldr:'ldr1',light:0}],ticks:[600,1200]}};
- const MELODY=(body)=>String.raw`const int BUZZER_PIN = 25;
+ const MELODY=(body)=>String.raw`const int BUZZER_PIN = 32;
 
 void setup() {
 }
@@ -99,8 +99,8 @@ ${body}}
   hints:['The duration (300 ms) is how long the note sounds; the delay(400) is the gap before the next call.','Higher frequency means a higher note. Do, re, mi are 262, 294 and 330 Hz.'],
   goals:[{text:'Plays C (262 Hz)',check:s=>notes(s).includes(262)},{text:'Then D (294 Hz)',check:s=>notes(s).join(',').includes('262,294')},{text:'Then E (330 Hz)',check:s=>notes(s).join(',').includes('262,294,330')}],
   script:{ms:1700}};
- const ALARM=(body)=>String.raw`const int LDR_PIN = 34;
-const int BUZZER_PIN = 25;
+ const ALARM=(body)=>String.raw`const int LDR_PIN = 35;
+const int BUZZER_PIN = 32;
 const int OPEN_LIMIT = 2500;   // above this the box is open
 
 void setup() {
@@ -196,7 +196,7 @@ ${body}  display.display();
   goals:[{text:'The temperature is on the screen',check:s=>/T: \d+\.\d C/.test(screenText(s))},{text:'The humidity is on the screen',check:s=>/H: \d+ %/.test(screenText(s))},{text:'It follows the sensor: 30 degrees',check:s=>(s.mem.w=s.mem.w||/T: 30\.0 C/.test(screenText(s)))}],
   script:{ms:6000,actions:[{at:2500,dht:'dht1',temp:30,hum:70}],ticks:[5500]}};
  // ---------- unit 8: catch the motion ----------
- const MOTION=(body)=>String.raw`const int PIR_PIN = 27;
+ const MOTION=(body)=>String.raw`const int PIR_PIN = 33;
 const int LED_PIN = 23;
 
 void setup() {
@@ -216,7 +216,7 @@ ${body}  delay(50);
   hints:['The PIR needs 3.3 V on VCC and GND to work: it is already wired.','A real PIR stays HIGH for a few seconds after the movement. Here you control it yourself.'],
   goals:[{text:'No motion: the LED is off',check:s=>(s.mem.n=s.mem.n||(!pirAt(s)&&!anyLit(s)&&s.now>200e3))},{text:'Motion: the LED is on',check:s=>(s.mem.m=s.mem.m||(pirAt(s)&&anyLit(s)))}],
   script:{ms:1600,actions:[{at:500,pir:'pir1',motion:true},{at:1100,pir:'pir1',motion:false}],ticks:[400,900,1500]}};
- const VISITORS=(body)=>String.raw`const int PIR_PIN = 27;
+ const VISITORS=(body)=>String.raw`const int PIR_PIN = 33;
 
 int visitors = 0;
 int lastState = LOW;
@@ -238,7 +238,7 @@ ${body}  lastState = state;
   hints:['`lastState` remembers the reading from the previous loop. A new visitor is a change, not a level.','The same idea as the button toggle in unit 4.'],
   goals:[{text:'Prints Visitors: … for each new visitor',check:s=>lines(s).some(l=>/^Visitors: \d+$/.test(l.trim()))},{text:'Three pulses are counted as exactly 3',check:s=>pulses(s)>=3&&lastLine(s,/^Visitors/)==='Visitors: 3'&&!lines(s).some(l=>/^Visitors: 4$/.test(l.trim()))}],
   script:{ms:2400,actions:[{at:300,pir:'pir1',motion:true},{at:600,pir:'pir1',motion:false},{at:900,pir:'pir1',motion:true},{at:1200,pir:'pir1',motion:false},{at:1500,pir:'pir1',motion:true},{at:1800,pir:'pir1',motion:false}]}};
- const IRQ=(body)=>String.raw`const int PIR_PIN = 27;
+ const IRQ=(body)=>String.raw`const int PIR_PIN = 33;
 const int LED_PIN = 23;
 
 volatile bool motionSeen = false;
@@ -269,7 +269,7 @@ void loop() {
   goals:[{text:'A short pulse makes the LED flash',check:s=>pulses(s)>=1&&ledKeys(s).some(k=>changes(s,k).some(c=>c.on))},{text:'Each pulse flashes once: two pulses, two flashes',check:s=>pulses(s)>=2&&ledKeys(s).some(k=>changes(s,k).filter(c=>c.on).length>=2)}],
   script:{ms:4500,actions:[{at:300,pir:'pir1',motion:true},{at:400,pir:'pir1',motion:false},{at:2300,pir:'pir1',motion:true},{at:2400,pir:'pir1',motion:false}],ticks:[1800,4400]}};
  // ---------- unit 9: relays and Wi-Fi ----------
- const RELAYBLINK=(body)=>String.raw`const int RELAY_PIN = 26;
+ const RELAYBLINK=(body)=>String.raw`const int RELAY_PIN = 16;
 
 void setup() {
   pinMode(RELAY_PIN, OUTPUT);
@@ -285,8 +285,8 @@ ${body}}
   hints:['If the relay clicks on at start-up, you forgot the first `digitalWrite(RELAY_PIN, HIGH);`.','Only ever switch a relay module you were given with low-voltage things. Never touch mains electricity yourself.'],
   goals:[{text:'The relay switches on',check:s=>s.relayLog.some((e,i)=>e.on&&(s.relayLog[i+1]?.t??s.now/1000)-e.t>=1000)},{text:'And off again',check:s=>{const i=s.relayLog.findIndex((e,i)=>e.on&&(s.relayLog[i+1]?.t??s.now/1000)-e.t>=1000);return i>=0&&s.relayLog.slice(i+1).some(e=>e.on===false);}}],
   script:{ms:5000,ticks:[3000]}};
- const RELAYBTN=(body)=>String.raw`const int BUTTON_PIN = 22;
-const int RELAY_PIN = 26;
+ const RELAYBTN=(body)=>String.raw`const int BUTTON_PIN = 19;
+const int RELAY_PIN = 16;
 
 bool relayOn = false;
 int lastState = HIGH;
@@ -447,8 +447,8 @@ void loop() {
   goals:[{text:'/on switches the LED on',check:s=>(s.mem.on=s.mem.on||(s.webState.uri==='/on'&&anyLit(s)))},{text:'/off switches it off again',check:s=>s.mem.on&&s.webState.uri==='/off'&&!anyLit(s)}],
   script:{ms:4500,actions:[{at:2000,http:'/on'},{at:3000,http:'/off'}],ticks:[2700,4400]}};
  // ---------- unit 11: your own smart room ----------
- const ROOM=(body)=>String.raw`const int LDR_PIN = 34;
-const int PIR_PIN = 27;
+ const ROOM=(body)=>String.raw`const int LDR_PIN = 35;
+const int PIR_PIN = 33;
 const int LED_PIN = 23;
 const int DARK_LIMIT = 1500;
 const unsigned long HOLD_MS = 2000;   // stay on this long after the last motion
@@ -483,7 +483,7 @@ ${body}  digitalWrite(LED_PIN, (lampOn && dark) ? HIGH : LOW);
 #include <Adafruit_SSD1306.h>
 #include <DHT.h>
 
-const int RELAY_PIN = 26;
+const int RELAY_PIN = 16;
 
 DHT dht(4, DHT11);
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
@@ -534,7 +534,7 @@ WebServer server(80);
 
 void handleRoot() {
   float t = dht.readTemperature();
-  int light = map(analogRead(34), 0, 4095, 0, 100);
+  int light = map(analogRead(35), 0, 4095, 0, 100);
   String page = "<h1>My smart room</h1>";
   page += "<p>Temperature: " + String(t, 1) + " C</p>";
 ${body}  server.send(200, "text/html", page);

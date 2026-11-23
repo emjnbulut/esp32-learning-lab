@@ -5,7 +5,7 @@ Units now map one to one to the ESP32 From Zero episodes. Units 1-9 (episodes 1-
 
 Open:
 - Curriculum v7 is a draft: re-check units 10-18 (titles, order, pins) when the creator approves it, and set `videos`/`source` when each episode is out.
-- Pins of the moved sensor missions still follow the old drafts (buzzer 25, PIR 27, relay 26, LDR 34). Align them with PINMAP v7 (buzzer 32, PIR 33, relay 16/17, LDR 35, DHT 4, button 19) before releasing units 11-18.
+- Pins of the moved sensor missions follow the v7 pin plan since 2026-11-24 (PIR 33, LDR 35, buzzer 32, relay 16 (relay 2 would be 17), button 19; DHT 4, OLED 21/22). Re-check against CURRICULUM_v7_DRAFT.md section 4 if the creator changes it.
 - Not simulated yet: touch pins (`touchRead`, unit 14 fruit piano uses a tone melody instead), IR obstacle sensor (unit 16 uses a PIR pulse), Wi-Fi access-point mode (`WiFi.softAP`, unit 12 uses the station-mode model), servo, ultrasonic, WS2812 ring, joystick and MPU6050 for episodes 19-30.
 - Episode 10 lesson folder in esp32-from-zero still holds the older v6 LED version of the reflex game; the lab follows v7 (OLED + buzzer + button 19).
 

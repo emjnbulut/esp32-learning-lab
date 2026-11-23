@@ -8,7 +8,7 @@ const text=s=>s.oledState.screen.filter(x=>x.t==='text').map(x=>x.s).join('');
 const disconnected=(id,pin)=>{const d=clone(MISSIONS[id].solution.diagram);const s=run(id);const target=s.node(pin);d.wires=d.wires.filter(w=>s.node(w.a)!==target&&s.node(w.b)!==target);return d;};
 
 test('LDR divider responds to light through the actual ADC net',()=>{
- const s=run('ldr');s.setLight('ldr1',0);s.runFor(200);const dark=s.analogRead(34);s.setLight('ldr1',1);s.runFor(200);assert.ok(dark<1500);assert.ok(s.analogRead(34)>3000);assert.match(s.out,/Light: 83 %/);
+ const s=run('ldr');s.setLight('ldr1',0);s.runFor(200);const dark=s.analogRead(35);s.setLight('ldr1',1);s.runFor(200);assert.ok(dark<1500);assert.ok(s.analogRead(35)>3000);assert.match(s.out,/Light: 83 %/);
 });
 test('DHT needs its data wire, power and ground and follows both controls',()=>{
  const s=run('temp');s.setDht('dht1',{temp:30,hum:70});s.runFor(2100);assert.match(s.out,/Temp: 30.0 C  Humidity: 70 %/);
@@ -20,13 +20,13 @@ test('OLED sends a buffered frame only when wired and display() is called',()=>{
  s.setDht('dht1',{temp:30,hum:70});s.runFor(2100);assert.match(text(s),/T: 30.0 C/);assert.match(text(s),/H: 70 %/);
  const broken=run('oled',undefined,disconnected('oled','oled1:SDA'));broken.runFor(100);assert.equal(broken.oledState.screen.length,0);
 });
-const irqCode=extra=>`volatile int pulses=0;void onMotion(){pulses++;}void setup(){pinMode(27,INPUT);attachInterrupt(digitalPinToInterrupt(27),onMotion,RISING);${extra}}void loop(){delay(1000);}`;
+const irqCode=extra=>`volatile int pulses=0;void onMotion(){pulses++;}void setup(){pinMode(33,INPUT);attachInterrupt(digitalPinToInterrupt(33),onMotion,RISING);${extra}}void loop(){delay(1000);}`;
 test('a short PIR edge runs its ISR during delay rather than waiting for loop',()=>{
  const s=run('irq',irqCode(''));s.runFor(100);s.setPir('pir1',true);s.runFor(10);s.setPir('pir1',false);s.runFor(10);
  assert.equal(s.globalsView().find(v=>v.name==='pulses').value,1);assert.ok(s.now<1000000);assert.equal(s.status,'running');
 });
 test('interrupt masking, re-enabling and detach affect real PIR edges',()=>{
- const code=irqCode('noInterrupts();').replace('delay(1000);','if(millis()>=200) interrupts(); if(millis()>=400) detachInterrupt(27); delay(10);');
+ const code=irqCode('noInterrupts();').replace('delay(1000);','if(millis()>=200) interrupts(); if(millis()>=400) detachInterrupt(33); delay(10);');
  const s=run('irq',code);s.runFor(100);s.setPir('pir1',true);s.runFor(50);assert.equal(s.globalsView()[0].value,0);s.setPir('pir1',false);s.runFor(100);s.setPir('pir1',true);s.runFor(50);assert.equal(s.globalsView()[0].value,1);
  s.setPir('pir1',false);s.runFor(150);s.setPir('pir1',true);s.runFor(50);assert.equal(s.globalsView()[0].value,1);
 });
@@ -49,4 +49,15 @@ test('HTTP handlers change the physical LED and refresh sensor readings on reque
  const s=run('webled');s.runFor(1900);s.requestHttp('/on');s.runFor(100);assert.equal(s.webState.lastHtml,'LED is on');assert.ok(s.leds.led1>0.15);
  s.requestHttp('/off');s.runFor(100);assert.equal(s.webState.lastHtml,'LED is off');assert.equal(s.leds.led1,0);
  const d=run('dashboard');d.runFor(1900);assert.match(d.webState.lastHtml,/24.0 C/);d.setDht('dht1',{temp:30,hum:70});d.setLight('ldr1',1);assert.doesNotMatch(d.webState.lastHtml,/30.0 C/);d.requestHttp('/');d.runFor(100);assert.match(d.webState.lastHtml,/30.0 C/);assert.match(d.webState.lastHtml,/Light: 83 %/);
+});
+
+test('sensor missions follow the v7 pin plan: PIR 33, LDR 35, buzzer 32, relay 16, button 19',()=>{
+ const ids=['oled','beep','reflex','motion','visitors','wifi','web','webled','temp','station','webtemp','melody','ldr','nightlight','alarm','irq','relay','relaybtn','climate','room','dashboard'];
+ for(const id of ids){const m=MISSIONS[id];assert.ok(m,id);for(const v of [m.starter,m.solution]){if(!v)continue;const wires=(v.diagram?.wires||[]).flatMap(w=>[w.a,w.b]).join(' ');const code=v.code||'';
+  const parts=(v.diagram?.parts||[]).map(p=>p.type);
+  assert.doesNotMatch(wires,/esp:D(25|26|27|34)/,id+' wires');
+  if(!parts.includes('oled'))assert.doesNotMatch(wires,/esp:D22/,id+' button wire on 22');
+  assert.doesNotMatch(code,/\b(LDR|PIR|BUZZER|RELAY)_PIN\s*=\s*(25|26|27|34)\b|BUTTON_PIN\s*=\s*22\b/,id+' code');}}
+ const used=id=>{const d=MISSIONS[id].solution.diagram;return d.wires.flatMap(w=>[w.a,w.b]).filter(x=>x.startsWith('esp:'));};
+ assert.ok(used('ldr').includes('esp:D35'));assert.ok(used('motion').includes('esp:D33'));assert.ok(used('melody').includes('esp:D32'));assert.ok(used('relay').includes('esp:RX2'));assert.ok(used('relaybtn').includes('esp:D19'));
 });

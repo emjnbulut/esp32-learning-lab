@@ -1,3 +1,13 @@
+# Development handoff - 2026-11-24 (1.5.1)
+
+## Sensor missions moved to the v7 pin plan - 2026-11-24
+
+Closed units 10-18 only (PUBLIC_RELEASED stays [1..9]; nothing public changes). Pins follow CURRICULUM_v7_DRAFT.md section 4: PIR OUT 27 -> 33, LDR AO 34 -> 35, passive buzzer 25 -> 32, relay IN 26 -> 16 (wired as board pin RX2; relay 2 would be 17 = TX2), button 22 -> 19 (relaybtn). DHT11 4 and OLED SDA 21 / SCL 22 unchanged; RGB 25/26/27 and units 1-9 (button 22) untouched.
+
+- Changed: wires and sketches in dist/missions-sensors.mjs (units 10-18 missions). Unit 10 beep/reflex already used 19/32. Turkish text (sensors-i18n.mjs) and checkpoints (sensor-curriculum.mjs) carried no old pin numbers, so no edits were needed there.
+- Simulator needs no change: D19/D32/D33/D35/RX2 exist on the board model, 35 is input-only (INPUT_ONLY), 32/33/35 are ADC1.
+- Tests: sensors.test.mjs uses 35/33 and has a new guard test that no unit 10-18 mission wires or declares the old pins. Open: ROADMAP 1.5 item on pins is closed; v7 itself is still a draft.
+
 # Development handoff - 2026-11-21 (1.5)
 
 ## Site follows the published episodes; units 1-9 released - 2026-11-21
